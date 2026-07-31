@@ -1,5 +1,6 @@
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
+import FeaturedProducts from "../components/FeaturedProducts";
 import Categories from "../components/Categories";
 export default function Home() {
   return (
@@ -9,6 +10,7 @@ export default function Home() {
 
       <Hero />
       <Categories />
+      <FeaturedProducts />
       <section className="bg-gradient-to-r from-green-200 to-lime-300 py-24">
         <div className="max-w-7xl mx-auto px-6 text-center">
 
