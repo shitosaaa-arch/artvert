@@ -1,29 +1,52 @@
+import Link from "next/link";
+
 export default function Hero() {
   return (
-    <section className="bg-gradient-to-r from-green-800 via-green-700 to-lime-600 text-white">
-      <div className="max-w-7xl mx-auto px-6 py-24">
+    <section
+      className="relative h-[760px] bg-cover bg-center"
+      style={{
+        backgroundImage: "url('/images/hero.png')",
+      }}
+    >
+      <div className="absolute inset-0 bg-black/45"></div>
 
-        <h1 className="text-6xl font-extrabold mb-6">
-          ArtVert Egypt
-        </h1>
+      <div className="relative z-10 mx-auto flex h-full max-w-7xl items-center px-6">
 
-        <h2 className="text-3xl font-semibold mb-6">
-          Growing Success... Worldwide
-        </h2>
+        <div className="max-w-2xl text-white">
 
-        <p className="text-xl leading-9 max-w-2xl mb-10">
-          حلول متكاملة للمزارعين والزراعة المنزلية ونباتات الزينة،
-          مع منتجات عالية الجودة ودعم فني متخصص.
-        </p>
+          <span className="mb-6 inline-block rounded-full bg-green-700 px-5 py-2 text-sm font-bold">
+            ARTVERT EGYPT
+          </span>
 
-        <div className="flex gap-4">
-          <button className="bg-yellow-400 text-black px-8 py-4 rounded-xl font-bold hover:bg-yellow-300">
-            تسوق الآن
-          </button>
+          <h1 className="text-6xl font-black leading-tight">
+            حلول زراعية
+            <br />
+            لمستقبل أكثر إنتاجية
+          </h1>
 
-          <button className="border-2 border-white px-8 py-4 rounded-xl hover:bg-white hover:text-green-800">
-            تواصل معنا
-          </button>
+          <p className="mt-8 text-xl leading-10 text-gray-100">
+            نقدم مجموعة متكاملة من الأسمدة الزراعية والمخصبات الحيوية
+            ومنظمات النمو ومحسنات الامتصاص لتحقيق أعلى إنتاجية وجودة للمحاصيل.
+          </p>
+
+          <div className="mt-10 flex gap-5">
+
+            <Link
+              href="/products"
+              className="rounded-xl bg-lime-500 px-8 py-4 font-bold text-black hover:bg-lime-400 transition"
+            >
+              تصفح المنتجات
+            </Link>
+
+            <Link
+              href="/contact"
+              className="rounded-xl border-2 border-white px-8 py-4 font-bold hover:bg-white hover:text-green-700 transition"
+            >
+              تواصل معنا
+            </Link>
+
+          </div>
+
         </div>
 
       </div>

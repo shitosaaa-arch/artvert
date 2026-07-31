@@ -1,39 +1,80 @@
-import { products } from "../data/products";
+import Image from "next/image";
+import Link from "next/link";
+import { products } from "@/data/products";
 
 export default function FeaturedProducts() {
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-7xl mx-auto px-6">
-        <h2 className="text-4xl font-bold text-center mb-12">
-          منتجاتنا المميزة
-        </h2>
+    <section className="bg-[#f7faf7] py-24">
+      <div className="mx-auto max-w-7xl px-6">
 
-        <div className="grid gap-8 md:grid-cols-3">
-          {products.map((product) => (
+        <div className="mb-16 text-center">
+          <h2 className="text-5xl font-black text-gray-900">
+            منتجات ArtVert
+          </h2>
+
+          <p className="mt-4 text-lg text-gray-600">
+            مجموعة مختارة من أشهر منتجاتنا
+          </p>
+        </div>
+
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+
+          {products.slice(0, 8).map((product) => (
+
             <div
               key={product.id}
-              className="rounded-2xl border shadow-lg p-6 hover:shadow-2xl transition"
+              className="overflow-hidden rounded-3xl bg-white shadow-lg transition hover:-translate-y-2 hover:shadow-2xl"
             >
-              <img
-  src={product.image}
-  alt={product.name}
-  className="w-full h-56 object-contain mb-5 rounded-lg"
-/>
+              <div className="relative h-72 bg-white">
 
-              <h3 className="text-2xl font-bold mb-3">
-                {product.name}
-              </h3>
+                <Image
+                  src={product.image}
+                  alt={product.nameEn}
+                  fill
+                  className="object-contain p-6"
+                />
 
-              <p className="text-gray-600 mb-4">
-                {product.description}
-              </p>
+              </div>
 
-              <button className="bg-green-700 text-white px-5 py-2 rounded-lg hover:bg-green-800">
-                اعرف المزيد
-              </button>
+              <div className="p-6">
+
+                <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
+                  {product.category}
+                </span>
+
+                <h3 className="mt-4 text-2xl font-bold">
+                  {product.nameAr}
+                </h3>
+
+                <p className="mt-2 text-gray-600">
+                  {product.nameEn}
+                </p>
+
+                <Link
+                  href={`/products/${product.slug}`}
+                  className="mt-6 inline-block rounded-xl bg-green-700 px-6 py-3 font-bold text-white transition hover:bg-green-800"
+                >
+                  عرض المنتج
+                </Link>
+
+              </div>
             </div>
+
           ))}
+
         </div>
+
+        <div className="mt-14 text-center">
+
+          <Link
+            href="/products"
+            className="rounded-xl border-2 border-green-700 px-8 py-4 font-bold text-green-700 transition hover:bg-green-700 hover:text-white"
+          >
+            عرض جميع المنتجات
+          </Link>
+
+        </div>
+
       </div>
     </section>
   );
