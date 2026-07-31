@@ -7,7 +7,6 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
 
-
 const cairo = Cairo({
 
   subsets: ["arabic"],
@@ -26,12 +25,11 @@ const cairo = Cairo({
 
 
 
-
 export const metadata: Metadata = {
 
 
   metadataBase: new URL(
-    "https://www.artvert.com"
+    "https://artvertegypt.com"
   ),
 
 
@@ -52,11 +50,11 @@ export const metadata: Metadata = {
 
 
 
-
-
   keywords: [
 
     "ArtVert Egypt",
+
+    "ArtVert",
 
     "أسمدة زراعية",
 
@@ -73,17 +71,13 @@ export const metadata: Metadata = {
 
 
 
-
   icons: {
-
 
     icon: "/icon.png",
 
     shortcut: "/icon.png",
 
-
   },
-
 
 
 
@@ -92,35 +86,22 @@ export const metadata: Metadata = {
   openGraph: {
 
 
-    title:
-
-      "ArtVert Egypt",
-
+    title: "ArtVert Egypt",
 
 
     description:
-
       "حلول زراعية متكاملة لتغذية وحماية النبات",
 
 
-
-
     url:
-
-      "https://www.artvert.com",
-
-
+      "https://artvertegypt.com",
 
 
     siteName:
-
       "ArtVert Egypt",
 
 
-
-
     images: [
-
 
       {
 
@@ -130,18 +111,15 @@ export const metadata: Metadata = {
 
         height: 630,
 
-        alt: "ArtVert Egypt",
+        alt: "ArtVert Egypt"
 
       }
-
 
     ],
 
 
 
-
     locale: "ar_EG",
-
 
 
     type: "website",
@@ -161,16 +139,11 @@ export const metadata: Metadata = {
 
 
     title:
-
       "ArtVert Egypt",
 
 
-
     description:
-
       "حلول زراعية متكاملة للنبات",
-
-
 
 
     images: [
@@ -192,7 +165,6 @@ export const metadata: Metadata = {
 
 
 
-
 export default function RootLayout({
 
   children,
@@ -204,9 +176,7 @@ export default function RootLayout({
 }>) {
 
 
-
   return (
-
 
 
     <html
@@ -216,7 +186,6 @@ export default function RootLayout({
       dir="rtl"
 
     >
-
 
 
 
@@ -232,7 +201,6 @@ export default function RootLayout({
 
 
 
-
         <Navbar />
 
 
@@ -245,7 +213,6 @@ export default function RootLayout({
 
 
 
-
         <Footer />
 
 
@@ -254,9 +221,7 @@ export default function RootLayout({
 
 
 
-
       </body>
-
 
 
     </html>
