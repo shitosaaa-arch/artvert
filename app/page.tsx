@@ -342,7 +342,111 @@ export default function Home() {
 
 
 
+{/* Doctor ArtVert */}
 
+<AnimatedSection>
+
+<section className="
+mx-auto
+max-w-7xl
+px-6
+pb-20
+">
+
+<div className="
+rounded-3xl
+border
+border-green-700
+bg-[#181818]
+p-10
+text-center
+">
+
+<h2 className="
+text-4xl
+font-black
+text-green-400
+">
+
+👨‍🌾 دكتور ArtVert
+
+</h2>
+
+
+<p className="
+mx-auto
+mt-6
+max-w-3xl
+text-xl
+leading-10
+text-gray-300
+">
+
+عندك مشكلة في نباتك؟
+أرسل صورة النبات واحصل على تشخيص
+وحل مناسب من خبراء ArtVert.
+
+</p>
+
+
+<div className="
+mt-8
+flex
+flex-wrap
+justify-center
+gap-4
+">
+
+
+<Link
+
+href="/doctor"
+
+className="
+rounded-xl
+bg-green-700
+px-10
+py-4
+font-black
+"
+
+>
+
+اسأل دكتور ArtVert
+
+</Link>
+
+
+<a
+
+href="https://wa.me/201080040408"
+
+target="_blank"
+
+className="
+rounded-xl
+border
+border-green-700
+px-10
+py-4
+font-black
+text-green-400
+"
+
+>
+
+🟢 أرسل صورة نباتك
+
+</a>
+
+
+</div>
+
+</div>
+
+</section>
+
+</AnimatedSection>
 
       {/* باقي المنتجات */}
 
