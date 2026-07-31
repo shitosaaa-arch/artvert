@@ -1,33 +1,69 @@
 import Image from "next/image";
 
-type Props = {
+
+
+interface GoldBranchProps {
+
   className?: string;
+
   rotate?: boolean;
-};
+
+}
+
+
+
+
 
 export default function GoldBranch({
+
   className = "",
+
   rotate = false,
-}: Props) {
+
+}: GoldBranchProps) {
+
+
 
   return (
 
-    <Image
-      src="/images/gold-branch.png"
-      alt="gold branch"
-      width={450}
-      height={450}
-      style={{
-        width: "auto",
-        height: "auto",
-      }}
+
+    <div
+
       className={`
-        pointer-events-none
-        absolute
-        ${rotate ? "rotate-180" : ""}
-        ${className}
+      absolute
+      pointer-events-none
+      ${rotate ? "rotate-180" : ""}
+      ${className}
       `}
-    />
+
+    >
+
+
+
+      <Image
+
+        src="/images/gold-branch.png"
+
+        alt=""
+
+        width={500}
+
+        height={500}
+
+        loading="lazy"
+
+        className="
+        h-auto
+        w-[350px]
+        object-contain
+        "
+
+      />
+
+
+
+    </div>
+
 
   );
 
