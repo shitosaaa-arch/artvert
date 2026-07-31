@@ -2,7 +2,7 @@ import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import Categories from "../components/Categories";
 import FeaturedProducts from "../components/FeaturedProducts";
-
+import About from "../components/About";
 export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
@@ -14,7 +14,7 @@ export default function Home() {
 
       <FeaturedProducts />
 
-      {/* About */}
+      <About />
       <section className="py-20 bg-green-50">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold mb-6">

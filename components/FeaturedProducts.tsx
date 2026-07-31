@@ -14,9 +14,11 @@ export default function FeaturedProducts() {
               key={product.id}
               className="rounded-2xl border shadow-lg p-6 hover:shadow-2xl transition"
             >
-              <div className="h-48 rounded-lg bg-gray-100 flex items-center justify-center mb-5">
-                <span className="text-gray-400">صورة المنتج</span>
-              </div>
+              <img
+  src={product.image}
+  alt={product.name}
+  className="w-full h-56 object-contain mb-5 rounded-lg"
+/>
 
               <h3 className="text-2xl font-bold mb-3">
                 {product.name}
