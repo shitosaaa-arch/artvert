@@ -9,7 +9,7 @@ export const products = [
   {
     id: 2,
     name: "Art P Fosfo",
-    description: "سماد عالي الفوسفور لتحفيز التجذير والإزهار.",
+    description: "سماد عالي الفوسفور.",
     category: "الأسمدة",
     image: "/products/art-p-fosfo.png",
   },
