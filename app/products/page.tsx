@@ -10,30 +10,48 @@ import GoldBranch from "@/components/GoldBranch";
 import AnimatedSection from "@/components/AnimatedSection";
 
 
-
 export default function ProductsPage() {
 
 
-  const [search,setSearch] = useState("");
+  const [search, setSearch] = useState("");
 
-  const [category,setCategory] = useState("الكل");
-
+  const [category, setCategory] = useState("الكل");
 
 
 
   const categories = [
 
     "الكل",
-    "الأسمدة والمغذيات",
+
     "المنشطات الحيوية",
+
     "الأحماض الأمينية",
+
     "المبيدات الحشرية",
+
+    "الأسمدة المتخصصة",
+
     "محسنات التربة",
-    "الزراعة المنزلية"
+
+    "الزراعة المنزلية",
+
+    "العناصر الصغرى",
+
+    "الأسمدة العضوية",
+
+    "أسمدة الكالسيوم",
+
+    "محسنات الامتصاص",
+
+    "العناصر الكبرى والصغرى",
+
+    "الأسمدة المركبة",
+
+    "منشطات الجذور",
+
+    "منظمات النمو"
 
   ];
-
-
 
 
 
@@ -68,10 +86,7 @@ export default function ProductsPage() {
 
 
 
-
-
   return (
-
 
     <main className="
     relative
@@ -81,7 +96,6 @@ export default function ProductsPage() {
     py-16
     text-white
     ">
-
 
 
       <GoldBranch
@@ -96,9 +110,6 @@ export default function ProductsPage() {
 
 
 
-
-
-
       <div className="
       relative
       z-10
@@ -106,9 +117,6 @@ export default function ProductsPage() {
       max-w-7xl
       px-6
       ">
-
-
-
 
 
         <AnimatedSection>
@@ -144,16 +152,7 @@ export default function ProductsPage() {
 
 
         </AnimatedSection>
-
-
-
-
-
-
-
-
-
-        <AnimatedSection>
+                <AnimatedSection>
 
 
           <input
@@ -195,9 +194,6 @@ export default function ProductsPage() {
 
 
 
-
-
-
         <AnimatedSection>
 
 
@@ -215,7 +211,9 @@ export default function ProductsPage() {
 
               <button
 
+
                 key={item}
+
 
                 onClick={()=>setCategory(item)}
 
@@ -251,6 +249,7 @@ export default function ProductsPage() {
 
                 {item}
 
+
               </button>
 
 
@@ -261,9 +260,6 @@ export default function ProductsPage() {
 
 
         </AnimatedSection>
-
-
-
 
 
 
@@ -285,10 +281,6 @@ export default function ProductsPage() {
 
 
 
-
-
-
-
         <div className="
         mt-10
         grid
@@ -305,7 +297,9 @@ export default function ProductsPage() {
 
             <AnimatedSection
 
+
               key={product.id}
+
 
               className="
               rounded-3xl
@@ -316,6 +310,7 @@ export default function ProductsPage() {
               transition
               hover:-translate-y-3
               "
+
 
             >
 
@@ -333,18 +328,24 @@ export default function ProductsPage() {
 
                   <Image
 
+
                     src={product.image}
+
 
                     alt={product.nameAr}
 
+
                     fill
 
+
                     sizes="25vw"
+
 
                     className="
                     object-contain
                     p-5
                     "
+
 
                   />
 
@@ -368,6 +369,7 @@ export default function ProductsPage() {
                     {product.category}
 
                   </span>
+
 
 
 
@@ -418,10 +420,13 @@ export default function ProductsPage() {
                 </div>
 
 
+
               </Link>
 
 
+
             </AnimatedSection>
+
 
 
           ))}
@@ -432,12 +437,15 @@ export default function ProductsPage() {
 
 
 
+
       </div>
+
 
 
     </main>
 
 
   );
+
 
 }
