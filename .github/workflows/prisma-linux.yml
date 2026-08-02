@@ -19,10 +19,14 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - run: npm run db:generate
-      - run: npm run db:deploy
-      - run: npm run db:status
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate Prisma client
+        run: npm run db:generate
+      - name: Apply Prisma migrations
+        run: npm run db:deploy
+      - name: Verify Prisma migration status
+        run: npm run db:status
       - run: npx tsx scripts/prisma-linux-verification.ts prepare
       - run: npm run auth:import-json | tee first-import.log
       - run: "grep -Fx 'Import summary: imported=4, skipped=0, failed=0' first-import.log"
@@ -31,9 +35,15 @@ jobs:
       - run: npx tsx scripts/prisma-linux-verification.ts verify
       - run: npm run test:knowledge
       - run: npm run test:diseases
-      - run: npm run build
-      - run: npm run lint
-      - run: npx tsc --noEmit
-      - run: git diff --check
+      - name: Pest integration, authorization, relationship, lifecycle, sync, and cleanup tests
+        run: npm run test:pests
+      - name: Build
+        run: npm run build
+      - name: Lint
+        run: npm run lint
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Diff check
+        run: git diff --check
       - if: ${{ always() }}
         run: npx tsx scripts/prisma-linux-verification.ts cleanup

@@ -14,18 +14,20 @@ enum UserRole {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         UserRole @default(AGRONOMIST)
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  createdPlants Plant[] @relation("PlantCreatedBy")
-  updatedPlants Plant[] @relation("PlantUpdatedBy")
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  passwordHash    String
+  role            UserRole  @default(AGRONOMIST)
+  active          Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  createdPlants   Plant[]   @relation("PlantCreatedBy")
+  updatedPlants   Plant[]   @relation("PlantUpdatedBy")
   createdDiseases Disease[] @relation("DiseaseCreatedBy")
   updatedDiseases Disease[] @relation("DiseaseUpdatedBy")
+  createdPests    Pest[]    @relation("PestCreatedBy")
+  updatedPests    Pest[]    @relation("PestUpdatedBy")
 
   @@index([active])
   @@index([role])
@@ -77,17 +79,55 @@ enum DiseaseClassification {
   OOMYCETE
   PHYSIOLOGICAL_DISORDER
 }
+
 enum DiseaseSeverity {
   LOW
   MODERATE
   HIGH
   CRITICAL
 }
+
+enum PestClassification {
+  INSECT
+  MITE
+  NEMATODE
+  MOLLUSK
+  RODENT
+  OTHER
+}
+
+enum PestSeverity {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+enum PestEconomicImpact {
+  LOW
+  MODERATE
+  HIGH
+  SEVERE
+}
+
+enum PlantPestSusceptibility {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum PlantPestRelationshipType {
+  PRIMARY_HOST
+  SECONDARY_HOST
+  OCCASIONAL_HOST
+}
+
 enum PlantDiseaseSusceptibility {
   LOW
   MEDIUM
   HIGH
 }
+
 enum PlantDiseaseRelationshipType {
   HOST
   COMMON_HOST
@@ -95,151 +135,119 @@ enum PlantDiseaseRelationshipType {
 }
 
 model Plant {
-  id              String        @id
+  id              String              @id
   category        PlantCategory
   scientificName  String?
   description     String?
   createdByUserId String
   updatedByUserId String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  entity          KnowledgeEntity @relation(fields: [id], references: [id], onDelete: Restrict)
-  createdBy       User          @relation("PlantCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy       User?         @relation("PlantUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  entity          KnowledgeEntity     @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy       User                @relation("PlantCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy       User?               @relation("PlantUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
   aliases         PlantAlias[]
   images          PlantImage[]
   syncState       PlantKnowledgeSync?
   diseases        PlantDisease[]
+  pests           PlantPest[]
 
   @@index([category])
   @@index([createdByUserId])
 }
 
-model Disease {
-  id String @id
-  classification DiseaseClassification
-  severity DiseaseSeverity
-  scientificName String?
-  pathogenGenus String?
-  pathogenSpecies String?
-  lifecycle String?
+model Pest {
+  id              String               @id
+  classification  PestClassification
+  severity        PestSeverity
+  economicImpact  PestEconomicImpact
+  scientificName  String?
+  description     String?
   createdByUserId String
   updatedByUserId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  entity KnowledgeEntity @relation(fields: [id], references: [id], onDelete: Restrict)
-  createdBy User @relation("DiseaseCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy User? @relation("DiseaseUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  aliases DiseaseAlias[]
-  symptoms DiseaseSymptom[]
-  causes DiseaseCause[]
-  plantParts DiseasePlantPart[]
-  riskFactors DiseaseRiskFactor[]
-  plants PlantDisease[]
-  images DiseaseImage[]
-  syncState DiseaseKnowledgeSync?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  entity          KnowledgeEntity      @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy       User                 @relation("PestCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy       User?                @relation("PestUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases         PestAlias[]
+  symptoms        PestSymptom[]
+  damagePatterns  PestDamagePattern[]
+  lifecycleStages PestLifecycleStage[]
+  plants          PlantPest[]
+  images          PestImage[]
+  syncState       PestKnowledgeSync?
+
   @@index([classification])
   @@index([severity])
+  @@index([economicImpact])
   @@index([createdByUserId])
 }
-model DiseaseAlias {
- id String @id @default(cuid())
- diseaseId String
- value String
- normalizedValue String
- locale String?
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@unique([diseaseId,normalizedValue])
- @@index([normalizedValue])
-}
-model DiseaseSymptom {
- id String @id @default(cuid())
- diseaseId String
- value String
- normalizedValue String
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@unique([diseaseId,normalizedValue])
- @@index([normalizedValue])
-}
-model DiseaseCause {
- id String @id @default(cuid())
- diseaseId String
- value String
- normalizedValue String
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@unique([diseaseId,normalizedValue])
- @@index([normalizedValue])
-}
-model DiseasePlantPart {
- id String @id @default(cuid())
- diseaseId String
- value String
- normalizedValue String
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@unique([diseaseId,normalizedValue])
- @@index([normalizedValue])
-}
-model DiseaseRiskFactor {
- id String @id @default(cuid())
- diseaseId String
- value String
- normalizedValue String
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@unique([diseaseId,normalizedValue])
- @@index([normalizedValue])
-}
-model PlantDisease {
- plantId String
- diseaseId String
- susceptibility PlantDiseaseSusceptibility
- relationshipType PlantDiseaseRelationshipType
- notes String?
- plant Plant @relation(fields:[plantId],references:[id],onDelete:Cascade)
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@id([plantId,diseaseId])
- @@index([diseaseId])
-}
-model DiseaseImage {
- id String @id @default(cuid())
- diseaseId String
- storageKey String @unique
- url String
- alt String
- contentType String
- fileSize Int
- width Int
- height Int
- checksum String
- sortOrder Int
- createdAt DateTime @default(now())
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@unique([diseaseId,sortOrder])
-}
-model DiseaseKnowledgeSync {
- diseaseId String @id
- status KnowledgeSyncStatus @default(PENDING)
- lastSyncedAt DateTime?
- diagnosticCode String?
- updatedAt DateTime @updatedAt
- disease Disease @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- @@index([status])
-}
 
-model PlantAlias {
-  id              String @id @default(cuid())
-  plantId         String
+model PestAlias {
+  id              String  @id @default(cuid())
+  pestId          String
   value           String
   normalizedValue String
   locale          String?
-  plant           Plant  @relation(fields: [plantId], references: [id], onDelete: Cascade)
-  @@unique([plantId, normalizedValue])
+  pest            Pest    @relation(fields: [pestId], references: [id], onDelete: Cascade)
+
+  @@unique([pestId, normalizedValue])
   @@index([normalizedValue])
 }
 
-model PlantImage {
-  id          String @id @default(cuid())
-  plantId     String
-  storageKey  String @unique
+model PestSymptom {
+  id              String @id @default(cuid())
+  pestId          String
+  value           String
+  normalizedValue String
+  pest            Pest   @relation(fields: [pestId], references: [id], onDelete: Cascade)
+
+  @@unique([pestId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model PestDamagePattern {
+  id              String @id @default(cuid())
+  pestId          String
+  value           String
+  normalizedValue String
+  pest            Pest   @relation(fields: [pestId], references: [id], onDelete: Cascade)
+
+  @@unique([pestId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model PestLifecycleStage {
+  id              String @id @default(cuid())
+  pestId          String
+  value           String
+  normalizedValue String
+  sortOrder       Int
+  pest            Pest   @relation(fields: [pestId], references: [id], onDelete: Cascade)
+
+  @@unique([pestId, normalizedValue])
+  @@unique([pestId, sortOrder])
+}
+
+model PlantPest {
+  plantId          String
+  pestId           String
+  susceptibility   PlantPestSusceptibility
+  relationshipType PlantPestRelationshipType
+  seasonalContext  String?
+  notes            String?
+  plant            Plant                     @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  pest             Pest                      @relation(fields: [pestId], references: [id], onDelete: Cascade)
+
+  @@id([plantId, pestId])
+  @@index([pestId])
+}
+
+model PestImage {
+  id          String   @id @default(cuid())
+  pestId      String
+  storageKey  String   @unique
   url         String
   alt         String
   contentType String
@@ -249,29 +257,200 @@ model PlantImage {
   checksum    String
   sortOrder   Int
   createdAt   DateTime @default(now())
-  plant       Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  pest        Pest     @relation(fields: [pestId], references: [id], onDelete: Cascade)
+
+  @@unique([pestId, sortOrder])
+}
+
+model PestKnowledgeSync {
+  pestId         String              @id
+  status         KnowledgeSyncStatus @default(PENDING)
+  lastSyncedAt   DateTime?
+  diagnosticCode String?
+  updatedAt      DateTime            @updatedAt
+  pest           Pest                @relation(fields: [pestId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model Disease {
+  id              String                @id
+  classification  DiseaseClassification
+  severity        DiseaseSeverity
+  scientificName  String?
+  pathogenGenus   String?
+  pathogenSpecies String?
+  lifecycle       String?
+  createdByUserId String
+  updatedByUserId String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  entity          KnowledgeEntity       @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy       User                  @relation("DiseaseCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy       User?                 @relation("DiseaseUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases         DiseaseAlias[]
+  symptoms        DiseaseSymptom[]
+  causes          DiseaseCause[]
+  plantParts      DiseasePlantPart[]
+  riskFactors     DiseaseRiskFactor[]
+  plants          PlantDisease[]
+  images          DiseaseImage[]
+  syncState       DiseaseKnowledgeSync?
+
+  @@index([classification])
+  @@index([severity])
+  @@index([createdByUserId])
+}
+
+model DiseaseAlias {
+  id              String  @id @default(cuid())
+  diseaseId       String
+  value           String
+  normalizedValue String
+  locale          String?
+  disease         Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@unique([diseaseId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model DiseaseSymptom {
+  id              String  @id @default(cuid())
+  diseaseId       String
+  value           String
+  normalizedValue String
+  disease         Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@unique([diseaseId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model DiseaseCause {
+  id              String  @id @default(cuid())
+  diseaseId       String
+  value           String
+  normalizedValue String
+  disease         Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@unique([diseaseId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model DiseasePlantPart {
+  id              String  @id @default(cuid())
+  diseaseId       String
+  value           String
+  normalizedValue String
+  disease         Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@unique([diseaseId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model DiseaseRiskFactor {
+  id              String  @id @default(cuid())
+  diseaseId       String
+  value           String
+  normalizedValue String
+  disease         Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@unique([diseaseId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model PlantDisease {
+  plantId          String
+  diseaseId        String
+  susceptibility   PlantDiseaseSusceptibility
+  relationshipType PlantDiseaseRelationshipType
+  notes            String?
+  plant            Plant                        @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  disease          Disease                      @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@id([plantId, diseaseId])
+  @@index([diseaseId])
+}
+
+model DiseaseImage {
+  id          String   @id @default(cuid())
+  diseaseId   String
+  storageKey  String   @unique
+  url         String
+  alt         String
+  contentType String
+  fileSize    Int
+  width       Int
+  height      Int
+  checksum    String
+  sortOrder   Int
+  createdAt   DateTime @default(now())
+  disease     Disease  @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@unique([diseaseId, sortOrder])
+}
+
+model DiseaseKnowledgeSync {
+  diseaseId      String              @id
+  status         KnowledgeSyncStatus @default(PENDING)
+  lastSyncedAt   DateTime?
+  diagnosticCode String?
+  updatedAt      DateTime            @updatedAt
+  disease        Disease             @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+model PlantAlias {
+  id              String  @id @default(cuid())
+  plantId         String
+  value           String
+  normalizedValue String
+  locale          String?
+  plant           Plant   @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
+  @@unique([plantId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model PlantImage {
+  id          String   @id @default(cuid())
+  plantId     String
+  storageKey  String   @unique
+  url         String
+  alt         String
+  contentType String
+  fileSize    Int
+  width       Int
+  height      Int
+  checksum    String
+  sortOrder   Int
+  createdAt   DateTime @default(now())
+  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
   @@unique([plantId, sortOrder])
 }
 
 model PlantKnowledgeSync {
-  plantId        String @id
+  plantId        String              @id
   status         KnowledgeSyncStatus @default(PENDING)
   lastSyncedAt   DateTime?
   diagnosticCode String?
-  updatedAt      DateTime @updatedAt
-  plant          Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  updatedAt      DateTime            @updatedAt
+  plant          Plant               @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
   @@index([status])
 }
 
 model StorageCleanupJob {
-  id          String @id @default(cuid())
-  storageKey  String @unique
-  status      StorageCleanupStatus @default(PENDING)
-  retryCount  Int @default(0)
+  id             String               @id @default(cuid())
+  storageKey     String               @unique
+  status         StorageCleanupStatus @default(PENDING)
+  retryCount     Int                  @default(0)
   diagnosticCode String?
-  createdAt   DateTime @default(now())
-  completedAt DateTime?
-  updatedAt   DateTime @updatedAt
+  createdAt      DateTime             @default(now())
+  completedAt    DateTime?
+  updatedAt      DateTime             @updatedAt
+
   @@index([status])
 }
 
@@ -287,20 +466,21 @@ model KnowledgeEntity {
   updatedAt        DateTime                  @updatedAt
   plant            Plant?
   disease          Disease?
+  pest             Pest?
 
   @@unique([type, slug])
   @@index([publicationState, type])
 }
 
 model KnowledgeRelease {
-  id               String                 @id @default(cuid())
-  version          String                 @unique
-  generation       Int                    @unique
-  status           KnowledgeReleaseStatus @default(GENERATING)
+  id               String                   @id @default(cuid())
+  version          String                   @unique
+  generation       Int                      @unique
+  status           KnowledgeReleaseStatus   @default(GENERATING)
   contentChecksum  String?
-  manifestChecksum String?                @unique
+  manifestChecksum String?                  @unique
   failureReason    String?
-  createdAt        DateTime               @default(now())
+  createdAt        DateTime                 @default(now())
   activatedAt      DateTime?
   activeIn         KnowledgeGenerationLock? @relation("ActiveKnowledgeRelease")
 

@@ -1,0 +1,12 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import type { Prisma } from "@prisma/client";
+import { authOptions } from "@/lib/auth/options";
+import { UserRole } from "@/lib/auth/roles";
+import { canCreatePest, canViewPests } from "@/lib/pests/pest-permissions";
+import { PestRepository } from "@/lib/pests/pest-repository";
+import { PestService } from "@/lib/pests/pest-service";
+async function actor() { const session = await getServerSession(authOptions); if (!session?.user?.id || !session.user.role) throw new Error("UNAUTHORIZED"); return { id: session.user.id, role: session.user.role as UserRole }; }
+const first = (value: string | null, allowed: readonly string[]) => value && allowed.includes(value) ? value : undefined;
+export async function GET(request: Request) { try { const current = await actor(); if (!canViewPests(current.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 }); const p = new URL(request.url).searchParams, page = Math.max(1, Number.parseInt(p.get("page") ?? "1", 10) || 1), pageSize = Math.min(50, Math.max(1, Number.parseInt(p.get("pageSize") ?? "20", 10) || 20)); return NextResponse.json(await new PestRepository().list({ page, pageSize, q: p.get("q") ?? undefined, classification: first(p.get("classification"), ["INSECT", "MITE", "NEMATODE", "MOLLUSK", "RODENT", "OTHER"]), severity: first(p.get("severity"), ["LOW", "MODERATE", "HIGH", "CRITICAL"]), economicImpact: first(p.get("economicImpact"), ["LOW", "MODERATE", "HIGH", "SEVERE"]), publicationState: first(p.get("publicationState"), ["DRAFT", "PUBLISHED", "ARCHIVED"]), syncStatus: first(p.get("syncStatus"), ["PENDING", "SYNCED", "FAILED"]), sort: (first(p.get("sort"), ["updatedAt", "createdAt", "name"]) ?? "updatedAt") as "updatedAt" | "createdAt" | "name", direction: p.get("direction") === "asc" ? "asc" : "desc" as Prisma.SortOrder })); } catch { return NextResponse.json({ error: "Access denied" }, { status: 401 }); } }
+export async function POST(request: Request) { try { const current = await actor(); if (!canCreatePest(current.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 }); return NextResponse.json(await new PestService().create(await request.json(), current), { status: 201 }); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Pest could not be created" }, { status: 400 }); } }
