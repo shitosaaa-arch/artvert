@@ -1,0 +1,10 @@
+import { NextResponse } from "next/server";
+import { getPrismaClient } from "@/lib/db/prisma";
+import { requireCustomer } from "@/lib/customers/session";
+import { auditCustomer } from "@/lib/customers/audit";
+import { assertSameOrigin } from "@/lib/customers/security";
+
+// This endpoint deliberately accepts a private storage handle, never image bytes or a public URL.
+// Doctor temporary uploads are one-use and cannot be promoted through this route.
+export async function GET() { try { const customer = await requireCustomer(); const items = await getPrismaClient().customerSavedImage.findMany({ where: { customerId: customer.id, expiresAt: { gt: new Date() } }, select: { id: true, contentType: true, createdAt: true, expiresAt: true }, orderBy: { createdAt: "desc" }, take: 50 }); return NextResponse.json({ items }); } catch { return NextResponse.json({ error: "CUSTOMER_UNAUTHORIZED" }, { status: 401 }); } }
+export async function POST(request: Request) { try { assertSameOrigin(request); const customer = await requireCustomer(); if (!customer.historyOptIn || !customer.imageSavingOptIn) return NextResponse.json({ error: "IMAGE_SAVING_CONSENT_REQUIRED" }, { status: 403 }); const body = await request.json(); const storageKey = typeof body.storageKey === "string" ? body.storageKey : ""; const contentType = typeof body.contentType === "string" ? body.contentType : ""; if (!/^customer-private\/[a-zA-Z0-9/_-]{1,180}$/.test(storageKey) || !["image/jpeg", "image/png", "image/webp"].includes(contentType)) throw new Error("INVALID_PRIVATE_IMAGE"); const item = await getPrismaClient().customerSavedImage.create({ data: { customerId: customer.id, storageKey, contentType, expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) } }); await auditCustomer("CUSTOMER_IMAGE_SAVED", "CustomerSavedImage", { customerId: customer.id, targetId: item.id, actorType: "CUSTOMER" }); return NextResponse.json({ id: item.id, expiresAt: item.expiresAt }, { status: 201 }); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "IMAGE_SAVE_FAILED" }, { status: 400 }); } }

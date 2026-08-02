@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server"; import { requireCustomer } from "@/lib/customers/session"; import { CustomerService } from "@/lib/customers/service"; import { assertSameOrigin } from "@/lib/customers/security";
+export async function POST(request: Request) { try { assertSameOrigin(request); const customer = await requireCustomer(); await new CustomerService().revokeOtherSessions(customer.id, customer.sessionId); return NextResponse.json({ ok: true }); } catch { return NextResponse.json({ error: "CUSTOMER_UNAUTHORIZED" }, { status: 401 }); } }

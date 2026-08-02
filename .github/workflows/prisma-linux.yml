@@ -12,7 +12,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DIRECT_URL }}
       AUTH_USER_DIRECTORY: prisma
-      SPRINT3_VERIFICATION_PASSWORD: sprint3-${{ github.run_id }}-${{ github.run_attempt }}-Aa1!
+      SPRINT3_VERIFICATION_PASSWORD: ${{ secrets.SPRINT3_VERIFICATION_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,6 +49,10 @@ jobs:
         run: npm run test:doctor-ui
       - name: Secure Vision upload, quality, storage, privacy, and import-boundary tests
         run: npm run test:vision
+      - name: Customer contract and customer/staff identity-isolation tests
+        run: npm run test:customers
+      - name: Customer verification/reset/session security, consent/privacy, saved diagnosis/plant/favorite, export/deletion job, retention, admin boundary, analytics, rate-limit, and audit integration tests
+        run: npm run test:customers:integration
       - name: Build
         run: npm run build
       - name: Lint

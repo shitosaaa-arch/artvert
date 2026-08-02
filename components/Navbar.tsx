@@ -32,6 +32,11 @@ export default function Navbar() {
     },
 
     {
+      name: "حسابي",
+      href: "/account"
+    },
+
+    {
       name: "من نحن",
       href: "/about"
     },

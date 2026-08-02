@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server"; import { CustomerService } from "@/lib/customers/service"; import { assertSameOrigin } from "@/lib/customers/security";
+export async function POST(request: Request) { try { assertSameOrigin(request); await new CustomerService().verifyEmail(String((await request.json()).token ?? "")); return NextResponse.json({ ok: true }); } catch { return NextResponse.json({ error: "TOKEN_INVALID" }, { status: 400 }); } }

@@ -205,6 +205,7 @@ model Plant {
   pests           PlantPest[]
   deficiencies    PlantDeficiency[]
   productRecommendations ProductRecommendation[]
+  savedByCustomers CustomerSavedPlant[]
 
   @@index([category])
   @@index([createdByUserId])
@@ -668,6 +669,7 @@ model Product {
   images ProductImage[]
   recommendations ProductRecommendation[]
   syncState ProductKnowledgeSync?
+  favoritedByCustomers CustomerProductFavorite[]
   @@index([category])
   @@index([createdByUserId])
 }
@@ -757,4 +759,191 @@ model KnowledgeGenerationLock {
   activeReleaseId  String?           @unique
   updatedAt        DateTime          @updatedAt
   activeRelease    KnowledgeRelease? @relation("ActiveKnowledgeRelease", fields: [activeReleaseId], references: [id])
+}
+
+// Customer identity is intentionally a separate domain. Staff users must never be
+// granted customer permissions by role, or share a session/token table with them.
+enum CustomerTokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+enum CustomerJobType {
+  DATA_EXPORT
+  ACCOUNT_DELETION
+}
+
+enum CustomerJobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum CustomerAnalyticsEventType {
+  PAGE_VIEW
+  DOCTOR_STARTED
+  DOCTOR_COMPLETED
+  PRODUCT_VIEWED
+  FAVORITE_CHANGED
+  ACCOUNT_CREATED
+}
+
+model Customer {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  passwordHash          String
+  displayName           String
+  locale                String   @default("ar-EG")
+  emailVerifiedAt       DateTime?
+  active                Boolean  @default(true)
+  historyOptIn          Boolean  @default(false)
+  imageSavingOptIn      Boolean  @default(false)
+  analyticsOptIn        Boolean  @default(false)
+  marketingOptIn        Boolean  @default(false)
+  deletionRequestedAt   DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  sessions              CustomerSession[]
+  tokens                CustomerToken[]
+  diagnoses             CustomerDiagnosis[]
+  savedPlants           CustomerSavedPlant[]
+  productFavorites      CustomerProductFavorite[]
+  savedImages           CustomerSavedImage[]
+  jobs                  CustomerJob[]
+  auditLogs             CustomerAuditLog[]
+
+  @@index([active])
+  @@index([createdAt])
+}
+
+model CustomerSession {
+  id          String   @id @default(cuid())
+  customerId  String
+  tokenHash   String   @unique
+  userAgent   String?
+  ipHash      String?
+  createdAt   DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, expiresAt])
+}
+
+model CustomerToken {
+  id          String               @id @default(cuid())
+  customerId  String
+  purpose     CustomerTokenPurpose
+  tokenHash   String               @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime             @default(now())
+  customer    Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, purpose, expiresAt])
+}
+
+model CustomerDiagnosis {
+  id          String   @id @default(cuid())
+  customerId  String
+  // Structured outcome only: raw chat messages and temporary image references are forbidden.
+  summary     Json
+  createdAt   DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId, createdAt])
+}
+
+model CustomerSavedPlant {
+  customerId  String
+  plantId     String
+  createdAt   DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, plantId])
+  @@index([plantId])
+}
+
+model CustomerProductFavorite {
+  customerId  String
+  productId   String
+  createdAt   DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, productId])
+  @@index([productId])
+}
+
+model CustomerSavedImage {
+  id          String   @id @default(cuid())
+  customerId  String
+  storageKey  String   @unique
+  contentType String
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([customerId])
+}
+
+model CustomerJob {
+  id          String            @id @default(cuid())
+  customerId  String?
+  type        CustomerJobType
+  status      CustomerJobStatus @default(PENDING)
+  result      Json?
+  errorCode   String?
+  createdAt   DateTime          @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  customer    Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@index([customerId, type])
+}
+
+model CustomerAuditLog {
+  id          String   @id @default(cuid())
+  customerId  String?
+  actorType   String
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([customerId, createdAt])
+  @@index([action, createdAt])
+}
+
+model AnalyticsEvent {
+  id              String                     @id @default(cuid())
+  eventType       CustomerAnalyticsEventType
+  occurredAt      DateTime                   @default(now())
+  anonymousIdHash String
+  locale          String?
+  route           String?
+  // Non-identifying, whitelisted dimensions only. Never messages, images, email, or IP.
+  dimensions      Json?
+
+  @@index([eventType, occurredAt])
+  @@index([occurredAt])
+}
+
+model AnalyticsDailyRollup {
+  id          String                     @id @default(cuid())
+  date        DateTime
+  eventType   CustomerAnalyticsEventType
+  locale      String   @default("all")
+  count       Int
+  updatedAt   DateTime                   @updatedAt
+
+  @@unique([date, eventType, locale])
+  @@index([date])
 }

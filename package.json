@@ -26,6 +26,11 @@
     "test:doctor": "tsx scripts/test-doctor-engine.ts",
     "test:doctor-ui": "tsx scripts/test-doctor-ui.ts",
     "test:vision": "tsx scripts/test-vision.ts",
+    "test:customers": "node scripts/test-customer-accounts.mjs",
+    "test:customers:integration": "tsx scripts/test-customer-integration.ts",
+    "customers:jobs": "tsx scripts/process-customer-jobs.ts",
+    "customers:cleanup": "tsx scripts/process-customer-retention.ts",
+    "analytics:rollup": "tsx scripts/rollup-analytics.ts",
     "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {

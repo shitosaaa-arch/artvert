@@ -1,0 +1,2 @@
+import Link from "next/link"; import CustomerAuthForm from "@/components/customer/CustomerAuthForm";
+export default function CustomerLoginPage() { return <main className="min-h-screen bg-green-950 p-6 pt-24"><CustomerAuthForm mode="login" /><p className="mt-4 text-center text-white"><Link href="/account/register">إنشاء حساب جديد</Link> · <Link href="/account/reset-password">نسيت كلمة المرور؟</Link></p></main>; }

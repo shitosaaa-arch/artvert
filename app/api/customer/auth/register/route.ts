@@ -1,0 +1,5 @@
+import { NextResponse } from "next/server";
+import { CustomerService } from "@/lib/customers/service";
+import { customerCookie, requestIpHash, assertSameOrigin } from "@/lib/customers/security";
+import { enforceRateLimit } from "@/lib/customers/rate-limit";
+export async function POST(request: Request) { try { assertSameOrigin(request); enforceRateLimit("customer-register", requestIpHash(request), 5, 60 * 60 * 1000); const body = await request.json(); const result = await new CustomerService().register(body, { userAgent: request.headers.get("user-agent") ?? undefined, ipHash: requestIpHash(request) }); const response = NextResponse.json({ customer: { id: result.customer.id, displayName: result.customer.displayName, emailVerified: false }, ...(process.env.NODE_ENV !== "production" ? { verificationToken: result.verificationToken } : {}) }, { status: 201 }); response.cookies.set(customerCookie(result.sessionToken)); return response; } catch (error) { const code = error instanceof Error ? error.message : "REGISTRATION_FAILED"; return NextResponse.json({ error: code }, { status: code === "RATE_LIMITED" ? 429 : 400 }); } }

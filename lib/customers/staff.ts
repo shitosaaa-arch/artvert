@@ -1,0 +1,2 @@
+import { getServerSession } from "next-auth"; import { authOptions } from "@/lib/auth/options"; import { UserRole } from "@/lib/auth/roles";
+export async function requireCustomerAdmin(superAdminOnly = false) { const session = await getServerSession(authOptions); const role = session?.user?.role; if (!session?.user?.id || !role || ![UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(role) || (superAdminOnly && role !== UserRole.SUPER_ADMIN)) throw new Error("STAFF_FORBIDDEN"); return { id: session.user.id, role }; }
