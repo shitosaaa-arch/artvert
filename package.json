@@ -21,6 +21,8 @@
     "test:pests": "tsx scripts/test-pest-management.ts",
     "pests:cleanup": "tsx scripts/process-pest-cleanup.ts",
     "test:deficiencies": "tsx scripts/test-deficiency-management.ts",
+    "products:import": "tsx scripts/import-legacy-products.ts",
+    "test:products": "tsx scripts/test-product-management.ts",
     "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {

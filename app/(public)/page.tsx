@@ -1,14 +1,16 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { products } from "@/data/products";
+import { getProductCatalog } from "@/lib/products/product-catalog";
 
 import GoldBranch from "@/components/GoldBranch";
 import AnimatedSection from "@/components/AnimatedSection";
 
 
 
-export default function Home() {
+export default async function Home() {
+
+  const products = await getProductCatalog().list();
 
 
 

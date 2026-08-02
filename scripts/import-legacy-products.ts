@@ -1,0 +1,1 @@
+import { importLegacyProducts } from "../lib/products/import-legacy-products"; importLegacyProducts().then(r=>console.log(`legacy-products-imported:${r.imported}`)).catch(e=>{console.error(e);process.exitCode=1;});

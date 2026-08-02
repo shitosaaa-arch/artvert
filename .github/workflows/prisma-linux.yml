@@ -21,6 +21,8 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Validate Prisma schema
+        run: npm run db:validate
       - name: Generate Prisma client
         run: npm run db:generate
       - name: Apply Prisma migrations
@@ -39,6 +41,8 @@ jobs:
         run: npm run test:pests
       - name: Deficiency integration, authorization, context, sync, and cleanup tests
         run: npm run test:deficiencies
+      - name: Product import, authorization, catalog parity, recommendation, and sync tests
+        run: npm run test:products
       - name: Build
         run: npm run build
       - name: Lint

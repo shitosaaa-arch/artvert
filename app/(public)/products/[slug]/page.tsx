@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
-import { products } from "@/data/products";
+import { getProductCatalog } from "@/lib/products/product-catalog";
 
 import GoldBranch from "@/components/GoldBranch";
 import AnimatedSection from "@/components/AnimatedSection";
@@ -27,9 +27,7 @@ export async function generateMetadata(
   const {slug}=await params;
 
 
-  const product = products.find(
-    item=>item.slug===slug
-  );
+  const product = await getProductCatalog().findBySlug(slug);
 
 
   return {
@@ -62,9 +60,7 @@ export default async function ProductPage({params}:Props){
 
 
 
-  const product = products.find(
-    item=>item.slug===slug
-  );
+  const product = await getProductCatalog().findBySlug(slug);
 
 
 

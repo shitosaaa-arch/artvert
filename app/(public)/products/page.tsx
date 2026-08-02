@@ -2,15 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-
-import { products } from "@/data/products";
+import { useEffect, useState } from "react";
+import type { CatalogProduct } from "@/lib/products/product-catalog";
 
 import GoldBranch from "@/components/GoldBranch";
 import AnimatedSection from "@/components/AnimatedSection";
 
 
 export default function ProductsPage() {
+
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  useEffect(() => { fetch("/api/products").then(async r => { if (!r.ok) throw new Error("Catalog unavailable"); return r.json(); }).then(setProducts).catch(() => setProducts([])); }, []);
 
 
   const [search, setSearch] = useState("");

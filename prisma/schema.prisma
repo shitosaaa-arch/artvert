@@ -30,6 +30,8 @@ model User {
   updatedPests    Pest[]    @relation("PestUpdatedBy")
   createdDeficiencies Deficiency[] @relation("DeficiencyCreatedBy")
   updatedDeficiencies Deficiency[] @relation("DeficiencyUpdatedBy")
+  createdProducts Product[] @relation("ProductCreatedBy")
+  updatedProducts Product[] @relation("ProductUpdatedBy")
 
   @@index([active])
   @@index([role])
@@ -135,6 +137,30 @@ enum PlantDeficiencyRelationshipType {
  SUSCEPTIBLE
  OCCASIONAL
 }
+enum ProductImageOwnership {
+  LEGACY_PUBLIC
+  MANAGED_BLOB
+  EXTERNAL
+}
+
+enum ProductRecommendationState {
+  ACTIVE
+  DISABLED
+}
+
+enum ProductRecommendationPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum ProductRecommendationTargetType {
+  PLANT
+  DISEASE
+  PEST
+  DEFICIENCY
+}
 
 enum PlantPestSusceptibility {
   LOW
@@ -178,6 +204,7 @@ model Plant {
   diseases        PlantDisease[]
   pests           PlantPest[]
   deficiencies    PlantDeficiency[]
+  productRecommendations ProductRecommendation[]
 
   @@index([category])
   @@index([createdByUserId])
@@ -204,6 +231,7 @@ model Pest {
   plants          PlantPest[]
   images          PestImage[]
   syncState       PestKnowledgeSync?
+  productRecommendations ProductRecommendation[]
 
   @@index([classification])
   @@index([severity])
@@ -326,6 +354,7 @@ model Deficiency {
   plants PlantDeficiency[]
   images DeficiencyImage[]
   syncState DeficiencyKnowledgeSync?
+  productRecommendations ProductRecommendation[]
   @@index([classification])
   @@index([mobility])
   @@index([createdByUserId])
@@ -436,6 +465,7 @@ model Disease {
   plants          PlantDisease[]
   images          DiseaseImage[]
   syncState       DiseaseKnowledgeSync?
+  productRecommendations ProductRecommendation[]
 
   @@index([classification])
   @@index([severity])
@@ -608,9 +638,99 @@ model KnowledgeEntity {
   disease          Disease?
   pest             Pest?
   deficiency       Deficiency?
+  product          Product?
 
   @@unique([type, slug])
   @@index([publicationState, type])
+}
+
+model Product {
+  id String @id
+  legacyId Int? @unique
+  category String
+  nameAr String
+  nameEn String
+  shortDescription String
+  description String
+  composition String
+  dosage String
+  packageSize String
+  benefits Json
+  crops Json
+  createdByUserId String
+  updatedByUserId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  entity KnowledgeEntity @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy User @relation("ProductCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases ProductAlias[]
+  images ProductImage[]
+  recommendations ProductRecommendation[]
+  syncState ProductKnowledgeSync?
+  @@index([category])
+  @@index([createdByUserId])
+}
+model ProductAlias {
+ id String @id @default(cuid())
+ productId String
+ value String
+ normalizedValue String
+ locale String?
+ product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+ @@unique([productId,normalizedValue])
+ @@index([normalizedValue])
+}
+model ProductImage {
+ id String @id @default(cuid())
+ productId String
+ ownership ProductImageOwnership
+ storageKey String? @unique
+ url String
+ alt String
+ contentType String?
+ fileSize Int?
+ width Int?
+ height Int?
+ checksum String?
+ sortOrder Int
+ createdAt DateTime @default(now())
+ product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+ @@unique([productId,sortOrder])
+}
+model ProductRecommendation {
+ id String @id @default(cuid())
+ productId String
+ targetType ProductRecommendationTargetType
+ plantId String?
+ diseaseId String?
+ pestId String?
+ deficiencyId String?
+ state ProductRecommendationState @default(ACTIVE)
+ priority ProductRecommendationPriority @default(NORMAL)
+ usageContext String?
+ compatibility String?
+ contraindications String?
+ notes String?
+ product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+ plant Plant? @relation(fields:[plantId],references:[id],onDelete:Cascade)
+ disease Disease? @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
+ pest Pest? @relation(fields:[pestId],references:[id],onDelete:Cascade)
+ deficiency Deficiency? @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@index([targetType])
+ @@index([plantId])
+ @@index([diseaseId])
+ @@index([pestId])
+ @@index([deficiencyId])
+}
+model ProductKnowledgeSync {
+ productId String @id
+ status KnowledgeSyncStatus @default(PENDING)
+ lastSyncedAt DateTime?
+ diagnosticCode String?
+ updatedAt DateTime @updatedAt
+ product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+ @@index([status])
 }
 
 model KnowledgeRelease {

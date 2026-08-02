@@ -1,11 +1,11 @@
 import { MetadataRoute } from "next";
-import { products } from "@/data/products";
+import { getProductCatalog } from "@/lib/products/product-catalog";
 
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
 
-  const productPages = products.map((product) => ({
+  const productPages = (await getProductCatalog().list()).map((product) => ({
 
     url: `https://www.artvert.com/products/${product.slug}`,
 
