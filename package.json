@@ -25,6 +25,7 @@
     "test:products": "tsx scripts/test-product-management.ts",
     "test:doctor": "tsx scripts/test-doctor-engine.ts",
     "test:doctor-ui": "tsx scripts/test-doctor-ui.ts",
+    "test:homepage-contract": "tsx scripts/test-homepage-contract.ts",
     "test:vision": "tsx scripts/test-vision.ts",
     "test:customers": "node scripts/test-customer-accounts.mjs",
     "test:customers:integration": "tsx scripts/test-customer-integration.ts",

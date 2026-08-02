@@ -1,0 +1,33 @@
+name: Homepage Linux verification
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  homepage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Homepage production build
+        run: npm run build
+      - name: Lint
+        run: npm run lint
+      - name: TypeScript
+        run: npx tsc --noEmit
+      - name: Diff check
+        run: git diff --check
+      - name: Homepage visual, mobile, product-asset, Doctor-state, reduced-motion, and protected-boundary contract
+        run: npm run test:homepage-contract

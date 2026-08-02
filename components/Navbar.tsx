@@ -54,7 +54,7 @@ export default function Navbar() {
   return (
 
 
-    <nav className="
+    <nav data-site-navbar className="
     sticky
     top-0
     z-50
