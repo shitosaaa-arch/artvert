@@ -12,7 +12,8 @@
     "db:validate": "node scripts/run-prisma.cjs validate",
     "db:generate": "node scripts/run-prisma.cjs generate",
     "db:migrate": "node scripts/run-prisma.cjs migrate dev",
-    "db:deploy": "node scripts/run-prisma.cjs migrate deploy"
+    "db:deploy": "node scripts/run-prisma.cjs migrate deploy",
+    "db:status": "node scripts/run-prisma.cjs migrate status"
   },
   "dependencies": {
     "@prisma/client": "6.19.2",
