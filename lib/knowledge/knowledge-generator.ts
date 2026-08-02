@@ -49,7 +49,7 @@ export class KnowledgeGenerator {
       const pointer: KnowledgeCurrentPointer = { formatVersion: 1, releaseVersion: artifacts.version, manifestChecksum: checksum(artifacts.manifestBytes) };
       try {
         await this.store.writeCurrentPointer(pointer);
-      } catch (error) {
+      } catch {
         await this.releases.restorePrevious(lease.release.id, activation.previousVersion, lease.token);
         throw new KnowledgeExportError("Knowledge release activation could not update the current pointer.");
       }

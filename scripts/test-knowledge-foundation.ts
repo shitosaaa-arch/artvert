@@ -13,7 +13,6 @@ import { KnowledgeGenerator } from "../lib/knowledge/knowledge-generator";
 import { KnowledgeReader } from "../lib/knowledge/knowledge-reader";
 import { createPrismaKnowledgeEntityRepository } from "../lib/knowledge/prisma/prisma-knowledge-repository";
 import { PrismaKnowledgeReleaseRepository } from "../lib/knowledge/prisma/prisma-knowledge-release-repository";
-import type { KnowledgeReleaseArtifacts } from "../lib/knowledge/knowledge-types";
 
 dotenv.config({ path: ".env.local" });
 
@@ -23,7 +22,7 @@ const ids = [`${prefix}-plant`, `${prefix}-disease`];
 
 class FailingStore implements KnowledgeExportStore {
   constructor(private readonly delegate: KnowledgeExportStore) {}
-  writeRelease(_artifacts: KnowledgeReleaseArtifacts): Promise<void> { return Promise.reject(new Error("Intentional export failure.")); }
+  writeRelease(): Promise<void> { return Promise.reject(new Error("Intentional export failure.")); }
   readReleaseFile(version: string, fileName: string) { return this.delegate.readReleaseFile(version, fileName); }
   writeCurrentPointer(pointer: Parameters<KnowledgeExportStore["writeCurrentPointer"]>[0]) { return this.delegate.writeCurrentPointer(pointer); }
   readCurrentPointer() { return this.delegate.readCurrentPointer(); }
