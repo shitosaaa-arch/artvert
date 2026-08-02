@@ -1,13 +1,14 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
+import dotenv from "dotenv";
+
+import { hash } from "bcryptjs";
 import { stdin, stdout } from "node:process";
 import { createInterface } from "node:readline/promises";
-import { hash } from "bcryptjs";
 
+import { getUserDirectory } from "../lib/auth/user-directory-factory";
 import { UserRole } from "../lib/auth/roles";
-import type { DirectoryUser } from "../lib/auth/user-directory";
+import { UserDirectoryConflictError } from "../lib/auth/user-directory-errors";
 
-const usersFile = path.join(process.cwd(), "data", "auth", "users.json");
+dotenv.config({ path: ".env.local" });
 
 function isStrongPassword(password: string) {
   return password.length >= 12 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
@@ -61,19 +62,6 @@ function askForPassword() {
   });
 }
 
-async function writeUsersAtomically(users: DirectoryUser[]) {
-  await fs.mkdir(path.dirname(usersFile), { recursive: true });
-  const temporaryFile = `${usersFile}.${process.pid}.${Date.now()}.tmp`;
-
-  try {
-    await fs.writeFile(temporaryFile, `${JSON.stringify(users, null, 2)}\n`, "utf8");
-    await fs.rename(temporaryFile, usersFile);
-  } catch (error) {
-    await fs.rm(temporaryFile, { force: true });
-    throw error;
-  }
-}
-
 async function createAdmin() {
   const name = await ask("Name: ");
   const email = (await ask("Email: ")).toLowerCase();
@@ -83,33 +71,22 @@ async function createAdmin() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Enter a valid email address.");
   if (!isStrongPassword(password)) throw new Error("Password does not meet the strength requirements.");
 
-  let users: DirectoryUser[] = [];
-  try {
-    users = JSON.parse(await fs.readFile(usersFile, "utf8")) as DirectoryUser[];
-  } catch (error: unknown) {
-    if (!(error && typeof error === "object" && "code" in error && error.code === "ENOENT")) throw error;
-  }
-
-  if (users.some((user) => user.email.toLowerCase() === email)) {
-    throw new Error("A user with this email already exists.");
-  }
-
-  const now = new Date().toISOString();
-  users.push({
+  await getUserDirectory().createUser({
     id: crypto.randomUUID(),
     name,
     email,
     passwordHash: await hash(password, 12),
     role: UserRole.SUPER_ADMIN,
     active: true,
-    createdAt: now,
-    updatedAt: now,
   });
-  await writeUsersAtomically(users);
   console.log(`Created Super Admin for ${email}.`);
 }
 
 createAdmin().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : "Unable to create the admin user.");
+  if (error instanceof UserDirectoryConflictError) {
+    console.error("A user with this email already exists.");
+  } else {
+    console.error(error instanceof Error ? error.message : "Unable to create the admin user.");
+  }
   process.exitCode = 1;
 });

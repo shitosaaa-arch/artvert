@@ -11,6 +11,12 @@ export type DirectoryUser = {
   updatedAt: string;
 };
 
+export type CreateDirectoryUser = Omit<DirectoryUser, "createdAt" | "updatedAt"> & {
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export interface UserDirectory {
   findByEmail(email: string): Promise<DirectoryUser | null>;
+  createUser(user: CreateDirectoryUser): Promise<DirectoryUser>;
 }

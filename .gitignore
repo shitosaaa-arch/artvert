@@ -37,6 +37,7 @@ yarn-error.log*
 # Local authentication directory; users are created interactively and never committed.
 /data/auth/users.json
 
+
 # vercel
 .vercel
 

@@ -2,7 +2,7 @@ import { compare } from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-import { jsonUserDirectory } from "@/lib/auth/json-user-directory";
+import { getUserDirectory } from "@/lib/auth/user-directory-factory";
 
 const rememberedSessionMaxAge = 60 * 60 * 24 * 30;
 const standardSessionMaxAge = 60 * 60 * 8;
@@ -31,7 +31,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const user = await jsonUserDirectory.findByEmail(email);
+        const user = await getUserDirectory().findByEmail(email);
         if (!user || !(await compare(password, user.passwordHash))) {
           return null;
         }

@@ -29,6 +29,14 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## PostgreSQL and Prisma
+
+Sprint 3 uses PostgreSQL through Prisma ORM `6.19.2` and `@prisma/client` `6.19.2`. Use a supported external provider such as Neon or Prisma Postgres; Vercel's legacy Postgres product is not assumed.
+
+Copy `.env.example`, use `AUTH_USER_DIRECTORY=json` only for local development, and set `AUTH_USER_DIRECTORY=prisma`, `DATABASE_URL`, and `DIRECT_URL` in production. Prisma mode fails closed when its database configuration is missing or unavailable.
+
+Run `npm run db:validate`, `npm run db:generate`, and `npm run db:migrate` locally. Commit generated migration files, then run `npm run db:deploy` in production. Do not use `db push` for production migrations.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
