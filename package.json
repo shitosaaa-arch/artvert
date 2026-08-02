@@ -33,6 +33,7 @@
     "analytics:rollup": "tsx scripts/rollup-analytics.ts",
     "test:production-readiness": "node scripts/production-readiness.mjs",
     "test:load": "node scripts/load-test.mjs",
+    "knowledge:validate-import": "tsx scripts/test-knowledge-import.ts",
     "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {

@@ -36,6 +36,8 @@ jobs:
       - run: "grep -Fx 'Import summary: imported=0, skipped=4, failed=0' second-import.log"
       - run: npx tsx scripts/prisma-linux-verification.ts verify
       - run: npm run test:knowledge
+      - name: Knowledge source authority, licensing manifest, and staged-import validation
+        run: npm run knowledge:validate-import
       - run: npm run test:diseases
       - name: Pest integration, authorization, relationship, lifecycle, sync, and cleanup tests
         run: npm run test:pests

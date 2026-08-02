@@ -640,9 +640,112 @@ model KnowledgeEntity {
   pest             Pest?
   deficiency       Deficiency?
   product          Product?
+  provenance       KnowledgeProvenance[]
 
   @@unique([type, slug])
   @@index([publicationState, type])
+}
+
+enum KnowledgeSourceStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+enum KnowledgeReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+enum KnowledgeImportStatus {
+  DRAFT
+  VALIDATED
+  APPROVED
+  IMPORTED
+  ROLLED_BACK
+  FAILED
+}
+
+model KnowledgeSource {
+  id                       String                @id
+  publisher                String
+  url                      String
+  contentType              String
+  license                  String
+  commercialUseAllowed     Boolean
+  attributionRequirements  String?
+  modificationAllowed      Boolean
+  redistributionAllowed    Boolean
+  reviewDate               DateTime
+  status                   KnowledgeSourceStatus @default(PENDING)
+  reviewerNotes            String?
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
+  provenance               KnowledgeProvenance[]
+
+  @@index([status])
+}
+
+model KnowledgeImportBatch {
+  id          String                @id
+  version     String
+  status      KnowledgeImportStatus @default(DRAFT)
+  report      Json?
+  approvedBy  String?
+  approvedAt  DateTime?
+  importedAt  DateTime?
+  rolledBackAt DateTime?
+  createdAt   DateTime              @default(now())
+  items       KnowledgeImportItem[]
+
+  @@unique([version])
+  @@index([status])
+}
+
+model KnowledgeImportItem {
+  id          String                @id @default(cuid())
+  batchId     String
+  entityType  KnowledgeEntityType
+  entityId    String
+  payload     Json
+  status      KnowledgeImportStatus @default(DRAFT)
+  diagnostic  String?
+  batch       KnowledgeImportBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, entityId])
+}
+
+model KnowledgeProvenance {
+  id               String                @id @default(cuid())
+  entityId         String
+  sourceId         String
+  citation         String
+  reviewerStatus   KnowledgeReviewStatus @default(PENDING)
+  scientificReview KnowledgeReviewStatus @default(PENDING)
+  version          String
+  importBatchId    String
+  entity           KnowledgeEntity       @relation(fields: [entityId], references: [id], onDelete: Cascade)
+  source           KnowledgeSource       @relation(fields: [sourceId], references: [id], onDelete: Restrict)
+
+  @@unique([entityId, sourceId, version])
+  @@index([importBatchId])
+}
+
+model KnowledgeImageRights {
+  id               String                @id @default(cuid())
+  entityId         String
+  imageSource      String
+  owner            String
+  license          String
+  attributionText  String?
+  permittedUse     String
+  originalUrl      String
+  checksum         String                @unique
+  approvalStatus   KnowledgeReviewStatus @default(PENDING)
+  reviewerNotes    String?
+  createdAt        DateTime              @default(now())
+
+  @@index([entityId])
+  @@index([approvalStatus])
 }
 
 model Product {
