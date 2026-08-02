@@ -1,4 +1,259 @@
-import { NextResponse } from "next/server"; import { getServerSession } from "next-auth"; import { authOptions } from "@/lib/auth/options"; import { getPrismaClient } from "@/lib/db/prisma"; import { UserRole } from "@/lib/auth/roles"; import { canHardDeleteProduct,canManageProduct,canPublishProduct,canViewProducts } from "@/lib/products/product-permissions"; import { ProductRepository } from "@/lib/products/product-repository"; import { normalizeProductValue } from "@/schemas/product";
-async function actor(){const s=await getServerSession(authOptions);if(!s?.user?.id||!s.user.role)throw new Error("Unauthorized");return{id:s.user.id,role:s.user.role as UserRole};}export async function GET(_:Request,{params}:{params:Promise<{id:string}>}){try{const a=await actor();if(!canViewProducts(a.role))return NextResponse.json({error:"Forbidden"},{status:403});const p=await new ProductRepository().find((await params).id);return p?NextResponse.json(p):NextResponse.json({error:"Not found"},{status:404});}catch{return NextResponse.json({error:"Access denied"},{status:401});}}
-export async function PATCH(req:Request,{params}:{params:Promise<{id:string}>}){try{const a=await actor(),id=(await params).id,db=getPrismaClient(),p=await db.product.findUnique({where:{id},include:{entity:true}});if(!p)return NextResponse.json({error:"Not found"},{status:404});if(!canManageProduct(a.role,a.id,{createdByUserId:p.createdByUserId,publicationState:p.entity.publicationState}))return NextResponse.json({error:"Forbidden"},{status:403});const b=await req.json();if(b.publicationState&&b.publicationState!==p.entity.publicationState&&!canPublishProduct(a.role))return NextResponse.json({error:"Forbidden"},{status:403});const updated=await db.$transaction(async tx=>{await tx.knowledgeEntity.update({where:{id},data:{slug:b.slug,name:b.nameEn??p.nameEn,publicationState:b.publicationState}});if(b.aliases){await tx.productAlias.deleteMany({where:{productId:id}});await tx.productAlias.createMany({data:b.aliases.map((x:any)=>({productId:id,value:typeof x==="string"?x:x.value,locale:typeof x==="string"?null:x.locale,normalizedValue:normalizeProductValue(typeof x==="string"?x:x.value)}))});}if(b.recommendations){await tx.productRecommendation.deleteMany({where:{productId:id}});await tx.productRecommendation.createMany({data:b.recommendations.map((x:any)=>({...x,productId:id}))});}return tx.product.update({where:{id},data:{...Object.fromEntries(["category","nameAr","nameEn","shortDescription","description","composition","dosage","packageSize","benefits","crops"].filter(k=>b[k]!==undefined).map(k=>[k,b[k]])),updatedByUserId:a.id},include:{entity:true,aliases:true,images:true,recommendations:true,syncState:true}})});return NextResponse.json(updated);}catch(e){return NextResponse.json({error:e instanceof Error?e.message:"Product could not be updated"},{status:400});}}
-export async function DELETE(req:Request,{params}:{params:Promise<{id:string}>}){try{const a=await actor(),id=(await params).id,db=getPrismaClient(),hard=new URL(req.url).searchParams.get("hard")==="true",p=await db.product.findUnique({where:{id},include:{entity:true,images:true,recommendations:true}});if(!p)return NextResponse.json({error:"Not found"},{status:404});if(!hard){if(!canPublishProduct(a.role))return NextResponse.json({error:"Forbidden"},{status:403});await db.knowledgeEntity.update({where:{id},data:{publicationState:"ARCHIVED"}});return new NextResponse(null,{status:204});}if(!canHardDeleteProduct(a.role))return NextResponse.json({error:"Forbidden"},{status:403});if(p.recommendations.length)return NextResponse.json({error:"Remove recommendation relationships before permanently deleting this product.",impact:{recommendations:p.recommendations.length,images:p.images.length}},{status:409});await db.$transaction(async tx=>{for(const image of p.images.filter(i=>i.ownership==="MANAGED_BLOB"&&i.storageKey))await tx.storageCleanupJob.upsert({where:{storageKey:image.storageKey!},create:{storageKey:image.storageKey!},update:{status:"PENDING"}});await tx.product.delete({where:{id}});await tx.knowledgeEntity.delete({where:{id}});});return new NextResponse(null,{status:204});}catch{return NextResponse.json({error:"Product could not be deleted"},{status:400});}}
+import type { KnowledgePublicationState, Prisma } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+
+import { authOptions } from "@/lib/auth/options";
+import { UserRole } from "@/lib/auth/roles";
+import { getPrismaClient } from "@/lib/db/prisma";
+import {
+  canHardDeleteProduct,
+  canManageProduct,
+  canPublishProduct,
+  canViewProducts,
+} from "@/lib/products/product-permissions";
+import { ProductRepository } from "@/lib/products/product-repository";
+import { normalizeProductValue } from "@/schemas/product";
+
+type RouteContext = {
+  params: Promise<{ id: string }>;
+};
+
+type ProductAliasInput = string | { value: string; locale?: string | null };
+type ProductRecommendationInput = Omit<
+  Prisma.ProductRecommendationCreateManyInput,
+  "productId"
+>;
+
+type ProductPatch = {
+  slug?: string;
+  publicationState?: KnowledgePublicationState;
+  aliases?: ProductAliasInput[];
+  recommendations?: ProductRecommendationInput[];
+  category?: string;
+  nameAr?: string;
+  nameEn?: string;
+  shortDescription?: string;
+  description?: string;
+  composition?: string;
+  dosage?: string;
+  packageSize?: string;
+  benefits?: Prisma.InputJsonValue;
+  crops?: Prisma.InputJsonValue;
+};
+
+async function actor() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id || !session.user.role) {
+    throw new Error("Unauthorized");
+  }
+
+  return {
+    id: session.user.id,
+    role: session.user.role as UserRole,
+  };
+}
+
+function aliasRows(productId: string, aliases: ProductAliasInput[]) {
+  return aliases.map((alias) => {
+    const value = typeof alias === "string" ? alias : alias.value;
+    const locale = typeof alias === "string" ? null : (alias.locale ?? null);
+
+    return {
+      productId,
+      value,
+      locale,
+      normalizedValue: normalizeProductValue(value),
+    };
+  });
+}
+
+export async function GET(_: Request, { params }: RouteContext) {
+  try {
+    const current = await actor();
+
+    if (!canViewProducts(current.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const product = await new ProductRepository().find((await params).id);
+
+    return product
+      ? NextResponse.json(product)
+      : NextResponse.json({ error: "Not found" }, { status: 404 });
+  } catch {
+    return NextResponse.json({ error: "Access denied" }, { status: 401 });
+  }
+}
+
+export async function PATCH(request: Request, { params }: RouteContext) {
+  try {
+    const current = await actor();
+    const { id } = await params;
+    const prisma = getPrismaClient();
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { entity: true },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (
+      !canManageProduct(current.role, current.id, {
+        createdByUserId: product.createdByUserId,
+        publicationState: product.entity.publicationState,
+      })
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const body = (await request.json()) as ProductPatch;
+
+    if (
+      body.publicationState &&
+      body.publicationState !== product.entity.publicationState &&
+      !canPublishProduct(current.role)
+    ) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.knowledgeEntity.update({
+        where: { id },
+        data: {
+          slug: body.slug,
+          name: body.nameEn ?? product.nameEn,
+          publicationState: body.publicationState,
+        },
+      });
+
+      if (body.aliases) {
+        await tx.productAlias.deleteMany({ where: { productId: id } });
+        await tx.productAlias.createMany({
+          data: aliasRows(id, body.aliases),
+        });
+      }
+
+      if (body.recommendations) {
+        await tx.productRecommendation.deleteMany({ where: { productId: id } });
+        await tx.productRecommendation.createMany({
+          data: body.recommendations.map((recommendation) => ({
+            ...recommendation,
+            productId: id,
+          })),
+        });
+      }
+
+      const data: Prisma.ProductUncheckedUpdateInput = {
+        updatedByUserId: current.id,
+      };
+
+      if (body.category !== undefined) data.category = body.category;
+      if (body.nameAr !== undefined) data.nameAr = body.nameAr;
+      if (body.nameEn !== undefined) data.nameEn = body.nameEn;
+      if (body.shortDescription !== undefined) data.shortDescription = body.shortDescription;
+      if (body.description !== undefined) data.description = body.description;
+      if (body.composition !== undefined) data.composition = body.composition;
+      if (body.dosage !== undefined) data.dosage = body.dosage;
+      if (body.packageSize !== undefined) data.packageSize = body.packageSize;
+      if (body.benefits !== undefined) data.benefits = body.benefits;
+      if (body.crops !== undefined) data.crops = body.crops;
+
+      return tx.product.update({
+        where: { id },
+        data,
+        include: {
+          entity: true,
+          aliases: true,
+          images: true,
+          recommendations: true,
+          syncState: true,
+        },
+      });
+    });
+
+    return NextResponse.json(updated);
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Product could not be updated" },
+      { status: 400 },
+    );
+  }
+}
+
+export async function DELETE(request: Request, { params }: RouteContext) {
+  try {
+    const current = await actor();
+    const { id } = await params;
+    const prisma = getPrismaClient();
+    const hard = new URL(request.url).searchParams.get("hard") === "true";
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: {
+        entity: true,
+        images: true,
+        recommendations: true,
+      },
+    });
+
+    if (!product) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    if (!hard) {
+      if (!canPublishProduct(current.role)) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+
+      await prisma.knowledgeEntity.update({
+        where: { id },
+        data: { publicationState: "ARCHIVED" },
+      });
+
+      return new NextResponse(null, { status: 204 });
+    }
+
+    if (!canHardDeleteProduct(current.role)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (product.recommendations.length) {
+      return NextResponse.json(
+        {
+          error: "Remove recommendation relationships before permanently deleting this product.",
+          impact: {
+            recommendations: product.recommendations.length,
+            images: product.images.length,
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      for (const image of product.images) {
+        if (image.ownership !== "MANAGED_BLOB" || !image.storageKey) {
+          continue;
+        }
+
+        await tx.storageCleanupJob.upsert({
+          where: { storageKey: image.storageKey },
+          create: { storageKey: image.storageKey },
+          update: { status: "PENDING" },
+        });
+      }
+
+      await tx.product.delete({ where: { id } });
+      await tx.knowledgeEntity.delete({ where: { id } });
+    });
+
+    return new NextResponse(null, { status: 204 });
+  } catch {
+    return NextResponse.json(
+      { error: "Product could not be deleted" },
+      { status: 400 },
+    );
+  }
+}
