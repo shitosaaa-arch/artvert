@@ -38,7 +38,21 @@ export function DoctorAvatarAsset({ state, compact = false, className = "" }: Pr
           <path d="M177 230 Q185 238 196 230" stroke="#743f32" strokeWidth="5" fill="none" strokeLinecap="round"/>
           <path d="M139 216 Q150 218 158 214 M202 214 Q214 218 224 214" stroke="#744932" strokeWidth="4" fill="none" strokeLinecap="round"/>
           <path d="M178 238 v18" stroke="#9f6046" strokeWidth="3"/>
-          {warning && <circle cx="244" cy="116" r="18" fill="#f6c542"/><text x="244" y="123" textAnchor="middle" fontSize="24" fontWeight="900" fill="#172017">!</text>}
+          {warning && (
+            <>
+              <circle cx="244" cy="116" r="18" fill="#f6c542" />
+              <text
+                x="244"
+                y="123"
+                textAnchor="middle"
+                fontSize="24"
+                fontWeight="900"
+                fill="#172017"
+              >
+                !
+              </text>
+            </>
+          )}
         </g>
       </svg>
     </div>
