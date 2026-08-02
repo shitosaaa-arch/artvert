@@ -40,6 +40,7 @@ yarn-error.log*
 !/data/generated/knowledge/.gitkeep
 
 
+
 # vercel
 .vercel
 
