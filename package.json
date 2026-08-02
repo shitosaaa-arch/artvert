@@ -25,6 +25,7 @@
     "test:products": "tsx scripts/test-product-management.ts",
     "test:doctor": "tsx scripts/test-doctor-engine.ts",
     "test:doctor-ui": "tsx scripts/test-doctor-ui.ts",
+    "test:vision": "tsx scripts/test-vision.ts",
     "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {
@@ -36,7 +37,8 @@
     "next": "16.2.12",
     "next-auth": "4.24.15",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "sharp": "0.34.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

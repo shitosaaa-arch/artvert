@@ -47,6 +47,8 @@ jobs:
         run: npm run test:doctor
       - name: Doctor ArtVert UI status, safety, accessibility, and import-boundary tests
         run: npm run test:doctor-ui
+      - name: Secure Vision upload, quality, storage, privacy, and import-boundary tests
+        run: npm run test:vision
       - name: Build
         run: npm run build
       - name: Lint

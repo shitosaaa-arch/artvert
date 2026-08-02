@@ -11,6 +11,7 @@ export type DoctorAnswer = string | string[];
 
 export type DoctorChatRequest = {
   sessionId?: string;
+  imageRef?: string;
   message?: string;
   answers?: Record<string, DoctorAnswer>;
   context?: { plant?: string; symptoms?: string[]; location?: string; timing?: string; severity?: string };

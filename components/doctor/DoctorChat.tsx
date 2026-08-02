@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DoctorCharacter } from "@/components/doctor/DoctorCharacter";
+import { DoctorImageAttachment } from "@/components/doctor/DoctorImageAttachment";
 import { DoctorResult } from "@/components/doctor/DoctorResult";
 import { FollowUpQuestionCard } from "@/components/doctor/FollowUpQuestionCard";
 import { sendDoctorMessage } from "@/lib/doctor/client";
@@ -38,6 +39,7 @@ export function DoctorChat() {
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   const [message, setMessage] = useState("");
   const [plant, setPlant] = useState("");
+  const [imageRef, setImageRef] = useState<string | undefined>(undefined);
   const [isRequestPending, setIsRequestPending] = useState(false);
   const [lastTurn, setLastTurn] = useState<DoctorChatRequest | undefined>(undefined);
   const requestRef = useRef<AbortController | null>(null);
@@ -86,7 +88,8 @@ export function DoctorChat() {
     const trimmed = message.trim();
     if (!trimmed || isRequestPending || isTerminal(status)) return;
     setMessage("");
-    void submitTurn({ message: trimmed, context: plant.trim() ? { plant: plant.trim() } : undefined });
+    void submitTurn({ message: trimmed, imageRef, sessionId, context: plant.trim() ? { plant: plant.trim() } : undefined });
+    setImageRef(undefined);
   }
 
   function answerQuestion(questionId: string, answer: DoctorAnswer, summary: string) {
@@ -117,6 +120,7 @@ export function DoctorChat() {
     setTranscript([]);
     setMessage("");
     setPlant("");
+    setImageRef(undefined);
     setStatus("welcome");
   }
 
@@ -137,7 +141,7 @@ export function DoctorChat() {
       {followUp && !locked && status !== "thinking" ? <div className="mt-5"><FollowUpQuestionCard key={followUp.id} question={followUp} disabled={!sessionId || isRequestPending} onSubmit={answerQuestion} /></div> : null}
       {status === "unavailable" ? <button type="button" onClick={retry} disabled={!lastTurn || isRequestPending} className="mt-5 rounded-xl border border-lime-300/60 px-5 py-3 font-black text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:opacity-50">إعادة المحاولة</button> : null}
       {locked ? <button type="button" onClick={startNewSession} className="mt-5 rounded-xl bg-lime-300 px-5 py-3 font-black text-[#152015] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100">بدء جلسة جديدة</button> : null}
-      {!locked ? <form onSubmit={submitInitial} className="doctor-composer sticky bottom-0 z-20 mt-6 border-t border-green-800/70 bg-[#161b17]/95 pt-5"><label className="block text-sm font-bold text-lime-100">اسم النبات <span className="font-normal text-green-50/60">(اختياري)</span><input value={plant} onChange={(event) => setPlant(event.target.value)} disabled={isRequestPending} maxLength={300} className="mt-2 w-full rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" /></label><label className="mt-4 block text-sm font-bold text-lime-100">ما المشكلة التي تراها؟<textarea value={message} onChange={(event) => setMessage(event.target.value)} disabled={isRequestPending} maxLength={2000} rows={4} className="mt-2 w-full resize-y rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" placeholder="مثال: بقع بنية على أوراق الطماطم" /></label><button type="submit" disabled={!message.trim() || isRequestPending} className="mt-4 min-h-11 max-w-full rounded-xl bg-lime-300 px-6 py-3 font-black text-[#152015] transition hover:bg-lime-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:cursor-not-allowed disabled:opacity-50">إرسال للدكتور</button></form> : null}
+      {!locked ? <form onSubmit={submitInitial} className="doctor-composer sticky bottom-0 z-20 mt-6 border-t border-green-800/70 bg-[#161b17]/95 pt-5"><label className="block text-sm font-bold text-lime-100">اسم النبات <span className="font-normal text-green-50/60">(اختياري)</span><input value={plant} onChange={(event) => setPlant(event.target.value)} disabled={isRequestPending} maxLength={300} className="mt-2 w-full rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" /></label><label className="mt-4 block text-sm font-bold text-lime-100">ما المشكلة التي تراها؟<textarea value={message} onChange={(event) => setMessage(event.target.value)} disabled={isRequestPending} maxLength={2000} rows={4} className="mt-2 w-full resize-y rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" placeholder="مثال: بقع بنية على أوراق الطماطم" /></label><DoctorImageAttachment sessionId={sessionId} disabled={isRequestPending} onReady={setImageRef} onRemove={() => setImageRef(undefined)} /><button type="submit" disabled={!message.trim() || isRequestPending} className="mt-4 min-h-11 max-w-full rounded-xl bg-lime-300 px-6 py-3 font-black text-[#152015] transition hover:bg-lime-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:cursor-not-allowed disabled:opacity-50">إرسال للدكتور</button></form> : null}
     </div>
   </section>;
 }

@@ -5,7 +5,7 @@ const maxSymptoms = 20;
 const maxAnswers = 12;
 const maxContextEntries = 12;
 
-export type DoctorChatRequest = DoctorTurn & { sessionId?: string };
+export type DoctorChatRequest = DoctorTurn & { sessionId?: string; imageRef?: string };
 
 function stringRecord(value: unknown, limit: number): Record<string, string> | undefined {
   if (value === undefined) return undefined;
@@ -18,8 +18,9 @@ function stringRecord(value: unknown, limit: number): Record<string, string> | u
 export function parseDoctorChatRequest(value: unknown): DoctorChatRequest {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Request body must be an object.");
   const body = value as Record<string, unknown>;
-  if (Object.keys(body).some((key) => !["sessionId", "message", "answers", "context"].includes(key))) throw new Error("Request contains unsupported fields.");
+  if (Object.keys(body).some((key) => !["sessionId", "message", "answers", "context", "imageRef"].includes(key))) throw new Error("Request contains unsupported fields.");
   if (body.sessionId !== undefined && (typeof body.sessionId !== "string" || body.sessionId.length > 100)) throw new Error("Session id is invalid.");
+  if (body.imageRef !== undefined && (typeof body.imageRef !== "string" || body.imageRef.length > 100 || !body.sessionId)) throw new Error("Image reference is invalid.");
   if (body.message !== undefined && (typeof body.message !== "string" || body.message.length > maxMessageLength)) throw new Error("Message is invalid or too long.");
   if (body.answers !== undefined && (!body.answers || typeof body.answers !== "object" || Array.isArray(body.answers) || Object.keys(body.answers).length > maxAnswers)) throw new Error("Answers are invalid.");
   const answers = body.answers as Record<string, unknown> | undefined;
@@ -31,6 +32,7 @@ export function parseDoctorChatRequest(value: unknown): DoctorChatRequest {
   for (const key of ["plant", "location", "timing", "severity"]) if (context?.[key] !== undefined && (typeof context[key] !== "string" || context[key].length > 300)) throw new Error("Context is invalid.");
   return {
     sessionId: body.sessionId as string | undefined,
+    imageRef: body.imageRef as string | undefined,
     message: body.message as string | undefined,
     answers: answers as Record<string, string | string[]> | undefined,
     context: context ? {
