@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type ProductListItem = {
   id: string;
@@ -19,40 +19,57 @@ type ProductListResponse = {
   items?: ProductListItem[];
 };
 
-export default function ProductManager() {
+function useProductResults() {
   const [items, setItems] = useState<ProductListItem[]>([]);
   const [error, setError] = useState("");
-
-  const load = useCallback(async (signal: AbortSignal) => {
-    try {
-      const response = await fetch("/api/admin/products", { signal });
-
-      if (!response.ok) {
-        throw new Error("Product catalog request failed.");
-      }
-
-      const data = (await response.json()) as ProductListResponse;
-
-      if (!signal.aborted) {
-        setItems(data.items ?? []);
-        setError("");
-      }
-    } catch {
-      if (!signal.aborted) {
-        setError("Could not load products.");
-      }
-    }
-  }, []);
+  const [reloadToken, setReloadToken] = useState(0);
+  const requestId = useRef(0);
 
   useEffect(() => {
     const controller = new AbortController();
+    const currentRequest = ++requestId.current;
 
-    void load(controller.signal);
+    async function fetchResults() {
+      try {
+        const response = await fetch("/api/admin/products", { signal: controller.signal });
+        const data = (await response.json()) as ProductListResponse;
+
+        if (controller.signal.aborted || currentRequest !== requestId.current) {
+          return;
+        }
+
+        if (!response.ok) {
+          setError("Could not load products.");
+          return;
+        }
+
+        setItems(data.items ?? []);
+        setError("");
+      } catch {
+        if (controller.signal.aborted || currentRequest !== requestId.current) {
+          return;
+        }
+
+        setError("Could not load products.");
+      }
+    }
+
+    void fetchResults();
 
     return () => {
       controller.abort();
     };
-  }, [load]);
+  }, [reloadToken]);
+
+  const reload = useCallback(() => {
+    setReloadToken((token) => token + 1);
+  }, []);
+
+  return { items, error, reload };
+}
+
+export default function ProductManager() {
+  const { items, error } = useProductResults();
 
   return (
     <main className="min-h-screen flex-1 p-6 text-white">

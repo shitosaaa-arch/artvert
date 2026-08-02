@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useCallback, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
 
 type DeficiencyItem = {
   id: string;
@@ -15,6 +15,12 @@ type DeficiencyItem = {
 type DeficiencyListResponse = {
   items: DeficiencyItem[];
   error?: string;
+};
+
+type DeficiencyQuery = {
+  query: string;
+  classification: string;
+  mobility: string;
 };
 
 const classifications = [
@@ -39,37 +45,77 @@ const initialForm = {
   aggravatingConditions: "",
 };
 
-export default function DeficiencyManager() {
+function useDeficiencyResults({ query, classification, mobility }: DeficiencyQuery) {
   const [items, setItems] = useState<DeficiencyItem[]>([]);
+  const [error, setError] = useState("");
+  const [reloadToken, setReloadToken] = useState(0);
+  const requestId = useRef(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const currentRequest = ++requestId.current;
+
+    async function fetchResults() {
+      try {
+        const searchParams = new URLSearchParams({
+          page: "1",
+          pageSize: "50",
+          q: query,
+          classification,
+          mobility,
+          sort: "name",
+          direction: "asc",
+        });
+        const response = await fetch(`/api/admin/deficiencies?${searchParams}`, {
+          signal: controller.signal,
+        });
+        const data = (await response.json()) as DeficiencyListResponse;
+
+        if (controller.signal.aborted || currentRequest !== requestId.current) {
+          return;
+        }
+
+        if (!response.ok) {
+          setError(data.error ?? "Could not load deficiencies.");
+          return;
+        }
+
+        setItems(data.items);
+        setError("");
+      } catch (loadError) {
+        if (controller.signal.aborted || currentRequest !== requestId.current) {
+          return;
+        }
+
+        setError(loadError instanceof Error ? loadError.message : "Could not load deficiencies.");
+      }
+    }
+
+    void fetchResults();
+
+    return () => {
+      controller.abort();
+    };
+  }, [classification, mobility, query, reloadToken]);
+
+  const reload = useCallback(() => {
+    setReloadToken((token) => token + 1);
+  }, []);
+
+  return { items, error, reload };
+}
+
+export default function DeficiencyManager() {
   const [query, setQuery] = useState("");
   const [classification, setClassification] = useState("");
   const [mobility, setMobility] = useState("");
   const [form, setForm] = useState(initialForm);
   const [message, setMessage] = useState("");
-
-  const load = useCallback(async () => {
-    const searchParams = new URLSearchParams({
-      page: "1",
-      pageSize: "50",
-      q: query,
-      classification,
-      mobility,
-      sort: "name",
-      direction: "asc",
-    });
-    const response = await fetch(`/api/admin/deficiencies?${searchParams}`);
-    const data = (await response.json()) as DeficiencyListResponse;
-
-    if (response.ok) {
-      setItems(data.items);
-    } else {
-      setMessage(data.error ?? "Could not load deficiencies.");
-    }
-  }, [classification, mobility, query]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { items, error, reload } = useDeficiencyResults({
+    query,
+    classification,
+    mobility,
+  });
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -91,7 +137,7 @@ export default function DeficiencyManager() {
     setMessage(response.ok ? "Deficiency saved." : (data.error ?? "Could not save deficiency."));
 
     if (response.ok) {
-      await load();
+      reload();
     }
   };
 
@@ -186,7 +232,7 @@ export default function DeficiencyManager() {
             </button>
           </form>
 
-          {message && <p className="mt-3">{message}</p>}
+          {(message || error) && <p className="mt-3">{message || error}</p>}
         </section>
       </div>
     </main>
