@@ -37,7 +37,7 @@ export type DoctorCandidate = {
 export type DoctorQuestion = {
   id: string;
   prompt: string;
-  answerShape: "text" | "single_choice" | "multiple_choice" | "boolean";
+  answerShape: "short_text" | "single_choice" | "multiple_choice" | "yes_no";
   options?: string[];
   why: string;
 };

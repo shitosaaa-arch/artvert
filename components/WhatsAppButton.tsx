@@ -10,7 +10,7 @@ export default function WhatsAppButton() {
 
       rel="noopener noreferrer"
 
-      className="
+      className="whatsapp-button
       fixed
       bottom-6
       left-6

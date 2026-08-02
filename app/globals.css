@@ -115,3 +115,11 @@ section{
       rgba(0,0,0,.55)
   );
 }
+
+body:has([data-doctor-ui]) .whatsapp-button {
+  display: none;
+}
+
+.doctor-composer {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}

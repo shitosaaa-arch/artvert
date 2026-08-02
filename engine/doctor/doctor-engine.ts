@@ -184,10 +184,10 @@ function scoreCandidate(entity: KnowledgeEntityEnvelope, plant: KnowledgeEntityE
 function questions(candidates: ScoredCandidate[], plant: KnowledgeEntityEnvelope | undefined, state: DoctorSessionState): DoctorQuestion[] {
   const answered = new Set(state.answeredQuestionIds);
   const next: DoctorQuestion[] = [];
-  if (!plant && !answered.has("plant")) next.push({ id: "plant", prompt: "Which plant is affected?", answerShape: "text", why: "Plant identity removes incompatible candidates." });
-  if (!state.facts.some((item) => item.key === "symptom") && !answered.has("symptom")) next.push({ id: "symptom", prompt: "What is the most visible symptom?", answerShape: "text", why: "A specific symptom most strongly separates diseases, pests, and deficiencies." });
+  if (!plant && !answered.has("plant")) next.push({ id: "plant", prompt: "Which plant is affected?", answerShape: "short_text", why: "Plant identity removes incompatible candidates." });
+  if (!state.facts.some((item) => item.key === "symptom") && !answered.has("symptom")) next.push({ id: "symptom", prompt: "What is the most visible symptom?", answerShape: "short_text", why: "A specific symptom most strongly separates diseases, pests, and deficiencies." });
   if (candidates.length > 1 && !answered.has("symptom_location")) next.push({ id: "symptom_location", prompt: "Where on the plant is the symptom most visible?", answerShape: "single_choice", options: ["leaves", "stems", "roots", "fruit", "whole plant"], why: "Location helps distinguish the leading candidates." });
-  if (candidates.length > 1 && !answered.has("timing")) next.push({ id: "timing", prompt: "When did the problem begin or worsen?", answerShape: "text", why: "Timing can distinguish seasonal, lifecycle, and nutrient-related patterns." });
+  if (candidates.length > 1 && !answered.has("timing")) next.push({ id: "timing", prompt: "When did the problem begin or worsen?", answerShape: "short_text", why: "Timing can distinguish seasonal, lifecycle, and nutrient-related patterns." });
   return next.slice(0, 1);
 }
 

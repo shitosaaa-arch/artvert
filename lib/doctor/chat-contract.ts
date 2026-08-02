@@ -33,7 +33,7 @@ export type DoctorCandidate = {
 export type DoctorQuestion = {
   id: string;
   prompt: string;
-  answerShape: "text" | "single_choice" | "multiple_choice" | "boolean";
+  answerShape: "short_text" | "single_choice" | "multiple_choice" | "yes_no";
   options?: string[];
   why: string;
 };
@@ -73,7 +73,7 @@ export function characterStateFor(status: DoctorStatus | "welcome" | "thinking",
 
 const statuses: readonly DoctorStatus[] = ["needs_information", "differential_ready", "insufficient_information", "unavailable", "session_expired", "knowledge_release_unavailable"];
 const bands: readonly ConfidenceBand[] = ["HIGH", "MODERATE", "LOW", "INSUFFICIENT"];
-const answerShapes = ["text", "single_choice", "multiple_choice", "boolean"] as const;
+const answerShapes = ["short_text", "single_choice", "multiple_choice", "yes_no"] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);

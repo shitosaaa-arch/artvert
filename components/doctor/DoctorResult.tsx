@@ -9,9 +9,9 @@ function List({ title, items, tone = "text-green-50/85" }: { title: string; item
 }
 
 function CandidateCard({ candidate, primary = false }: { candidate: DoctorCandidate; primary?: boolean }) {
-  return <article className={`rounded-2xl border p-5 ${primary ? "border-lime-300/60 bg-green-950/45" : "border-green-700/60 bg-black/15"}`}>
+  return <article className={`min-w-0 overflow-hidden rounded-2xl border p-4 sm:p-5 ${primary ? "border-lime-300/60 bg-green-950/45" : "border-green-700/60 bg-black/15"}`}>
     <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="text-lg font-black text-white"><bdi>{candidate.name}</bdi></h3><span className={`rounded-full border px-3 py-1 text-xs font-black ${confidenceStyle[candidate.confidence]}`}>{confidenceCopy[candidate.confidence]}</span></div>
-    <p className="mt-3 text-sm leading-7 text-green-50/85">{candidate.explanation}</p>
+    <p className="mt-3 break-words text-sm leading-7 text-green-50/85">{candidate.explanation}</p>
     <List title="الأدلة المتوافقة" items={candidate.matchedEvidence.map((item) => item.detail)} />
     <List title="معلومات ما زالت مطلوبة" items={candidate.missingEvidence} />
     <List title="تناقضات يجب التحقق منها" items={candidate.contradictions} tone="text-amber-100" />
@@ -25,7 +25,7 @@ function Treatment({ result }: { result: DoctorChatResponse }) {
     <List title="إجراءات فورية غير متعلقة بالمنتجات" items={treatment.immediateActions} />
     <List title="خطوات المتابعة" items={treatment.monitoringSteps} />
     <List title="إرشادات العلاج" items={treatment.treatmentGuidance} />
-    {treatment.products.length > 0 ? <section><h3 className="text-base font-black text-lime-200">توصيات منتجات ArtVert</h3><div className="mt-3 grid gap-3 sm:grid-cols-2">{treatment.products.map((product) => <article key={product.productId} className="rounded-2xl border border-green-600/60 bg-green-900/20 p-4"><h4 className="font-black text-white"><bdi>{product.name}</bdi></h4><p className="mt-2 text-sm leading-6 text-green-50/80">{product.reason}</p>{product.compatibilityWarning ? <p role="note" className="mt-3 rounded-lg bg-amber-400/15 p-2 text-xs leading-5 text-amber-100">تنبيه توافق: {product.compatibilityWarning}</p> : null}</article>)}</div></section> : null}
+    {treatment.products.length > 0 ? <section><h3 className="text-base font-black text-lime-200">توصيات منتجات ArtVert</h3><div className="mt-3 grid gap-3 sm:grid-cols-2">{treatment.products.map((product) => <article key={product.productId} className="min-w-0 overflow-hidden rounded-2xl border border-green-600/60 bg-green-900/20 p-4"><h4 className="break-words font-black text-white"><bdi>{product.name}</bdi></h4><p className="mt-2 break-words text-sm leading-6 text-green-50/80">{product.reason}</p>{product.compatibilityWarning ? <p role="note" className="mt-3 break-words rounded-lg bg-amber-400/15 p-2 text-xs leading-5 text-amber-100">تنبيه توافق: {product.compatibilityWarning}</p> : null}</article>)}</div></section> : null}
     <List title="تحذيرات وموانع الاستخدام" items={[...treatment.contraindications, ...treatment.unknownCompatibilityWarnings]} tone="text-amber-100" />
   </section>;
 }
