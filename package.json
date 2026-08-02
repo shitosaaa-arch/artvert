@@ -15,7 +15,9 @@
     "db:deploy": "node scripts/run-prisma.cjs migrate deploy",
     "db:status": "node scripts/run-prisma.cjs migrate status",
     "test:knowledge": "tsx scripts/test-knowledge-foundation.ts",
-    "plants:cleanup": "tsx scripts/process-plant-cleanup.ts"
+    "test:diseases": "tsx scripts/test-disease-management.ts",
+    "plants:cleanup": "tsx scripts/process-plant-cleanup.ts",
+    "diseases:cleanup": "tsx scripts/process-disease-cleanup.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.2",

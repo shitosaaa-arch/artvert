@@ -11,7 +11,7 @@ import { toPlantSlug } from "@/lib/plants/plant-slug";
 async function actor() { const session = await getServerSession(authOptions); if (!session?.user?.id || !session.user.role) throw new Error("UNAUTHORIZED"); return { id: session.user.id, role: session.user.role as UserRole }; }
 const include = { entity: true, aliases: true, images: { orderBy: { sortOrder: "asc" as const } }, syncState: true };
 
-export async function GET(_: Request, { params }: RouteContext<"/api/admin/plants/[id]">) {
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const current = await actor();
     if (!canViewPlants(current.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -20,7 +20,7 @@ export async function GET(_: Request, { params }: RouteContext<"/api/admin/plant
   } catch { return NextResponse.json({ error: "Access denied" }, { status: 401 }); }
 }
 
-export async function PATCH(request: Request, { params }: RouteContext<"/api/admin/plants/[id]">) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const current = await actor(); const prisma = getPrismaClient(); const id = (await params).id;
     const existing = await prisma.plant.findUnique({ where: { id }, include: { entity: true } });
@@ -43,7 +43,7 @@ export async function PATCH(request: Request, { params }: RouteContext<"/api/adm
   } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Plant could not be updated" }, { status: 400 }); }
 }
 
-export async function DELETE(request: Request, { params }: RouteContext<"/api/admin/plants/[id]">) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const current = await actor(); const prisma = getPrismaClient(); const id = (await params).id; const hard = new URL(request.url).searchParams.get("hard") === "true";
     const plant = await prisma.plant.findUnique({ where: { id }, include: { entity: true, images: { select: { storageKey: true } } } });

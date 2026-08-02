@@ -6,7 +6,7 @@ import { getPrismaClient } from "@/lib/db/prisma";
 import { canManagePlant } from "@/lib/plants/plant-permissions";
 import { PlantService } from "@/lib/plants/plant-service";
 
-export async function POST(_: Request, { params }: RouteContext<"/api/admin/plants/[id]/sync">) {
+export async function POST(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions); if (!session?.user?.id || !session.user.role) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const id = (await params).id; const plant = await getPrismaClient().plant.findUnique({ where: { id }, include: { entity: true } });
