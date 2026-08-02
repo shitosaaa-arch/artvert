@@ -24,6 +24,7 @@
     "products:import": "tsx scripts/import-legacy-products.ts",
     "test:products": "tsx scripts/test-product-management.ts",
     "test:doctor": "tsx scripts/test-doctor-engine.ts",
+    "test:doctor-ui": "tsx scripts/test-doctor-ui.ts",
     "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {
