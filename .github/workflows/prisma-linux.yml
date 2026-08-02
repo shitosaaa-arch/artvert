@@ -37,6 +37,8 @@ jobs:
       - run: npm run test:diseases
       - name: Pest integration, authorization, relationship, lifecycle, sync, and cleanup tests
         run: npm run test:pests
+      - name: Deficiency integration, authorization, context, sync, and cleanup tests
+        run: npm run test:deficiencies
       - name: Build
         run: npm run build
       - name: Lint

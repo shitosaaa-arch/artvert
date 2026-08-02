@@ -28,6 +28,8 @@ model User {
   updatedDiseases Disease[] @relation("DiseaseUpdatedBy")
   createdPests    Pest[]    @relation("PestCreatedBy")
   updatedPests    Pest[]    @relation("PestUpdatedBy")
+  createdDeficiencies Deficiency[] @relation("DeficiencyCreatedBy")
+  updatedDeficiencies Deficiency[] @relation("DeficiencyUpdatedBy")
 
   @@index([active])
   @@index([role])
@@ -110,6 +112,30 @@ enum PestEconomicImpact {
   SEVERE
 }
 
+enum NutrientClassification {
+  MACRONUTRIENT
+  SECONDARY_NUTRIENT
+  MICRONUTRIENT
+  BENEFICIAL_ELEMENT
+  OTHER
+}
+enum NutrientMobility {
+  MOBILE
+  IMMOBILE
+  CONTEXT_DEPENDENT
+  UNKNOWN
+}
+enum PlantDeficiencySusceptibility {
+ LOW
+ MEDIUM
+ HIGH
+}
+enum PlantDeficiencyRelationshipType {
+ COMMON
+ SUSCEPTIBLE
+ OCCASIONAL
+}
+
 enum PlantPestSusceptibility {
   LOW
   MEDIUM
@@ -151,6 +177,7 @@ model Plant {
   syncState       PlantKnowledgeSync?
   diseases        PlantDisease[]
   pests           PlantPest[]
+  deficiencies    PlantDeficiency[]
 
   @@index([category])
   @@index([createdByUserId])
@@ -271,6 +298,119 @@ model PestKnowledgeSync {
   pest           Pest                @relation(fields: [pestId], references: [id], onDelete: Cascade)
 
   @@index([status])
+}
+
+model Deficiency {
+  id String @id
+  nutrientCode String @unique
+  nutrientNameAr String
+  nutrientNameEn String
+  scientificName String?
+  classification NutrientClassification
+  mobility NutrientMobility @default(UNKNOWN)
+  description String?
+  soilContext Json?
+  phContext Json?
+  createdByUserId String
+  updatedByUserId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  entity KnowledgeEntity @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy User @relation("DeficiencyCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("DeficiencyUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases DeficiencyAlias[]
+  symptoms DeficiencySymptom[]
+  visualPatterns DeficiencyVisualPattern[]
+  causes DeficiencyCause[]
+  aggravatingConditions DeficiencyAggravatingCondition[]
+  plants PlantDeficiency[]
+  images DeficiencyImage[]
+  syncState DeficiencyKnowledgeSync?
+  @@index([classification])
+  @@index([mobility])
+  @@index([createdByUserId])
+}
+model DeficiencyAlias {
+ id String @id @default(cuid())
+ deficiencyId String
+ value String
+ normalizedValue String
+ locale String?
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@unique([deficiencyId,normalizedValue])
+ @@index([normalizedValue])
+}
+model DeficiencySymptom {
+ id String @id @default(cuid())
+ deficiencyId String
+ value String
+ normalizedValue String
+ locations String[]
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@unique([deficiencyId,normalizedValue])
+ @@index([normalizedValue])
+}
+model DeficiencyVisualPattern {
+ id String @id @default(cuid())
+ deficiencyId String
+ value String
+ normalizedValue String
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@unique([deficiencyId,normalizedValue])
+}
+model DeficiencyCause {
+ id String @id @default(cuid())
+ deficiencyId String
+ value String
+ normalizedValue String
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@unique([deficiencyId,normalizedValue])
+}
+model DeficiencyAggravatingCondition {
+ id String @id @default(cuid())
+ deficiencyId String
+ value String
+ normalizedValue String
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@unique([deficiencyId,normalizedValue])
+}
+model PlantDeficiency {
+ plantId String
+ deficiencyId String
+ susceptibility PlantDeficiencySusceptibility
+ relationshipType PlantDeficiencyRelationshipType
+ notes String?
+ soilContext Json?
+ phContext Json?
+ plant Plant @relation(fields:[plantId],references:[id],onDelete:Cascade)
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@id([plantId,deficiencyId])
+ @@index([deficiencyId])
+}
+model DeficiencyImage {
+ id String @id @default(cuid())
+ deficiencyId String
+ storageKey String @unique
+ url String
+ alt String
+ contentType String
+ fileSize Int
+ width Int
+ height Int
+ checksum String
+ sortOrder Int
+ createdAt DateTime @default(now())
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@unique([deficiencyId,sortOrder])
+}
+model DeficiencyKnowledgeSync {
+ deficiencyId String @id
+ status KnowledgeSyncStatus @default(PENDING)
+ lastSyncedAt DateTime?
+ diagnosticCode String?
+ updatedAt DateTime @updatedAt
+ deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
+ @@index([status])
 }
 
 model Disease {
@@ -467,6 +607,7 @@ model KnowledgeEntity {
   plant            Plant?
   disease          Disease?
   pest             Pest?
+  deficiency       Deficiency?
 
   @@unique([type, slug])
   @@index([publicationState, type])

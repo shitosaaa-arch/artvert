@@ -19,7 +19,9 @@
     "plants:cleanup": "tsx scripts/process-plant-cleanup.ts",
     "diseases:cleanup": "tsx scripts/process-disease-cleanup.ts",
     "test:pests": "tsx scripts/test-pest-management.ts",
-    "pests:cleanup": "tsx scripts/process-pest-cleanup.ts"
+    "pests:cleanup": "tsx scripts/process-pest-cleanup.ts",
+    "test:deficiencies": "tsx scripts/test-deficiency-management.ts",
+    "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.2",
