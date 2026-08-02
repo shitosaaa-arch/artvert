@@ -7,7 +7,7 @@ import SignOutButton from "@/components/auth/SignOutButton";
 const items = [
   { label: "لوحة التحكم", href: "/admin", icon: BarChart3 },
   { label: "النباتات", href: "/admin/plants", icon: Sprout },
-  { label: "الأمراض", icon: FlaskConical }, { label: "الآفات", icon: Bug }, { label: "نقص العناصر", icon: Leaf }, { label: "المنتجات", icon: Package }, { label: "مولد المعرفة", icon: BookOpen }, { label: "الإعدادات", icon: Settings },
+  { label: "الأمراض", href: "/admin/diseases", icon: FlaskConical }, { label: "الآفات", href: "/admin/pests", icon: Bug }, { label: "نقص العناصر", icon: Leaf }, { label: "المنتجات", icon: Package }, { label: "مولد المعرفة", icon: BookOpen }, { label: "الإعدادات", icon: Settings },
 ];
 
 export default function AdminSidebar() {
