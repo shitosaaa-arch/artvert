@@ -36,6 +36,8 @@ yarn-error.log*
 
 # Local authentication directory; users are created interactively and never committed.
 /data/auth/users.json
+/data/generated/knowledge/*
+!/data/generated/knowledge/.gitkeep
 
 
 # vercel

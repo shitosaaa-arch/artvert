@@ -13,7 +13,8 @@
     "db:generate": "node scripts/run-prisma.cjs generate",
     "db:migrate": "node scripts/run-prisma.cjs migrate dev",
     "db:deploy": "node scripts/run-prisma.cjs migrate deploy",
-    "db:status": "node scripts/run-prisma.cjs migrate status"
+    "db:status": "node scripts/run-prisma.cjs migrate status",
+    "test:knowledge": "tsx scripts/test-knowledge-foundation.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.2",

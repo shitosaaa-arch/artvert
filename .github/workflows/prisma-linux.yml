@@ -29,6 +29,7 @@ jobs:
       - run: npm run auth:import-json | tee second-import.log
       - run: grep -Fx "Import summary: imported=0, skipped=4, failed=0" second-import.log
       - run: npx tsx scripts/prisma-linux-verification.ts verify
+      - run: npm run test:knowledge
       - run: npm run build
       - run: npm run lint
       - run: npx tsc --noEmit

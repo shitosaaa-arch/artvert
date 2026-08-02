@@ -37,6 +37,10 @@ Copy `.env.example`, use `AUTH_USER_DIRECTORY=json` only for local development, 
 
 Run `npm run db:validate`, `npm run db:generate`, and `npm run db:migrate` locally. Commit generated migration files, then run `npm run db:deploy` in production. Do not use `db push` for production migrations.
 
+## Knowledge releases
+
+Sprint 4 stores canonical knowledge envelopes in PostgreSQL and exports immutable, checksum-verified JSON releases. Local development uses `KNOWLEDGE_EXPORT_STORE=filesystem` under `data/generated/knowledge`; production must configure a real Blob export implementation before selecting Blob mode. The future Doctor engine consumes only the active generated JSON release through the knowledge reader, never PostgreSQL directly.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.

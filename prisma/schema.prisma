@@ -13,6 +13,27 @@ enum UserRole {
   AGRONOMIST
 }
 
+enum KnowledgeEntityType {
+  PLANT
+  DISEASE
+  PEST
+  DEFICIENCY
+  PRODUCT
+}
+
+enum KnowledgePublicationState {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum KnowledgeReleaseStatus {
+  GENERATING
+  ACTIVE
+  FAILED
+  SUPERSEDED
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -25,4 +46,45 @@ model User {
 
   @@index([active])
   @@index([role])
+}
+
+model KnowledgeEntity {
+  id               String                    @id
+  type             KnowledgeEntityType
+  slug             String
+  name             String
+  payload          Json
+  schemaVersion    Int
+  publicationState KnowledgePublicationState @default(DRAFT)
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+
+  @@unique([type, slug])
+  @@index([publicationState, type])
+}
+
+model KnowledgeRelease {
+  id               String                 @id @default(cuid())
+  version          String                 @unique
+  generation       Int                    @unique
+  status           KnowledgeReleaseStatus @default(GENERATING)
+  contentChecksum  String?
+  manifestChecksum String?                @unique
+  failureReason    String?
+  createdAt        DateTime               @default(now())
+  activatedAt      DateTime?
+  activeIn         KnowledgeGenerationLock? @relation("ActiveKnowledgeRelease")
+
+  @@index([status])
+  @@index([contentChecksum])
+}
+
+model KnowledgeGenerationLock {
+  id               String            @id
+  ownerToken       String?
+  expiresAt        DateTime?
+  latestGeneration Int               @default(0)
+  activeReleaseId  String?           @unique
+  updatedAt        DateTime          @updatedAt
+  activeRelease    KnowledgeRelease? @relation("ActiveKnowledgeRelease", fields: [activeReleaseId], references: [id])
 }
