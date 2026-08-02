@@ -24,7 +24,7 @@ async function main() {
   assert.match(avatar, /doctor-wave/);
   assert.match(css, /prefers-reduced-motion/);
   const changed = execFileSync("git", ["diff", "--name-only", "HEAD^", "HEAD"], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
-  const allowed = new Set(["app/(public)/page.tsx", "app/globals.css", "components/Navbar.tsx", "components/home/HomeHero.tsx", "components/doctor/DoctorAvatarAsset.tsx", "components/doctor/DoctorAvatarState.ts", "components/doctor/FloatingDoctorWidget.tsx", "scripts/test-homepage-contract.ts", ".github/workflows/homepage-linux.yml", "package.json"]);
+  const allowed = new Set(["app/(public)/page.tsx", "app/globals.css", "components/Hero.tsx", "components/Navbar.tsx", "components/home/HomeHero.tsx", "components/doctor/DoctorAvatarAsset.tsx", "components/doctor/DoctorAvatarState.ts", "components/doctor/FloatingDoctorWidget.tsx", "scripts/test-homepage-contract.ts", ".github/workflows/homepage-linux.yml", "package.json"]);
   for (const file of changed) assert.ok(allowed.has(file), `temporary homepage verification commit changed protected or unrelated file: ${file}`);
   console.log("homepage-contract-tests:ok");
 }

@@ -126,6 +126,13 @@ body:has(.home-hero) [data-site-navbar] {
 
 @keyframes doctor-breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.01); } }
 @keyframes doctor-wave { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-14deg); } }
+@keyframes doctor-blink { 0%, 45%, 49%, 100% { transform: scaleY(1); } 47% { transform: scaleY(.08); } }
+
+.doctor-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: doctor-blink 5.5s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }

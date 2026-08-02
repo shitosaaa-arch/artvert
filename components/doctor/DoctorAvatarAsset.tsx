@@ -8,7 +8,10 @@ type Props = { state: DoctorAvatarState; compact?: boolean; className?: string }
 export function DoctorAvatarAsset({ state, compact = false, className = "" }: Props) {
   const waving = state === "WELCOME" || state === "WAVING";
   const thinking = state === "THINKING";
+  const asking = state === "ASKING";
+  const diagnosisReady = state === "DIAGNOSIS_READY";
   const warning = state === "WARNING" || state === "UNAVAILABLE";
+  const unavailable = state === "UNAVAILABLE" || state === "SESSION_EXPIRED";
 
   return (
     <div className={`relative select-none ${compact ? "w-28" : "w-full max-w-[360px]"} ${className}`} aria-label={doctorStateLabel[state]} role="img">
@@ -34,10 +37,17 @@ export function DoctorAvatarAsset({ state, compact = false, className = "" }: Pr
           </g>
           <path d="M131 255 Q126 205 137 156 Q151 106 184 105 Q222 107 233 157 Q242 209 229 255 Q207 288 179 288 Q151 287 131 255Z" fill="#c98a60"/>
           <path d="M135 183 Q130 117 180 105 Q227 117 232 172 Q210 147 185 148 Q156 148 135 183Z" fill="#172017"/>
-          <path d="M159 197 h19 M201 197 h19" stroke="#132019" strokeWidth="7" strokeLinecap="round" className={thinking ? "motion-safe:animate-pulse" : ""}/>
-          <path d="M177 230 Q185 238 196 230" stroke="#743f32" strokeWidth="5" fill="none" strokeLinecap="round"/>
+          <g className={thinking ? "motion-safe:animate-pulse" : "doctor-blink"}>
+            <ellipse cx="168" cy="197" rx="11" ry="7" fill="#f9fcf0" />
+            <ellipse cx="211" cy="197" rx="11" ry="7" fill="#f9fcf0" />
+            <circle cx="170" cy="198" r="4" fill="#132019" />
+            <circle cx="209" cy="198" r="4" fill="#132019" />
+          </g>
+          <path d={unavailable ? "M177 237 Q186 228 196 237" : diagnosisReady ? "M174 228 Q186 244 200 228" : "M177 230 Q185 238 196 230"} stroke="#743f32" strokeWidth="5" fill="none" strokeLinecap="round"/>
           <path d="M139 216 Q150 218 158 214 M202 214 Q214 218 224 214" stroke="#744932" strokeWidth="4" fill="none" strokeLinecap="round"/>
           <path d="M178 238 v18" stroke="#9f6046" strokeWidth="3"/>
+          {asking && <path d="M97 372 Q115 357 129 369" fill="none" stroke="#b9784e" strokeWidth="20" strokeLinecap="round" />}
+          {diagnosisReady && <path d="M117 340 h27 v36 h-27z M123 349 h15 M123 357 h12" fill="#eff9dc" stroke="#315a30" strokeWidth="3" strokeLinecap="round" />}
           {warning && (
             <>
               <circle cx="244" cy="116" r="18" fill="#f6c542" />
