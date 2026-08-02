@@ -43,6 +43,8 @@ jobs:
         run: npm run test:deficiencies
       - name: Product import, authorization, catalog parity, recommendation, and sync tests
         run: npm run test:products
+      - name: Doctor API contract, session tampering/expiry, release pinning, deterministic ranking, confidence, follow-up, contradiction, product filtering, and import-boundary tests
+        run: npm run test:doctor
       - name: Build
         run: npm run build
       - name: Lint

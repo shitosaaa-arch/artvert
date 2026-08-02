@@ -23,6 +23,7 @@
     "test:deficiencies": "tsx scripts/test-deficiency-management.ts",
     "products:import": "tsx scripts/import-legacy-products.ts",
     "test:products": "tsx scripts/test-product-management.ts",
+    "test:doctor": "tsx scripts/test-doctor-engine.ts",
     "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {

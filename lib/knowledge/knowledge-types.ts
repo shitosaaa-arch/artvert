@@ -24,6 +24,13 @@ export type KnowledgeReleaseArtifacts = {
 
 export type KnowledgeSnapshot = Record<KnowledgeEntityType, KnowledgeEntityEnvelope[]>;
 
+export type KnowledgeReleaseSnapshot = {
+  releaseVersion: string;
+  manifestChecksum: string;
+  contentChecksum: string;
+  snapshot: KnowledgeSnapshot;
+};
+
 export const knowledgeFileNames: Record<KnowledgeEntityType, KnowledgeFileName> = {
   PLANT: "plants.json",
   DISEASE: "diseases.json",
