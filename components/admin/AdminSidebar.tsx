@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { BarChart3, BookOpen, Bug, FlaskConical, Leaf, Package, Settings, Sprout } from "lucide-react";
+import SignOutButton from "@/components/auth/SignOutButton";
 
 const items = [
   { label: "لوحة التحكم", href: "/admin", icon: BarChart3, active: true },
@@ -27,6 +28,7 @@ export default function AdminSidebar() {
         <div key={label} aria-disabled="true" title="متاح في Sprint لاحق" className="flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-emerald-50/45"><Icon size={18} />{label}<span className="mr-auto rounded-full bg-white/5 px-2 py-0.5 text-[10px]">قريبًا</span></div>
       ))}
     </nav>
+    <div className="mt-4 border-t border-white/10 pt-3"><SignOutButton /></div>
     <div className="mt-auto hidden rounded-2xl border border-emerald-200/10 bg-emerald-300/5 p-4 lg:block"><p className="text-sm font-bold text-emerald-200">Sprint 1</p><p className="mt-1 text-xs leading-5 text-white/45">تم تأسيس مساحة إدارة مستقلة دون تعديل تجربة الموقع العام.</p></div>
   </aside>;
 }
