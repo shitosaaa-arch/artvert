@@ -38,9 +38,9 @@ export function DoctorChat() {
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
   const [message, setMessage] = useState("");
   const [plant, setPlant] = useState("");
+  const [isRequestPending, setIsRequestPending] = useState(false);
+  const [lastTurn, setLastTurn] = useState<DoctorChatRequest | undefined>(undefined);
   const requestRef = useRef<AbortController | null>(null);
-  const requestNumber = useRef(0);
-  const lastTurn = useRef<DoctorChatRequest | undefined>(undefined);
   const newestResponseRef = useRef<HTMLDivElement>(null);
   const [newestResponseId, setNewestResponseId] = useState<string | undefined>(undefined);
 
@@ -54,47 +54,49 @@ export function DoctorChat() {
   }, []);
 
   const submitTurn = useCallback(async (turn: DoctorChatRequest) => {
-    if (requestRef.current || isTerminal(status)) return;
+    if (isRequestPending || isTerminal(status)) return;
     const controller = new AbortController();
-    const requestId = requestNumber.current + 1;
-    requestNumber.current = requestId;
     requestRef.current = controller;
-    lastTurn.current = turn;
+    setLastTurn(turn);
+    setIsRequestPending(true);
     setTranscript((current) => [...current, { id: `user-${crypto.randomUUID()}`, role: "user", text: turnText(turn) }]);
     setStatus("thinking");
     try {
       const result = await sendDoctorMessage(turn, controller.signal);
-      if (requestNumber.current !== requestId) return;
+      if (requestRef.current !== controller) return;
       if (result.sessionId) setSessionId(result.sessionId);
       setStatus(result.status);
       appendDoctor(result);
     } catch (error) {
-      if (controller.signal.aborted || requestNumber.current !== requestId) return;
+      if (controller.signal.aborted || requestRef.current !== controller) return;
       const detail = error instanceof Error ? error.message : "تعذر الاتصال بالطبيب.";
       const result: DoctorChatResponse = { sessionId: undefined, status: "unavailable", error: detail, knowledgeRelease: { version: "", manifestChecksum: "", contentChecksum: "" }, plant: { alternatives: [] }, candidates: [], followUpQuestions: [], treatment: { immediateActions: [], monitoringSteps: [], treatmentGuidance: [], products: [], contraindications: [], unknownCompatibilityWarnings: [] }, emergencyFlags: [], disclaimer: "" };
       setStatus("unavailable");
       appendDoctor(result);
     } finally {
-      if (requestNumber.current === requestId) requestRef.current = null;
+      if (requestRef.current === controller) {
+        requestRef.current = null;
+        setIsRequestPending(false);
+      }
     }
-  }, [appendDoctor, status]);
+  }, [appendDoctor, isRequestPending, status]);
 
   function submitInitial(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = message.trim();
-    if (!trimmed || requestRef.current || isTerminal(status)) return;
+    if (!trimmed || isRequestPending || isTerminal(status)) return;
     setMessage("");
     void submitTurn({ message: trimmed, context: plant.trim() ? { plant: plant.trim() } : undefined });
   }
 
   function answerQuestion(questionId: string, answer: DoctorAnswer, summary: string) {
-    if (!sessionId || requestRef.current || isTerminal(status)) return;
+    if (!sessionId || isRequestPending || isTerminal(status)) return;
     void submitTurn({ sessionId, answers: { [questionId]: answer } });
     setTranscript((current) => current.map((item) => item.id.startsWith("user-") && item.text === turnText({ answers: { [questionId]: answer } }) ? { ...item, text: `إجابة المتابعة: ${summary}` } : item));
   }
 
   function selectPlant(name: string) {
-    if (requestRef.current) return;
+    if (isRequestPending) return;
     setSessionId(undefined);
     setStatus("welcome");
     setPlant(name);
@@ -102,14 +104,15 @@ export function DoctorChat() {
   }
 
   function retry() {
-    if (!lastTurn.current || requestRef.current || isTerminal(status)) return;
-    void submitTurn(lastTurn.current);
+    if (!lastTurn || isRequestPending || isTerminal(status)) return;
+    void submitTurn(lastTurn);
   }
 
   function startNewSession() {
-    requestNumber.current += 1;
     requestRef.current?.abort();
     requestRef.current = null;
+    setIsRequestPending(false);
+    setLastTurn(undefined);
     setSessionId(undefined);
     setTranscript([]);
     setMessage("");
@@ -128,13 +131,13 @@ export function DoctorChat() {
       <header className="border-b border-green-800/70 pb-4"><h1 className="text-2xl font-black text-lime-300 sm:text-3xl">اسأل دكتور ArtVert</h1><p className="mt-2 text-sm leading-7 text-green-50/75">إرشاد زراعي مبني على المعلومات التي تشاركها.</p></header>
       <p aria-live="polite" role="status" className="mt-4 rounded-xl bg-green-900/25 px-4 py-3 text-sm leading-6 text-green-50/90">{statusCopy[status]}</p>
       <div className="mt-5 space-y-4" aria-label="سجل المحادثة">
-        {transcript.map((item) => item.role === "user" ? <article key={item.id} className="mr-auto max-w-[88%] break-words rounded-2xl rounded-tr-sm bg-lime-300 px-4 py-3 text-sm font-bold leading-7 text-[#152015]">{item.text}</article> : <div key={item.id} ref={item.id === newestResponseId ? newestResponseRef : undefined} tabIndex={-1} className="min-w-0 overflow-hidden rounded-2xl border border-green-700/60 bg-[#1b2820] p-4 outline-none focus-visible:ring-2 focus-visible:ring-lime-200 sm:p-5"><DoctorResult result={item.result!} />{item.result?.plant.alternatives.length ? <section className="mt-5"><h2 className="font-black text-lime-200">هل تقصد أحد هذه النباتات؟</h2><div className="mt-3 flex flex-wrap gap-2">{item.result.plant.alternatives.map((alternative) => <button type="button" key={alternative.id} onClick={() => selectPlant(alternative.name)} disabled={Boolean(requestRef.current)} className="min-h-11 max-w-full break-words rounded-xl border border-lime-300/60 px-4 py-2 text-sm font-bold text-lime-100 transition hover:bg-lime-300 hover:text-[#152015] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:opacity-50"><bdi>{alternative.name}</bdi></button>)}</div></section> : null}</div>)}
+        {transcript.map((item) => item.role === "user" ? <article key={item.id} className="mr-auto max-w-[88%] break-words rounded-2xl rounded-tr-sm bg-lime-300 px-4 py-3 text-sm font-bold leading-7 text-[#152015]">{item.text}</article> : <div key={item.id} ref={item.id === newestResponseId ? newestResponseRef : undefined} tabIndex={-1} className="min-w-0 overflow-hidden rounded-2xl border border-green-700/60 bg-[#1b2820] p-4 outline-none focus-visible:ring-2 focus-visible:ring-lime-200 sm:p-5"><DoctorResult result={item.result!} />{item.result?.plant.alternatives.length ? <section className="mt-5"><h2 className="font-black text-lime-200">هل تقصد أحد هذه النباتات؟</h2><div className="mt-3 flex flex-wrap gap-2">{item.result.plant.alternatives.map((alternative) => <button type="button" key={alternative.id} onClick={() => selectPlant(alternative.name)} disabled={isRequestPending} className="min-h-11 max-w-full break-words rounded-xl border border-lime-300/60 px-4 py-2 text-sm font-bold text-lime-100 transition hover:bg-lime-300 hover:text-[#152015] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:opacity-50"><bdi>{alternative.name}</bdi></button>)}</div></section> : null}</div>)}
         {status === "thinking" ? <div className="rounded-2xl border border-green-700/50 bg-green-900/15 p-4 text-sm text-green-50/80 motion-safe:animate-pulse">جارٍ تجهيز الرد…</div> : null}
       </div>
-      {followUp && !locked && status !== "thinking" ? <div className="mt-5"><FollowUpQuestionCard key={followUp.id} question={followUp} disabled={!sessionId || Boolean(requestRef.current)} onSubmit={answerQuestion} /></div> : null}
-      {status === "unavailable" ? <button type="button" onClick={retry} disabled={!lastTurn.current || Boolean(requestRef.current)} className="mt-5 rounded-xl border border-lime-300/60 px-5 py-3 font-black text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:opacity-50">إعادة المحاولة</button> : null}
+      {followUp && !locked && status !== "thinking" ? <div className="mt-5"><FollowUpQuestionCard key={followUp.id} question={followUp} disabled={!sessionId || isRequestPending} onSubmit={answerQuestion} /></div> : null}
+      {status === "unavailable" ? <button type="button" onClick={retry} disabled={!lastTurn || isRequestPending} className="mt-5 rounded-xl border border-lime-300/60 px-5 py-3 font-black text-lime-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:opacity-50">إعادة المحاولة</button> : null}
       {locked ? <button type="button" onClick={startNewSession} className="mt-5 rounded-xl bg-lime-300 px-5 py-3 font-black text-[#152015] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100">بدء جلسة جديدة</button> : null}
-      {!locked ? <form onSubmit={submitInitial} className="doctor-composer sticky bottom-0 z-20 mt-6 border-t border-green-800/70 bg-[#161b17]/95 pt-5"><label className="block text-sm font-bold text-lime-100">اسم النبات <span className="font-normal text-green-50/60">(اختياري)</span><input value={plant} onChange={(event) => setPlant(event.target.value)} disabled={Boolean(requestRef.current)} maxLength={300} className="mt-2 w-full rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" /></label><label className="mt-4 block text-sm font-bold text-lime-100">ما المشكلة التي تراها؟<textarea value={message} onChange={(event) => setMessage(event.target.value)} disabled={Boolean(requestRef.current)} maxLength={2000} rows={4} className="mt-2 w-full resize-y rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" placeholder="مثال: بقع بنية على أوراق الطماطم" /></label><button type="submit" disabled={!message.trim() || Boolean(requestRef.current)} className="mt-4 min-h-11 max-w-full rounded-xl bg-lime-300 px-6 py-3 font-black text-[#152015] transition hover:bg-lime-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:cursor-not-allowed disabled:opacity-50">إرسال للدكتور</button></form> : null}
+      {!locked ? <form onSubmit={submitInitial} className="doctor-composer sticky bottom-0 z-20 mt-6 border-t border-green-800/70 bg-[#161b17]/95 pt-5"><label className="block text-sm font-bold text-lime-100">اسم النبات <span className="font-normal text-green-50/60">(اختياري)</span><input value={plant} onChange={(event) => setPlant(event.target.value)} disabled={isRequestPending} maxLength={300} className="mt-2 w-full rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" /></label><label className="mt-4 block text-sm font-bold text-lime-100">ما المشكلة التي تراها؟<textarea value={message} onChange={(event) => setMessage(event.target.value)} disabled={isRequestPending} maxLength={2000} rows={4} className="mt-2 w-full resize-y rounded-xl border border-green-500/35 bg-black/20 px-4 py-3 text-white outline-none focus:border-lime-300 focus:ring-2 focus:ring-lime-300/50 disabled:opacity-60" placeholder="مثال: بقع بنية على أوراق الطماطم" /></label><button type="submit" disabled={!message.trim() || isRequestPending} className="mt-4 min-h-11 max-w-full rounded-xl bg-lime-300 px-6 py-3 font-black text-[#152015] transition hover:bg-lime-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime-100 disabled:cursor-not-allowed disabled:opacity-50">إرسال للدكتور</button></form> : null}
     </div>
   </section>;
 }

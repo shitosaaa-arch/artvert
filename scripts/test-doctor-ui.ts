@@ -44,7 +44,8 @@ async function main() {
   assert.match(question, /min-h-11/);
   for (const status of ["needs_information", "differential_ready", "insufficient_information", "unavailable", "session_expired", "knowledge_release_unavailable"]) assert.ok(chat.includes(status), `UI must handle ${status}.`);
   assert.match(chat, /AbortController/);
-  assert.match(chat, /requestNumber/);
+  assert.match(chat, /isRequestPending/);
+  assert.doesNotMatch(chat, /lastTurn\.current|Boolean\(requestRef\.current\)/);
   assert.match(chat, /aria-live/);
   assert.match(chat, /lg:grid-cols/);
   assert.match(chat, /data-doctor-ui/);
