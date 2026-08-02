@@ -120,9 +120,6 @@ body:has([data-doctor-ui]) .whatsapp-button {
   display: none;
 }
 
-body:has(.home-hero) [data-site-navbar] {
-  display: none;
-}
 
 @keyframes doctor-breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.01); } }
 @keyframes doctor-wave { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(-14deg); } }
