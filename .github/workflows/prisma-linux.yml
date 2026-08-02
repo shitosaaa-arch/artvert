@@ -53,6 +53,10 @@ jobs:
         run: npm run test:customers
       - name: Customer verification/reset/session security, consent/privacy, saved diagnosis/plant/favorite, export/deletion job, retention, admin boundary, analytics, rate-limit, and audit integration tests
         run: npm run test:customers:integration
+      - name: Production security headers, SEO, migration, regression, and readiness checks
+        run: npm run test:production-readiness
+      - name: 100, 500, and 1000 concurrent-user load fixture
+        run: npm run test:load
       - name: Build
         run: npm run build
       - name: Lint

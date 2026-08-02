@@ -7,9 +7,13 @@ import { getVisionAdapter } from "@/lib/doctor/vision/vision-adapter";
 import { getTemporaryVisionImageStore } from "@/lib/doctor/vision/image-store";
 import { createKnowledgeExportStore } from "@/lib/knowledge/export/knowledge-export-store-factory";
 import { parseDoctorChatRequest } from "@/schemas/doctor";
+import { enforceRateLimit } from "@/lib/customers/rate-limit";
+import { requestIpHash } from "@/lib/customers/security";
+import { reportError, requestId } from "@/lib/platform/observability";
 
 export async function POST(request: Request) {
   try {
+    enforceRateLimit("doctor-chat", requestIpHash(request), 30, 60 * 1000);
     const input = parseDoctorChatRequest(await request.json());
     const sessions = getDoctorSessionStore();
     const existing = input.sessionId ? await sessions.get(input.sessionId) : null;
@@ -52,6 +56,7 @@ export async function POST(request: Request) {
       image,
     });
   } catch (error) {
+    reportError(error, { requestId: requestId(request.headers), route: "doctor-chat" });
     const message = error instanceof Error ? error.message : "Doctor chat is unavailable.";
     return NextResponse.json({ status: "unavailable", error: message, retryable: true }, { status: 503 });
   }

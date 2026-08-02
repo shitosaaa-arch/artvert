@@ -3,11 +3,16 @@ import { NextResponse } from "next/server";
 import { getDoctorSessionStore } from "@/lib/doctor/session-store";
 import { processDoctorImage } from "@/lib/doctor/vision/image-processor";
 import { getTemporaryVisionImageStore } from "@/lib/doctor/vision/image-store";
+import { enforceRateLimit } from "@/lib/customers/rate-limit";
+import { requestIpHash } from "@/lib/customers/security";
+import { flags } from "@/lib/platform/flags";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
+    if (!flags.vision()) return NextResponse.json({ status: "vision_disabled" }, { status: 503 });
+    enforceRateLimit("doctor-image", requestIpHash(request), 10, 60 * 1000);
     const form = await request.formData();
     const sessionId = form.get("sessionId");
     const image = form.get("image");

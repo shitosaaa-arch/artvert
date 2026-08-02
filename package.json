@@ -31,6 +31,8 @@
     "customers:jobs": "tsx scripts/process-customer-jobs.ts",
     "customers:cleanup": "tsx scripts/process-customer-retention.ts",
     "analytics:rollup": "tsx scripts/rollup-analytics.ts",
+    "test:production-readiness": "node scripts/production-readiness.mjs",
+    "test:load": "node scripts/load-test.mjs",
     "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
   },
   "dependencies": {

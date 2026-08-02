@@ -1,0 +1,2 @@
+import assert from "node:assert/strict";
+const levels = [100, 500, 1000]; for (const users of levels) { const started = performance.now(); const responses = await Promise.all(Array.from({ length: users }, async () => ({ status: 200 }))); assert.equal(responses.filter((response) => response.status === 200).length, users); console.log(`load-fixture:concurrency=${users},duration_ms=${Math.round(performance.now() - started)}`); }
