@@ -24,7 +24,7 @@ export default function Home() {
       )
       .slice(0,3)
 
-  ].filter(Boolean);
+  ].filter((product): product is (typeof products)[number] => Boolean(product));
 
 
 
@@ -487,7 +487,7 @@ text-green-400
           ">
 
 
-            {featuredProducts.map((product:any)=>(
+            {featuredProducts.map((product)=>(
 
 
               <Link

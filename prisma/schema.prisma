@@ -22,6 +22,8 @@ model User {
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  createdPlants Plant[] @relation("PlantCreatedBy")
+  updatedPlants Plant[] @relation("PlantUpdatedBy")
 
   @@index([active])
   @@index([role])
@@ -48,18 +50,92 @@ enum KnowledgeReleaseStatus {
   SUPERSEDED
 }
 
-model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         UserRole @default(AGRONOMIST)
-  active       Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+enum PlantCategory {
+  CROP
+  HOME_PLANT
+  ORNAMENTAL
+}
 
-  @@index([active])
-  @@index([role])
+enum KnowledgeSyncStatus {
+  PENDING
+  SYNCED
+  FAILED
+}
+
+enum StorageCleanupStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Plant {
+  id              String        @id
+  category        PlantCategory
+  scientificName  String?
+  description     String?
+  createdByUserId String
+  updatedByUserId String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  entity          KnowledgeEntity @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy       User          @relation("PlantCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy       User?         @relation("PlantUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases         PlantAlias[]
+  images          PlantImage[]
+  syncState       PlantKnowledgeSync?
+
+  @@index([category])
+  @@index([createdByUserId])
+}
+
+model PlantAlias {
+  id              String @id @default(cuid())
+  plantId         String
+  value           String
+  normalizedValue String
+  locale          String?
+  plant           Plant  @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  @@unique([plantId, normalizedValue])
+  @@index([normalizedValue])
+}
+
+model PlantImage {
+  id          String @id @default(cuid())
+  plantId     String
+  storageKey  String @unique
+  url         String
+  alt         String
+  contentType String
+  fileSize    Int
+  width       Int
+  height      Int
+  checksum    String
+  sortOrder   Int
+  createdAt   DateTime @default(now())
+  plant       Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  @@unique([plantId, sortOrder])
+}
+
+model PlantKnowledgeSync {
+  plantId        String @id
+  status         KnowledgeSyncStatus @default(PENDING)
+  lastSyncedAt   DateTime?
+  diagnosticCode String?
+  updatedAt      DateTime @updatedAt
+  plant          Plant @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  @@index([status])
+}
+
+model StorageCleanupJob {
+  id          String @id @default(cuid())
+  storageKey  String @unique
+  status      StorageCleanupStatus @default(PENDING)
+  retryCount  Int @default(0)
+  diagnosticCode String?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime @updatedAt
+  @@index([status])
 }
 
 model KnowledgeEntity {
@@ -72,6 +148,7 @@ model KnowledgeEntity {
   publicationState KnowledgePublicationState @default(DRAFT)
   createdAt        DateTime                  @default(now())
   updatedAt        DateTime                  @updatedAt
+  plant            Plant?
 
   @@unique([type, slug])
   @@index([publicationState, type])

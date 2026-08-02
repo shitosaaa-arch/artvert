@@ -16,7 +16,7 @@ export default async function LoginPage({
   const [session, params] = await Promise.all([getServerSession(authOptions), searchParams]);
   const callbackUrl = getSafeCallbackUrl(params.callbackUrl);
 
-  if (session?.user?.sessionExpiresAt && session.user.sessionExpiresAt > Date.now()) {
+  if (session?.user?.sessionExpiresAt) {
     redirect(callbackUrl);
   }
 
