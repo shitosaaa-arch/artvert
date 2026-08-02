@@ -1,0 +1,22 @@
+{
+  "registryId": "sprint-15b-full-target-licensed-sources",
+  "scope": {
+    "plantsAndCropsMinimum": 120,
+    "diseasesMinimum": 300,
+    "pestsMinimum": 150,
+    "nutrientDeficiencies": "supported-only",
+    "relationshipsAndDiagnosticRules": "approved-only"
+  },
+  "sources": [
+    {"sourceId": "gbif-backbone-taxonomy", "eligibleFields": ["accepted taxonomy", "scientific name", "taxon identifier"], "eligibleEntityTypes": ["PLANT", "CROP"], "approvalState": "PENDING_FIELD_LEVEL_APPROVAL", "coverageLimit": "taxonomy only"},
+    {"sourceId": "fao-agrovoc-arabic-terminology", "eligibleFields": ["controlled Arabic term", "controlled English term", "concept URI", "synonym"], "eligibleEntityTypes": ["PLANT", "CROP", "DISEASE", "PEST", "DEFICIENCY"], "approvalState": "PENDING_FIELD_LEVEL_APPROVAL", "coverageLimit": "terminology only; individual concept lookup and language review required"},
+    {"sourceId": "eppo-data-services-codes", "eligibleFields": ["EPPO code"], "eligibleEntityTypes": ["PLANT", "CROP", "DISEASE", "PEST"], "approvalState": "PENDING_LICENSE_TERM_VERIFICATION", "coverageLimit": "codes only; do not reuse Global Database narrative, relationships, treatments, or images"},
+    {"sourceId": "usda-ars-image-gallery-public-domain", "eligibleFields": ["image source URL", "image rights", "image attribution", "image provenance"], "eligibleEntityTypes": ["PLANT", "CROP", "DISEASE", "PEST", "DEFICIENCY"], "approvalState": "PENDING_FILE_LEVEL_APPROVAL", "coverageLimit": "individual public-domain file verification required"},
+    {"sourceId": "artvert-internal-products-v1", "eligibleFields": ["existing product-specific facts"], "eligibleEntityTypes": ["PRODUCT"], "approvalState": "APPROVED", "coverageLimit": "not authority for agricultural knowledge"}
+  ],
+  "unfilledCoverage": [
+    "disease claims", "pest claims", "nutrient-deficiency claims", "symptoms", "affected parts", "environmental conditions", "monitoring", "prevention", "treatment categories", "diagnostic rules", "plant-to-disease relationships", "plant-to-pest relationships", "plant-to-deficiency relationships", "Egypt/Arab-region applicability", "local regulatory and product-label claims"
+  ],
+  "importAllowed": false,
+  "publicationAllowed": false
+}

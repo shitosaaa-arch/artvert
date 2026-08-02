@@ -1,0 +1,24 @@
+{
+  "programId": "sprint-15b-complete-licensed-knowledge",
+  "releasePolicy": "ONE_FINAL_RELEASE_ONLY",
+  "allPreparedRecordsPublicationState": "UNPUBLISHED",
+  "batches": [
+    {"batchId": "plants-001", "entityType": "PLANT_OR_CROP", "targetCount": 30, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "plants-002", "entityType": "PLANT_OR_CROP", "targetCount": 30, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "plants-003", "entityType": "PLANT_OR_CROP", "targetCount": 30, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "plants-004", "entityType": "PLANT_OR_CROP", "targetCount": 30, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "diseases-001", "entityType": "DISEASE", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "diseases-002", "entityType": "DISEASE", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "diseases-003", "entityType": "DISEASE", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "diseases-004", "entityType": "DISEASE", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "diseases-005", "entityType": "DISEASE", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "diseases-006", "entityType": "DISEASE", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "pests-001", "entityType": "PEST", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "pests-002", "entityType": "PEST", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "pests-003", "entityType": "PEST", "targetCount": 50, "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "deficiencies-001", "entityType": "DEFICIENCY", "targetCount": "SUPPORTED_ONLY", "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"},
+    {"batchId": "relationships-diagnostics-001", "entityType": "RELATIONSHIP_AND_DIAGNOSTIC_RULE", "targetCount": "SUPPORTED_ONLY", "status": "BLOCKED_NO_COMPLETE_FIELD_EVIDENCE", "rollbackMode": "DELETE_BATCH_STAGING_ROWS_ONLY"}
+  ],
+  "requiredValidationPerBatch": ["duplicate checks", "taxonomy checks", "orphan checks", "license checks", "scientific review status", "Arabic-language review status", "field-level provenance completeness", "unpublished-state check", "rollback rehearsal"],
+  "releaseGate": "All batches must pass every required validation, contain no unresolved diagnostic or treatment authority, and remain unpublished until one final complete approved release is generated."
+}

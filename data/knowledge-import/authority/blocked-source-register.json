@@ -1,0 +1,8 @@
+[
+  {"sourceId":"egypt-moa-public-site","status":"PERMISSION_REQUEST_REQUIRED","reason":"Official authority but public site asserts copyright without compatible open licence.","requestSent":false},
+  {"sourceId":"egypt-agricultural-research-center","status":"PERMISSION_REQUEST_REQUIRED","reason":"Target authority identified; source-specific licence and contact verification pending.","requestSent":false},
+  {"sourceId":"eppo-data-services-codes","status":"PENDING_LICENSE_EVIDENCE","reason":"Open Data Licence is referenced, but exact terms have not been captured.","requestSent":false},
+  {"sourceId":"uc-ipm","status":"RESTRICTED","reason":"Commercial distribution is prohibited by its legal notice.","requestSent":false},
+  {"sourceId":"university-of-minnesota-extension","status":"RESTRICTED","reason":"Reproduction requires written permission.","requestSent":false},
+  {"sourceId":"uncurated-internet-images","status":"REJECTED","reason":"No file-level licence and attribution evidence.","requestSent":false}
+]

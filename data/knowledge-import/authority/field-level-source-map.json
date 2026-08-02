@@ -1,0 +1,73 @@
+[
+  {
+    "entityId": "plant-tomato",
+    "fieldPath": "payload.scientificName",
+    "claimKey": "accepted-taxonomy",
+    "sourceId": "gbif-backbone-taxonomy",
+    "sourceUrl": "https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+    "citation": "GBIF Backbone Taxonomy dataset",
+    "license": "CC-BY-4.0",
+    "reviewerStatus": "PENDING_SOURCE_REVIEW",
+    "scientificReviewStatus": "PENDING_SCIENTIFIC_REVIEW",
+    "languageReviewStatus": "NOT_AVAILABLE",
+    "geographicApplicability": "global taxonomy baseline; Egypt/Arab-region applicability not yet reviewed",
+    "batchId": "egypt-arab-region-plants-001-safe-review"
+  },
+  {
+    "entityId": "plant-pepper",
+    "fieldPath": "payload.scientificName",
+    "claimKey": "accepted-taxonomy",
+    "sourceId": "gbif-backbone-taxonomy",
+    "sourceUrl": "https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+    "citation": "GBIF Backbone Taxonomy dataset",
+    "license": "CC-BY-4.0",
+    "reviewerStatus": "PENDING_SOURCE_REVIEW",
+    "scientificReviewStatus": "PENDING_SCIENTIFIC_REVIEW",
+    "languageReviewStatus": "NOT_AVAILABLE",
+    "geographicApplicability": "global taxonomy baseline; Egypt/Arab-region applicability not yet reviewed",
+    "batchId": "egypt-arab-region-plants-001-safe-review"
+  },
+  {
+    "entityId": "plant-cucumber",
+    "fieldPath": "payload.scientificName",
+    "claimKey": "accepted-taxonomy",
+    "sourceId": "gbif-backbone-taxonomy",
+    "sourceUrl": "https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+    "citation": "GBIF Backbone Taxonomy dataset",
+    "license": "CC-BY-4.0",
+    "reviewerStatus": "PENDING_SOURCE_REVIEW",
+    "scientificReviewStatus": "PENDING_SCIENTIFIC_REVIEW",
+    "languageReviewStatus": "NOT_AVAILABLE",
+    "geographicApplicability": "global taxonomy baseline; Egypt/Arab-region applicability not yet reviewed",
+    "batchId": "egypt-arab-region-plants-001-safe-review"
+  },
+  {
+    "entityId": "plant-potato",
+    "fieldPath": "payload.scientificName",
+    "claimKey": "accepted-taxonomy",
+    "sourceId": "gbif-backbone-taxonomy",
+    "sourceUrl": "https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+    "citation": "GBIF Backbone Taxonomy dataset",
+    "license": "CC-BY-4.0",
+    "reviewerStatus": "PENDING_SOURCE_REVIEW",
+    "scientificReviewStatus": "PENDING_SCIENTIFIC_REVIEW",
+    "languageReviewStatus": "NOT_AVAILABLE",
+    "geographicApplicability": "global taxonomy baseline; Egypt/Arab-region applicability not yet reviewed",
+    "batchId": "egypt-arab-region-plants-001-safe-review"
+  },
+  {
+    "entityId": "plant-strawberry",
+    "fieldPath": "payload.scientificName",
+    "claimKey": "accepted-taxonomy",
+    "sourceId": "gbif-backbone-taxonomy",
+    "sourceUrl": "https://www.gbif.org/dataset/d7dddbf4-2cf0-4f39-9b2a-bb099caae36c",
+    "citation": "GBIF Backbone Taxonomy dataset",
+    "license": "CC-BY-4.0",
+    "reviewerStatus": "PENDING_SOURCE_REVIEW",
+    "scientificReviewStatus": "PENDING_SCIENTIFIC_REVIEW",
+    "languageReviewStatus": "NOT_AVAILABLE",
+    "geographicApplicability": "global taxonomy baseline; Egypt/Arab-region applicability not yet reviewed",
+    "batchId": "egypt-arab-region-plants-001-safe-review",
+    "unresolvedGap": "Hybrid notation remains pending taxonomy review."
+  }
+]

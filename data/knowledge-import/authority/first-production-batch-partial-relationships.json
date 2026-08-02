@@ -1,0 +1,16 @@
+{
+  "batchId": "egypt-arab-region-plants-001-safe-review",
+  "artifactType": "partial-relationships",
+  "status": "NOT_AVAILABLE",
+  "importAllowed": false,
+  "publishAllowed": false,
+  "relationships": [],
+  "withholdingReason": "No disease, pest, deficiency, diagnostic, treatment, product recommendation, or plant-to-entity relationship has field-level approved authority in this batch.",
+  "requiredBeforePopulation": [
+    "approved source and compatible commercial reuse evidence for each relationship claim",
+    "scientific review of each relationship claim",
+    "explicit geographic applicability",
+    "Arabic-language review for any Arabic relationship text",
+    "local label or regulatory evidence for treatment or product recommendations"
+  ]
+}

@@ -1,0 +1,6 @@
+[
+  {"sourceId":"gbif-backbone-taxonomy","status":"APPROVED_FOR_COMMERCIAL_REUSE","license":"CC-BY-4.0","approvedFieldScope":["taxonomy only"],"limitations":"Field-level review still required."},
+  {"sourceId":"fao-agrovoc-arabic-terminology","status":"APPROVED_FOR_COMMERCIAL_REUSE","license":"CC-BY-IGO-3.0","approvedFieldScope":["controlled terminology and concept URIs only"],"limitations":"Not an agricultural guidance authority."},
+  {"sourceId":"usda-ars-image-gallery-public-domain","status":"APPROVED_FOR_COMMERCIAL_REUSE","license":"PUBLIC_DOMAIN_UNLESS_OTHERWISE_INDICATED","approvedFieldScope":["individually verified image files"],"limitations":"File-level rights and attribution remain mandatory."},
+  {"sourceId":"cip-seed-potato-manual-2018","status":"APPROVED_FOR_COMMERCIAL_REUSE","license":"CC-BY-4.0","approvedFieldScope":["identified manual claims after review"],"limitations":"Kenya context; no local regulatory inference."}
+]

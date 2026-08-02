@@ -1,0 +1,20 @@
+{
+  "scope": ["tomato", "pepper", "cucumber", "potato", "strawberry"],
+  "fieldCoverage": [
+    {"fieldGroup": "taxonomy and accepted names", "fieldPaths": ["payload.scientificName", "payload.taxonomy.acceptedName", "payload.taxonomy.taxonId"], "sourceIds": ["gbif-backbone-taxonomy"], "state": "PENDING_FIELD_LEVEL_APPROVAL", "gap": "Verify each taxon against the current supported taxonomy before import."},
+    {"fieldGroup": "Arabic terminology", "fieldPaths": ["payload.nameAr", "payload.aliases", "payload.terminology.agrovocConceptUri"], "sourceIds": ["fao-agrovoc-arabic-terminology"], "state": "PENDING_FIELD_LEVEL_APPROVAL", "gap": "Perform concept lookup and Arabic language review for each extracted label."},
+    {"fieldGroup": "English terminology", "fieldPaths": ["payload.nameEn", "payload.aliases", "payload.terminology.agrovocConceptUri"], "sourceIds": ["fao-agrovoc-arabic-terminology"], "state": "PENDING_FIELD_LEVEL_APPROVAL", "gap": "Perform concept lookup and retain the exact concept URI."},
+    {"fieldGroup": "EPPO identifiers", "fieldPaths": ["payload.identifiers.eppoCode"], "sourceIds": ["eppo-data-services-codes"], "state": "PENDING_LICENSE_TERM_VERIFICATION", "gap": "Verify exact EPPO Open Data Licence terms and code release before reuse."},
+    {"fieldGroup": "licensed images", "fieldPaths": ["images[].sourceUrl", "images[].rights.license", "images[].rights.attribution", "images[].rights.provenance"], "sourceIds": ["usda-ars-image-gallery-public-domain"], "state": "PENDING_FILE_LEVEL_APPROVAL", "gap": "Select and verify each file; no image is approved at source level."},
+    {"fieldGroup": "diseases", "fieldPaths": ["relationships[DISEASE]"], "sourceIds": [], "state": "NOT_AVAILABLE", "gap": "No compatible, field-level approved disease authority identified in this evidence pass."},
+    {"fieldGroup": "pests", "fieldPaths": ["relationships[PEST]"], "sourceIds": [], "state": "NOT_AVAILABLE", "gap": "No compatible, field-level approved pest authority identified in this evidence pass."},
+    {"fieldGroup": "nutrient deficiencies", "fieldPaths": ["relationships[DEFICIENCY]"], "sourceIds": [], "state": "NOT_AVAILABLE", "gap": "No compatible, field-level approved nutrient-deficiency authority identified in this evidence pass."},
+    {"fieldGroup": "symptoms and affected parts", "fieldPaths": ["diagnosticRules[].symptoms", "diagnosticRules[].affectedParts"], "sourceIds": [], "state": "NOT_AVAILABLE", "gap": "No compatible, field-level approved diagnostic authority identified in this evidence pass."},
+    {"fieldGroup": "environmental conditions", "fieldPaths": ["diagnosticRules[].environmentalConditions"], "sourceIds": [], "state": "NOT_AVAILABLE", "gap": "No compatible, field-level approved regional authority identified in this evidence pass."},
+    {"fieldGroup": "monitoring and prevention", "fieldPaths": ["management.monitoring", "management.prevention"], "sourceIds": [], "state": "NOT_AVAILABLE", "gap": "No compatible, field-level approved management authority identified in this evidence pass."},
+    {"fieldGroup": "treatment categories", "fieldPaths": ["treatments[].category"], "sourceIds": [], "state": "NOT_AVAILABLE", "gap": "No compatible treatment authority or Egypt/Arab-region label evidence identified; treatment content remains prohibited."}
+  ],
+  "recordImportAllowed": false,
+  "publicationAllowed": false,
+  "reason": "Coverage is source-discovery evidence only. No agricultural record, relationship, diagnostic rule, treatment, Arabic display text, or image has completed all applicable field-level gates."
+}

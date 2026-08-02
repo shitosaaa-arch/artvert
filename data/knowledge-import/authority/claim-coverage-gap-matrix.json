@@ -1,0 +1,12 @@
+{
+  "allRecordsUnpublished": true,
+  "coverage": [
+    {"claimType":"taxonomy","state":"PARTIAL","sourceIds":["gbif-backbone-taxonomy"],"gap":"Per-taxon validation and field provenance required."},
+    {"claimType":"disease identity and symptoms","state":"BLOCKED_AT_SCALE","sourceIds":[],"gap":"No reviewed, regionally applicable reusable corpus for 300+ records."},
+    {"claimType":"pest lifecycle and damage","state":"BLOCKED_AT_SCALE","sourceIds":[],"gap":"No reviewed reusable corpus for 150+ records."},
+    {"claimType":"deficiency symptoms and soil context","state":"BLOCKED","sourceIds":[],"gap":"No compatible crop-specific deficiency authority."},
+    {"claimType":"diagnostics, treatments, and chemical categories","state":"BLOCKED","sourceIds":[],"gap":"No Egypt/Arab-region regulatory and diagnostic authority with reuse evidence."},
+    {"claimType":"Arabic terminology","state":"PARTIAL","sourceIds":["fao-agrovoc-arabic-terminology"],"gap":"Concept mapping and contextual language review required."},
+    {"claimType":"images","state":"PARTIAL","sourceIds":["usda-ars-image-gallery-public-domain"],"gap":"Every asset needs file-level confirmation."}
+  ]
+}

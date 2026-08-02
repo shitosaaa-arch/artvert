@@ -1,0 +1,33 @@
+﻿{
+    "datasetId":  "sprint-15b-5-supporting-knowledge-draft",
+    "publicationState":  "DRAFT",
+    "importAllowed":  false,
+    "nutrientDeficiencies":  {
+                                 "status":  "NOT_AVAILABLE",
+                                 "records":  [
+
+                                             ],
+                                 "reason":  "No source-backed nutrient-deficiency records are available."
+                             },
+    "plantRelationships":  {
+                               "status":  "NOT_AVAILABLE",
+                               "records":  [
+
+                                           ],
+                               "reason":  "No source-backed relationships are available."
+                           },
+    "diagnosticRules":  {
+                            "status":  "NOT_AVAILABLE",
+                            "records":  [
+
+                                        ],
+                            "reason":  "No source-backed diagnostic rules are available."
+                        },
+    "treatmentCategories":  {
+                                "status":  "NOT_AVAILABLE",
+                                "records":  [
+
+                                            ],
+                                "reason":  "No source-backed treatment categories or regulatory claims are available."
+                            }
+}

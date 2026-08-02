@@ -1,0 +1,23 @@
+{
+  "programId": "sprint-15b-complete-licensed-knowledge",
+  "publicationState": "UNPUBLISHED",
+  "importAllowed": false,
+  "releaseActivationAllowed": false,
+  "drafts": {
+    "plantsAndCrops": {"minimumTarget": 120, "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "diseases": {"minimumTarget": 300, "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "pests": {"minimumTarget": 150, "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "nutrientDeficiencies": {"minimumTarget": "SUPPORTED_ONLY", "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "relationships": {"minimumTarget": "APPROVED_ONLY", "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "treatmentCategories": {"minimumTarget": "APPROVED_ONLY", "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "diagnosticRules": {"minimumTarget": "APPROVED_ONLY", "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "references": {"minimumTarget": "FIELD_LEVEL_REQUIRED", "records": [], "state": "PENDING_APPROVED_FIELD_EVIDENCE"},
+    "images": {"minimumTarget": "FILE_LEVEL_RIGHTS_REQUIRED", "records": [], "state": "PENDING_FILE_LEVEL_APPROVAL"}
+  },
+  "recordContract": {
+    "required": ["entity", "fieldProvenance", "sourceId", "citation", "license", "commercialUsePermission", "modificationPermission", "redistributionPermission", "scientificReviewStatus", "arabicLanguageReviewStatus", "validationBatchId", "publicationState"],
+    "publicationStateRequiredValue": "UNPUBLISHED",
+    "prohibitedWithoutFieldApproval": ["diagnostic claim", "treatment category", "product recommendation", "relationship", "image"]
+  },
+  "blockingReason": "The current reusable sources support only limited taxonomy, terminology, code, and file-level image discovery. No full-record agricultural evidence set or reviewer approvals exists yet."
+}

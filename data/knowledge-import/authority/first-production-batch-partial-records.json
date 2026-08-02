@@ -1,0 +1,21 @@
+{
+  "batchId": "egypt-arab-region-plants-001-safe-review",
+  "artifactType": "partial-records",
+  "status": "PENDING_SOURCE_REVIEW",
+  "importAllowed": false,
+  "publishAllowed": false,
+  "records": [],
+  "withheldCandidateIds": [
+    "plant-tomato",
+    "plant-pepper",
+    "plant-cucumber",
+    "plant-potato",
+    "plant-strawberry"
+  ],
+  "withholdingReason": "No candidate has completed source, scientific, and Arabic-language review. Taxonomy provenance candidates are retained only in field-level-source-map.json and are not agricultural records for import.",
+  "nextRequiredEvidence": [
+    "approved external agricultural source and compatible commercial reuse evidence",
+    "field-level scientific review",
+    "Arabic-language review for any Arabic content"
+  ]
+}

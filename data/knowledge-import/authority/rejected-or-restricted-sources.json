@@ -1,0 +1,6 @@
+[
+  {"source":"FAO general publications without an explicit compatible license","url":"https://www.fao.org/publications/about-fao-publishing/permissions/","status":"QUARANTINED","reason":"FAO states publications are copyright-protected and default reuse is non-commercial unless otherwise indicated or permission is obtained."},
+  {"source":"CABI Compendium / Plantwise restricted content","url":"https://www.cabi.org/","status":"QUARANTINED","reason":"No explicit compatible commercial adaptation/redistribution evidence recorded; do not scrape or copy."},
+  {"source":"GBIF mediated datasets with CC-BY-NC or unclear license","url":"https://docs.gbif.org/course-introduction-to-gbif/en/gbif-mediated-data-2.html","status":"REJECTED","reason":"Dataset-level licenses vary; non-commercial or unclear terms are incompatible."},
+  {"source":"Unlicensed internet images","url":null,"status":"REJECTED","reason":"No owner, license, attribution, permitted-use, checksum, or rights approval manifest."}
+]
