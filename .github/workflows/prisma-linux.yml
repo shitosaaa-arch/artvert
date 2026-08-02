@@ -25,9 +25,9 @@ jobs:
       - run: npm run db:status
       - run: npx tsx scripts/prisma-linux-verification.ts prepare
       - run: npm run auth:import-json | tee first-import.log
-      - run: grep -Fx "Import summary: imported=4, skipped=0, failed=0" first-import.log
+      - run: "grep -Fx 'Import summary: imported=4, skipped=0, failed=0' first-import.log"
       - run: npm run auth:import-json | tee second-import.log
-      - run: grep -Fx "Import summary: imported=0, skipped=4, failed=0" second-import.log
+      - run: "grep -Fx 'Import summary: imported=0, skipped=4, failed=0' second-import.log"
       - run: npx tsx scripts/prisma-linux-verification.ts verify
       - run: npm run test:knowledge
       - run: npm run build
