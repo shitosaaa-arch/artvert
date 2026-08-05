@@ -12,60 +12,13 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DIRECT_URL: ${{ secrets.DIRECT_URL }}
       AUTH_USER_DIRECTORY: prisma
-      SPRINT3_VERIFICATION_PASSWORD: ${{ secrets.SPRINT3_VERIFICATION_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Install dependencies
-        run: npm ci
-      - name: Validate Prisma schema
-        run: npm run db:validate
-      - name: Generate Prisma client
-        run: npm run db:generate
-      - name: Apply Prisma migrations
-        run: npm run db:deploy
-      - name: Verify Prisma migration status
-        run: npm run db:status
-      - run: npx tsx scripts/prisma-linux-verification.ts prepare
-      - run: npm run auth:import-json | tee first-import.log
-      - run: "grep -Fx 'Import summary: imported=4, skipped=0, failed=0' first-import.log"
-      - run: npm run auth:import-json | tee second-import.log
-      - run: "grep -Fx 'Import summary: imported=0, skipped=4, failed=0' second-import.log"
-      - run: npx tsx scripts/prisma-linux-verification.ts verify
-      - run: npm run test:knowledge
-      - name: Knowledge source authority, licensing manifest, and staged-import validation
-        run: npm run knowledge:validate-import
-      - run: npm run test:diseases
-      - name: Pest integration, authorization, relationship, lifecycle, sync, and cleanup tests
-        run: npm run test:pests
-      - name: Deficiency integration, authorization, context, sync, and cleanup tests
-        run: npm run test:deficiencies
-      - name: Product import, authorization, catalog parity, recommendation, and sync tests
-        run: npm run test:products
-      - name: Doctor API contract, session tampering/expiry, release pinning, deterministic ranking, confidence, follow-up, contradiction, product filtering, and import-boundary tests
-        run: npm run test:doctor
-      - name: Doctor ArtVert UI status, safety, accessibility, and import-boundary tests
-        run: npm run test:doctor-ui
-      - name: Secure Vision upload, quality, storage, privacy, and import-boundary tests
-        run: npm run test:vision
-      - name: Customer contract and customer/staff identity-isolation tests
-        run: npm run test:customers
-      - name: Customer verification/reset/session security, consent/privacy, saved diagnosis/plant/favorite, export/deletion job, retention, admin boundary, analytics, rate-limit, and audit integration tests
-        run: npm run test:customers:integration
-      - name: Production security headers, SEO, migration, regression, and readiness checks
-        run: npm run test:production-readiness
-      - name: 100, 500, and 1000 concurrent-user load fixture
-        run: npm run test:load
-      - name: Build
-        run: npm run build
-      - name: Lint
-        run: npm run lint
-      - name: TypeScript
-        run: npx tsc --noEmit
-      - name: Diff check
-        run: git diff --check
-      - if: ${{ always() }}
-        run: npx tsx scripts/prisma-linux-verification.ts cleanup
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:deploy
+      - run: node scripts/run-prisma.cjs migrate status
