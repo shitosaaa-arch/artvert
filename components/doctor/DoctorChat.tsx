@@ -15,22 +15,22 @@ import {
   CheckCircle2,
   ClipboardList,
   FlaskConical,
-  Lightbulb,
-  Pill,
-  Stethoscope,
   Image as ImageIcon,
   Leaf,
+  Lightbulb,
   Loader2,
+  LogIn,
   Menu,
   Mic,
+  Pill,
   Plus,
+  Search,
   Send,
   ShieldCheck,
   ShoppingCart,
-  Trash2,
+  Stethoscope,
   User,
   X,
-  LogIn,
 } from "lucide-react";
 
 import { sendDoctorMessage } from "@/lib/doctor/client";
@@ -65,6 +65,11 @@ type ExtendedDoctorChatResponse = DoctorChatResponse & {
   intent?: string;
   products?: ExtendedProduct[];
   possibleDiagnoses?: PossibleDiagnosis[];
+  observedSymptoms?: string[];
+  followUpQuestion?: string;
+  immediateActions?: string[];
+  treatmentGuidance?: string[];
+  warning?: string;
 };
 
 type TranscriptItem = {
@@ -73,6 +78,7 @@ type TranscriptItem = {
   text: string;
   imageUrl?: string;
   result?: ExtendedDoctorChatResponse;
+  createdAt: string;
 };
 
 type UiStatus = DoctorStatus | "welcome" | "thinking";
@@ -92,15 +98,11 @@ function isTerminal(status: UiStatus) {
 }
 
 function turnText(input: DoctorChatRequest) {
-  if (input.message?.trim()) {
-    return input.message.trim();
-  }
+  if (input.message?.trim()) return input.message.trim();
 
   if (input.answers) {
     return Object.values(input.answers)
-      .flatMap((answer) =>
-        Array.isArray(answer) ? answer : [answer],
-      )
+      .flatMap((answer) => (Array.isArray(answer) ? answer : [answer]))
       .join("، ");
   }
 
@@ -114,278 +116,57 @@ function confidenceValue(
     result?.possibleDiagnoses?.[0]?.confidence ??
     result?.candidates?.[0]?.confidence;
 
-  if (confidence === "HIGH") {
-    return 96;
-  }
-  if (confidence === "MODERATE") {
-    return 82;
-  }
-  if (confidence === "LOW") {
-    return 58;
-  }
+  if (confidence === "HIGH") return 96;
+  if (confidence === "MODERATE") return 82;
+  if (confidence === "LOW") return 58;
   return 0;
 }
 
 function resultProducts(
-  result: ExtendedDoctorChatResponse,
+  result: ExtendedDoctorChatResponse | undefined,
 ): ExtendedProduct[] {
+  if (!result) return [];
+
   if (result.products && result.products.length > 0) {
     return result.products.slice(0, 3);
   }
 
-  return result.treatment.products
-    .slice(0, 3)
-    .map<ExtendedProduct>((product) => ({
-      id: product.productId,
-      slug: undefined,
-      nameAr: product.name,
-      reason: product.reason,
-    }));
+  return result.treatment.products.slice(0, 3).map((product) => ({
+    id: product.productId,
+    nameAr: product.name,
+    reason: product.reason,
+  }));
 }
 
-
-type ReplySection = {
-  title: string;
-  content: string;
-  tone: "diagnosis" | "cause" | "treatment" | "question" | "tip";
-};
-
-function replySections(text: string): ReplySection[] {
-  const cleanText = text.trim();
-
-  if (!cleanText) return [];
-
-  const headingPattern =
-    /^(?:🌿|🩺|📌|🔍|💊|🧴|❓|💡)?\s*(التشخيص(?:\s+المبدئي)?|الأسباب(?:\s+المحتملة)?|السبب(?:\s+المحتمل)?|العلاج|طريقة العلاج|المنتجات المقترحة|سؤال(?:\s+متابعة)?|سؤال مهم|نصيحة)\s*:?\s*$/;
-
-  const lines = cleanText.split(/\r?\n/);
-  const sections: ReplySection[] = [];
-  let currentTitle = "";
-  let currentLines: string[] = [];
-
-  function toneForTitle(title: string): ReplySection["tone"] {
-    if (title.includes("تشخيص")) return "diagnosis";
-    if (title.includes("سبب")) return "cause";
-    if (title.includes("علاج") || title.includes("منتجات")) return "treatment";
-    if (title.includes("سؤال")) return "question";
-    return "tip";
-  }
-
-  function flush() {
-    const content = currentLines.join("\n").trim();
-
-    if (!content) {
-      currentLines = [];
-      return;
-    }
-
-    sections.push({
-      title: currentTitle || "رد دكتور ArtVert",
-      content,
-      tone: currentTitle ? toneForTitle(currentTitle) : "diagnosis",
-    });
-
-    currentLines = [];
-  }
-
-  for (const line of lines) {
-    const trimmed = line.trim();
-    const match = trimmed.match(headingPattern);
-
-    if (match) {
-      flush();
-      currentTitle = match[1];
-      continue;
-    }
-
-    currentLines.push(line);
-  }
-
-  flush();
-
-  if (sections.length <= 1) {
-    return [
-      {
-        title: "رد دكتور ArtVert",
-        content: cleanText,
-        tone: "diagnosis",
-      },
-    ];
-  }
-
-  return sections;
+function timeLabel(value: string) {
+  return new Intl.DateTimeFormat("ar-EG", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
-function confidenceLabel(value: number) {
-  if (value >= 90) return "ثقة مرتفعة";
-  if (value >= 70) return "ثقة متوسطة";
-  if (value > 0) return "ثقة مبدئية";
-  return "";
-}
-
-function SectionIcon({
-  tone,
-}: {
-  tone: ReplySection["tone"];
-}) {
-  if (tone === "treatment") return <Pill size={17} />;
-  if (tone === "question") return <ClipboardList size={17} />;
-  if (tone === "tip") return <Lightbulb size={17} />;
-  if (tone === "cause") return <FlaskConical size={17} />;
-  return <Stethoscope size={17} />;
-}
-
-function AssistantReply({
-  text,
-  result,
-}: {
-  text: string;
-  result?: ExtendedDoctorChatResponse;
-}) {
-  const sections = replySections(text);
-  const confidence = confidenceValue(result);
-  const diagnosis =
-    result?.possibleDiagnoses?.[0]?.name ??
-    result?.candidates?.[0]?.name;
-
+function StatusDot() {
   return (
-    <div className="space-y-3">
-      {(diagnosis || confidence > 0) && (
-        <div className="rounded-2xl border border-[#c8f33f]/30 bg-[#c8f33f]/[.07] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-[#c8f33f]/35 bg-[#c8f33f]/10 text-[#c8f33f]">
-                <Stethoscope size={19} />
-              </span>
+    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#6cff62] shadow-[0_0_14px_rgba(108,255,98,.75)]" />
+  );
+}
 
-              <div className="min-w-0">
-                <p className="text-[10px] font-black text-[#c8f33f]">
-                  التشخيص المبدئي
-                </p>
-
-                <p className="mt-1 truncate text-sm font-black text-white">
-                  {diagnosis || "جاري تضييق الاحتمالات"}
-                </p>
-              </div>
-            </div>
-
-            {confidence > 0 && (
-              <span className="rounded-full border border-[#c8f33f]/25 bg-black/20 px-3 py-1.5 text-[10px] font-black text-[#c8f33f]">
-                {confidenceLabel(confidence)} · {confidence}%
-              </span>
-            )}
-          </div>
-
-          {confidence > 0 && (
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/10">
-              <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,#9fbd35,#c8f33f)] transition-all duration-500"
-                style={{ width: `${confidence}%` }}
-              />
-            </div>
-          )}
+function EmptyResultPanel() {
+  return (
+    <div className="grid min-h-[520px] place-items-center px-6 py-12 text-center">
+      <div className="max-w-xl">
+        <div className="mx-auto grid h-20 w-20 place-items-center rounded-[24px] border border-[#c8f33f]/30 bg-[#c8f33f]/10 text-[#c8f33f]">
+          <Stethoscope size={36} />
         </div>
-      )}
 
-      {sections.map((section, index) => (
-        <section
-          key={`${section.title}-${index}`}
-          className="rounded-2xl border border-white/10 bg-black/15 p-4"
-        >
-          <h3 className="flex items-center gap-2 text-xs font-black text-[#c8f33f]">
-            <SectionIcon tone={section.tone} />
-            {section.title}
-          </h3>
+        <h2 className="mt-6 text-3xl font-black text-white">
+          ابدأ تشخيصًا جديدًا
+        </h2>
 
-          <div className="mt-2 whitespace-pre-line text-sm leading-7 text-white/85">
-            {section.content}
-          </div>
-        </section>
-      ))}
-    </div>
-  );
-}
-
-function AudioWave({ compact = false }: { compact?: boolean }) {
-  const count = compact ? 28 : 50;
-
-  return (
-    <div
-      className={[
-        "flex items-center justify-center gap-1.5 overflow-hidden opacity-50",
-        compact ? "h-16" : "h-24",
-      ].join(" ")}
-      aria-hidden="true"
-    >
-      {Array.from({ length: count }).map((_, index) => (
-        <span
-          key={index}
-          className="w-[2px] rounded-full bg-[#7dff53]/70 animate-pulse"
-          style={{
-            height: `${
-              8 + ((index * 19) % (compact ? 38 : 64))
-            }px`,
-            animationDelay: `${index * 32}ms`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function TrustCard({
-  icon,
-  title,
-  text,
-  featured = false,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  text: string;
-  featured?: boolean;
-}) {
-  return (
-    <div
-      className={[
-        "flex min-h-[90px] items-center gap-4 rounded-[20px] border p-4 backdrop-blur-md transition-all",
-        featured
-          ? "border-[#c8f33f] bg-[linear-gradient(145deg,rgba(200,243,63,0.1),rgba(200,243,63,0.02))] shadow-[0_0_20px_rgba(200,243,63,0.15)]"
-          : "border-[#9fbd35]/30 bg-white/5",
-      ].join(" ")}
-    >
-      <div
-        className={[
-          "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border",
-          featured
-            ? "border-[#c8f33f]/50 bg-[#c8f33f]/20 text-[#c8f33f]"
-            : "border-[#b4d82f]/35 bg-[#b4d82f]/8 text-[#b7df35]",
-        ].join(" ")}
-      >
-        {icon}
-      </div>
-
-      <div>
-        <p
-          className={[
-            "text-base font-black",
-            featured ? "text-white" : "text-white",
-          ].join(" ")}
-        >
-          {title}
+        <p className="mx-auto mt-4 max-w-lg text-base leading-8 text-white/60">
+          اكتب أعراض النبات أو ارفع صورة واضحة، وسيظهر التشخيص والتوصيات هنا
+          في بطاقات مرتبة.
         </p>
-        <p
-          className={[
-            "mt-1 text-sm leading-6",
-            featured ? "text-[#c8f33f]" : "text-white/60",
-          ].join(" ")}
-        >
-          {text}
-        </p>
-        {featured && (
-          <p className="mt-1 text-lg tracking-[.15em] text-[#c8f33f]">
-            ★★★★★
-          </p>
-        )}
       </div>
     </div>
   );
@@ -400,18 +181,17 @@ export function DoctorChat() {
   const [imagePreview, setImagePreview] = useState<string>();
   const [imageUploading, setImageUploading] = useState(false);
   const [isRequestPending, setIsRequestPending] = useState(false);
-  const [mobileDoctorOpen, setMobileDoctorOpen] = useState(false);
   const [recording, setRecording] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<string>();
 
   const sessionIdRef = useRef<string | undefined>(undefined);
   const requestRef = useRef<AbortController | null>(null);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const previewUrlsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
+    chatScrollRef.current?.scrollTo({
+      top: chatScrollRef.current.scrollHeight,
       behavior: "smooth",
     });
   }, [transcript, isRequestPending]);
@@ -419,9 +199,11 @@ export function DoctorChat() {
   useEffect(() => {
     return () => {
       requestRef.current?.abort();
+
       for (const url of previewUrlsRef.current) {
         URL.revokeObjectURL(url);
       }
+
       previewUrlsRef.current.clear();
     };
   }, []);
@@ -438,15 +220,40 @@ export function DoctorChat() {
       )?.result;
   }, [transcript]);
 
-  const diagnosisName =
+  const lastUserImage = useMemo(() => {
+    return [...transcript]
+      .reverse()
+      .find((item) => item.role === "user" && item.imageUrl)?.imageUrl;
+  }, [transcript]);
+
+  const diagnosis =
     lastResult?.possibleDiagnoses?.[0]?.name ??
     lastResult?.candidates?.[0]?.name;
 
   const confidence = confidenceValue(lastResult);
-  const productsCount =
-    (lastResult?.products ?? []).length ||
-    lastResult?.treatment.products.length ||
-    0;
+  const products = resultProducts(lastResult);
+
+  const observedSymptoms =
+    lastResult?.observedSymptoms?.filter(Boolean) ?? [];
+
+  const immediateActions = [
+    ...(lastResult?.immediateActions ?? []),
+    ...(lastResult?.treatment.immediateActions ?? []),
+  ].filter(Boolean);
+
+  const treatmentGuidance = [
+    ...(lastResult?.treatmentGuidance ?? []),
+    ...(lastResult?.treatment.treatmentGuidance ?? []),
+  ].filter(Boolean);
+
+  const followUpQuestion =
+    lastResult?.followUpQuestion ??
+    lastResult?.followUpQuestions?.[0]?.prompt;
+
+  const warning =
+    lastResult?.warning ??
+    lastResult?.treatment.contraindications?.[0] ??
+    lastResult?.disclaimer;
 
   const appendAssistant = useCallback(
     (result: ExtendedDoctorChatResponse) => {
@@ -460,6 +267,7 @@ export function DoctorChat() {
             result.error ||
             "محتاج توضيح بسيط أكتر.",
           result,
+          createdAt: new Date().toISOString(),
         },
       ]);
     },
@@ -483,6 +291,7 @@ export function DoctorChat() {
           role: "user",
           text: turnText(turn),
           imageUrl: displayImageUrl,
+          createdAt: new Date().toISOString(),
         },
       ]);
 
@@ -514,6 +323,7 @@ export function DoctorChat() {
               error instanceof Error
                 ? error.message
                 : "تعذر الاتصال بدكتور ArtVert AI.",
+            createdAt: new Date().toISOString(),
           },
         ]);
       } finally {
@@ -529,31 +339,48 @@ export function DoctorChat() {
   async function chooseImage(file: File | undefined) {
     if (!file || isRequestPending || imageUploading) return;
 
+    const image = file;
+
     setImageUploading(true);
-    const preview = URL.createObjectURL(file);
+
+    const preview = URL.createObjectURL(image);
     previewUrlsRef.current.add(preview);
     setImagePreview(preview);
 
     async function upload(activeSessionId?: string) {
       const body = new FormData();
-      if (activeSessionId) body.set("sessionId", activeSessionId);
-      body.set("image", file!);
+
+      if (activeSessionId) {
+        body.set("sessionId", activeSessionId);
+      }
+
+      body.set("image", image);
 
       const response = await fetch("/api/doctor/images", {
         method: "POST",
         body,
       });
+
       const result = (await response.json()) as ImageUploadResponse;
-      return { response, result };
+
+      return {
+        response,
+        result,
+      };
     }
 
     try {
       const currentSessionId = sessionIdRef.current ?? sessionId;
+
       let { response, result } = await upload(currentSessionId);
 
-      if (response.status === 409 || result.status === "session_expired") {
+      if (
+        response.status === 409 ||
+        result.status === "session_expired"
+      ) {
         sessionIdRef.current = undefined;
         setSessionId(undefined);
+
         ({ response, result } = await upload());
       }
 
@@ -576,7 +403,10 @@ export function DoctorChat() {
           id: crypto.randomUUID(),
           role: "assistant",
           text:
-            error instanceof Error ? error.message : "تعذر رفع الصورة.",
+            error instanceof Error
+              ? error.message
+              : "تعذر رفع الصورة.",
+          createdAt: new Date().toISOString(),
         },
       ]);
     } finally {
@@ -589,17 +419,25 @@ export function DoctorChat() {
       URL.revokeObjectURL(imagePreview);
       previewUrlsRef.current.delete(imagePreview);
     }
+
     setImagePreview(undefined);
     setImageRef(undefined);
   }
 
   function sendCurrentMessage() {
     const trimmed = message.trim();
-    if ((!trimmed && !imageRef) || isRequestPending || imageUploading || isTerminal(status)) {
+
+    if (
+      (!trimmed && !imageRef) ||
+      isRequestPending ||
+      imageUploading ||
+      isTerminal(status)
+    ) {
       return;
     }
 
     const displayImageUrl = imagePreview;
+
     setMessage("");
     setImageRef(undefined);
     setImagePreview(undefined);
@@ -607,7 +445,8 @@ export function DoctorChat() {
     void submitTurn(
       {
         message:
-          trimmed || "حلل صورة النبات المرفوعة وساعدني في معرفة المشكلة.",
+          trimmed ||
+          "حلل صورة النبات المرفوعة وساعدني في معرفة المشكلة.",
         imageRef,
         sessionId: sessionIdRef.current ?? sessionId,
       },
@@ -618,381 +457,583 @@ export function DoctorChat() {
   function resetConversation() {
     requestRef.current?.abort();
     requestRef.current = null;
+
+    for (const url of previewUrlsRef.current) {
+      URL.revokeObjectURL(url);
+    }
+
+    previewUrlsRef.current.clear();
+
     setTranscript([]);
     sessionIdRef.current = undefined;
     setSessionId(undefined);
     setStatus("welcome");
     setMessage("");
+    setImageRef(undefined);
+    setImagePreview(undefined);
     setIsRequestPending(false);
     setRecording(false);
-    removeImage();
+    setZoomedImage(undefined);
   }
 
   const canSend = Boolean(message.trim()) || Boolean(imageRef);
+
   const doctorState =
     status === "thinking"
-      ? "براجع الحالة الآن"
+      ? "جاري التحليل"
       : status === "differential_ready"
-      ? "وصلنا للنتيجة"
-      : status === "needs_information"
-      ? "محتاج معلومة إضافية"
-      : "وصلت الطبيب شغالة";
+        ? "تم تجهيز التشخيص"
+        : status === "needs_information"
+          ? "محتاج معلومة إضافية"
+          : "متصل الآن";
 
   return (
     <main
       dir="rtl"
-      className="relative h-[100dvh] w-full overflow-hidden bg-[#0a1e12] px-2 py-2 text-white sm:px-3 font-sans"
+      className="relative min-h-[100dvh] overflow-hidden bg-[#03140c] text-white"
     >
-      {/* Background Gradient & Pattern */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_6%,rgba(143,202,45,.12),transparent_25%),radial-gradient(circle_at_88%_18%,rgba(38,164,83,.12),transparent_27%),linear-gradient(145deg,#02150d_0%,#063220_48%,#02180f_100%)]" />
-      
-      {/* Subtle Grid Overlay */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.2) 1px,transparent 1px)",
-          backgroundSize: "50px 50px",
-        }}
-      />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(200,243,63,.08),transparent_25%),radial-gradient(circle_at_85%_20%,rgba(42,164,99,.12),transparent_25%),linear-gradient(145deg,#021009_0%,#052719_50%,#02110a_100%)]" />
 
-      <div className="relative z-10 flex h-full w-full flex-col max-w-screen-2xl mx-auto">
-        {/* Top Navbar */}
-        <nav className="mb-2 flex items-center justify-between rounded-full border border-[#9fbd35]/25 bg-black/40 px-6 py-3 backdrop-blur-md">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="text-left">
-              <span className="text-3xl font-black text-[#c8f33f]">ArtVert</span>
-              <span className="block text-center text-sm font-bold leading-none text-white">Egypt</span>
+      <div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-[1600px] flex-col px-3 py-3 sm:px-5">
+        <nav className="flex min-h-[68px] items-center justify-between rounded-[24px] border border-[#9fbd35]/25 bg-[#03170e]/90 px-4 shadow-[0_16px_45px_rgba(0,0,0,.26)] backdrop-blur-xl sm:px-6">
+          <Link href="/" className="flex items-center gap-2" dir="ltr">
+            <Leaf size={30} className="text-[#c8f33f]" />
+            <div className="leading-none">
+              <span className="text-2xl font-black text-white">
+                ART<span className="text-[#c8f33f]">VERT</span>
+              </span>
+              <span className="mt-1 block text-center text-[9px] font-black tracking-[.28em] text-[#c8f33f]">
+                EGYPT
+              </span>
             </div>
-            <Leaf size={32} className="text-[#c8f33f]" />
           </Link>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold text-white/90">
-            <Link href="/" className="hover:text-[#c8f33f] transition-colors">الرئيسية</Link>
-            <Link href="/plant-care" className="hover:text-[#c8f33f] transition-colors">الرعاية والحماية</Link>
-            <Link href="/doctor" className="text-[#c8f33f]">الرعاية والتشخيص</Link>
-            <Link href="/blog" className="hover:text-[#c8f33f] transition-colors">المدونة</Link>
-            <Link href="/about" className="hover:text-[#c8f33f] transition-colors">من نحن</Link>
+          <div className="hidden items-center gap-7 text-sm font-black text-white/85 lg:flex">
+            <Link href="/" className="transition hover:text-[#c8f33f]">
+              الرئيسية
+            </Link>
+            <Link
+              href="/plant-care"
+              className="transition hover:text-[#c8f33f]"
+            >
+              الرعاية والحماية
+            </Link>
+            <Link href="/doctor" className="text-[#c8f33f]">
+              الرعاية والتشخيص
+            </Link>
+            <Link href="/blog" className="transition hover:text-[#c8f33f]">
+              المدونة
+            </Link>
+            <Link href="/about" className="transition hover:text-[#c8f33f]">
+              من نحن
+            </Link>
+            <Link
+              href="/contact"
+              className="transition hover:text-[#c8f33f]"
+            >
+              تواصل معنا
+            </Link>
           </div>
 
-          <Link
-            href="/contact"
-            className="rounded-xl border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/20"
-          >
-            تواصل معنا
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/login"
+              className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-4 text-sm font-black text-white sm:flex"
+            >
+              تسجيل الدخول
+              <LogIn size={16} />
+            </Link>
+
+            <Link
+              href="/cart"
+              className="relative grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[.04]"
+            >
+              <ShoppingCart size={18} />
+              <span className="absolute -right-1 -top-1 grid h-5 w-5 place-items-center rounded-full bg-[#c8f33f] text-[10px] font-black text-[#102014]">
+                0
+              </span>
+            </Link>
+
+            <Link
+              href="/products"
+              className="hidden min-h-11 items-center rounded-xl bg-[#c8f33f] px-5 text-sm font-black text-[#102014] shadow-[0_0_22px_rgba(200,243,63,.2)] sm:flex"
+            >
+              تسوق الآن
+            </Link>
+
+            <button
+              type="button"
+              className="grid h-11 w-11 place-items-center rounded-xl border border-white/10 bg-white/[.04] lg:hidden"
+              aria-label="فتح القائمة"
+            >
+              <Menu size={19} />
+            </button>
+          </div>
         </nav>
 
-        {/* Secondary Navbar */}
-        <div className="mb-4 flex items-center justify-between rounded-[24px] border border-[#9fbd35]/20 bg-[#072517]/80 px-4 py-3 backdrop-blur-md">
-          <div className="flex items-center gap-3">
-            <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 lg:hidden">
-              <Menu size={20} />
-            </button>
-            <button className="hidden sm:flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-bold text-white hover:bg-white/10">
-              تسجيل الدخول <LogIn size={16} className="rotate-180" />
-            </button>
-            <button className="hidden sm:flex h-10 items-center rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-white/80 hover:bg-white/10">
-              AR
-            </button>
-            <Link href="/cart" className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10">
-              <ShoppingCart size={18} />
-              <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c8f33f] text-[10px] font-black text-black">0</span>
-            </Link>
-            <Link href="/products" className="flex h-10 items-center rounded-xl bg-[#c8f33f] px-5 text-sm font-black text-[#102014] shadow-[0_0_15px_rgba(200,243,63,.3)] hover:bg-[#d4f85e] transition-colors">
-              تسوق الآن <ShoppingCart size={16} className="ml-2" />
-            </Link>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <div className="text-right leading-tight">
-              <span className="block text-xl font-black text-white">ARTVERT</span>
-              <span className="block text-[10px] font-black tracking-widest text-[#c8f33f]">EGYPT</span>
-            </div>
-            <Leaf size={28} className="text-[#c8f33f]" />
-          </div>
-        </div>
-
-        {/* Main Grid Layout */}
-        <div className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[340px_minmax(0,1fr)]">
-          
-          {/* Right Sidebar (Doctor Panel) */}
-          <aside className="hidden lg:flex flex-col gap-4 order-2 lg:order-1">
-            {/* Doctor Card */}
-            <div className="relative flex flex-col items-center overflow-hidden rounded-[24px] border border-[#9fbd35]/30 bg-[#072517]/80 pb-6 pt-4 backdrop-blur-md">
-              <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 border border-[#9fbd35]/30">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[#62ff59]" />
-                <span className="text-[10px] font-bold text-white">وصلنا للنتيجة</span>
-              </div>
-              
-              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-0 opacity-40">
-                <AudioWave compact />
-              </div>
-
-              <div className="relative z-10 mt-6 h-48 w-48">
-                <Image
-                  src="/doctor/artvert-doctor.png"
-                  alt="دكتور ArtVert AI"
-                  fill
-                  priority
-                  sizes="192px"
-                  className="object-contain object-bottom drop-shadow-2xl"
-                />
-              </div>
-
-              <div className="relative z-10 flex flex-col items-center mt-2 text-center px-4">
-                <div className="flex items-center gap-2">
-                   <h2 className="text-lg font-black text-white">دكتور ArtVert AI</h2>
-                   <CheckCircle2 size={16} className="text-[#c8f33f] fill-[#c8f33f]/20" />
-                </div>
-                <p className="mt-2 text-xs leading-5 text-white/70">
-                  تحدث مع أسرع ذكاء زراعي في الوطن العربي.<br/> جاهز لمساعدتك 24/2
-                </p>
-                <div className="mt-4 flex items-center justify-center gap-4 text-white/60">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hover:text-white cursor-pointer transition-colors">
-                    <rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect>
-                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                    <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line>
-                  </svg>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hover:text-white cursor-pointer transition-colors">
-                    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                  </svg>
-                </div>
-              </div>
-              
-              <button onClick={resetConversation} className="relative z-10 mx-4 mt-5 flex w-[calc(100%-32px)] items-center justify-center rounded-xl bg-[#2a4d3b] border border-[#3e6650] py-3 text-sm font-bold text-white transition-colors hover:bg-[#325a45]">
-                محادثة جديدة
-              </button>
-            </div>
-
-            {/* Sidebar Trust Cards */}
-            <div className="rounded-[24px] border border-[#c8f33f]/40 bg-[#122e1e]/80 p-4 flex items-center justify-between shadow-[0_0_15px_rgba(200,243,63,.1)] backdrop-blur-md">
-               <div>
-                  <p className="text-sm font-black text-white">أكثر من 10,000 مزارع</p>
-                  <p className="text-xs font-bold text-[#c8f33f] mt-0.5">يثقون بدكتور آرت فيرت</p>
-                  <p className="mt-1 text-sm tracking-[.15em] text-[#c8f33f]">★★★★★</p>
-               </div>
-               <div className="h-10 w-10 rounded-xl border border-[#c8f33f]/40 bg-[#c8f33f]/10 flex items-center justify-center text-[#c8f33f]">
-                  <ShieldCheck size={20} />
-               </div>
-            </div>
-
-            <div className="rounded-[24px] border border-white/10 bg-[#072517]/80 p-4 flex items-center justify-between backdrop-blur-md">
-               <div>
-                  <p className="text-sm font-black text-white">جودة على مضمونة</p>
-                  <p className="text-xs text-white/60 mt-0.5">منتجات عالية الفعالية</p>
-               </div>
-               <div className="h-10 w-10 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center text-white/80">
-                  <FlaskConical size={20} />
-               </div>
-            </div>
-          </aside>
-
-          {/* Chat Section */}
-          <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-[#9fbd35]/20 bg-[#072517]/40 backdrop-blur-xl order-1 lg:order-2">
-            
-            {/* Background Image / Overlay for Chat */}
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(200,243,63,.06),transparent_30%),radial-gradient(circle_at_80%_70%,rgba(38,164,83,.08),transparent_32%)]" />
-            
-            {/* Chat Header */}
-            <div className="relative z-10 shrink-0 flex items-center justify-between border-b border-white/10 px-6 py-4">
+        <div className="mt-3 grid min-h-0 flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_370px]">
+          <section className="flex min-h-[760px] min-w-0 flex-col overflow-hidden rounded-[28px] border border-[#9fbd35]/25 bg-[#061f14]/82 shadow-[0_24px_80px_rgba(0,0,0,.24)] backdrop-blur-xl">
+            <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-7">
               <div>
-                <h1 className="text-2xl font-black text-[#c8f33f]">
-                  اسأل دكتور ArtVert AI
+                <p className="text-xs font-black text-[#c8f33f]">
+                  دكتور ArtVert AI
+                </p>
+                <h1 className="mt-1 text-2xl font-black text-white sm:text-3xl">
+                  التشخيص والتوصيات
                 </h1>
-                <p className="mt-1 text-sm text-white/70">المهندس الزراعي الذكي</p>
               </div>
-              <div className="flex items-center gap-2 rounded-full bg-[#153a25] px-4 py-2 border border-[#9fbd35]/30">
-                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#62ff59]" />
-                <span className="text-[11px] font-bold text-white">{doctorState}</span>
+
+              <div className="flex items-center gap-2 rounded-full border border-[#9fbd35]/30 bg-[#153a25]/70 px-4 py-2">
+                <StatusDot />
+                <span className="text-xs font-black text-white">
+                  {doctorState}
+                </span>
               </div>
-            </div>
+            </header>
 
-            {/* Chat Messages */}
-            <div ref={scrollRef} className="relative z-10 min-h-0 flex-1 overflow-y-auto px-6 py-6">
-              {transcript.length === 0 ? (
-                <div className="flex h-full flex-col justify-center">
-                  <div className="relative mb-8 max-w-2xl">
-                    <div className="pointer-events-none absolute -left-12 top-0 bottom-0 opacity-40">
-                      <AudioWave />
-                    </div>
-                    
-                    {/* Welcome Bubbles */}
-                    <div className="space-y-4 pr-12">
-                      <div className="relative rounded-2xl rounded-tr-sm bg-[#153a25]/80 border border-white/10 px-5 py-4 text-sm leading-7 text-white backdrop-blur-md">
-                        <div className="absolute -right-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#9fbd35]/20 border border-[#c8f33f]/40 text-[#c8f33f]">
-                          <Bot size={18} />
-                        </div>
-                        <p className="font-black text-[#c8f33f] mb-1">مرحباً بك! أنا دكتور آرت فيرت.</p>
-                        اسألني عن أي مشكلة في نباتك، وسأساعدك في التشخيص والعلاج خطوة بخطوة لأفضل نتائج.
-                      </div>
-                      <div className="relative rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-5 py-3 text-sm text-white/90 backdrop-blur-md w-[85%]">
-                        <div className="absolute -right-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/20 text-white/70">
-                          <Bot size={18} />
-                        </div>
-                        تعبت ندردش في إيه النهاردة؟ أو عندك زرع محتاج متابعة؟
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Trust Cards Grid */}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl ml-auto">
-                    <TrustCard icon={<ShieldCheck size={24} />} title="جودة مضمونة" text="منتجات عالية الفعالية" />
-                    <TrustCard featured icon={<CheckCircle2 size={24} />} title="أكثر من 10,000 مزارع" text="يثقون بخبرتنا" />
-                    <TrustCard icon={<FlaskConical size={24} />} title="آمنة على" text="الضمير النباتات" />
-                    <TrustCard icon={<Leaf size={24} />} title="آمنة على النباتات" text="طاولة المعارض" />
-                  </div>
-                </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+              {!lastResult ? (
+                <EmptyResultPanel />
               ) : (
-                <div className="space-y-6">
-                  {transcript.map((item) => {
-                    const isUser = item.role === "user";
-                    const products = item.result ? resultProducts(item.result) : [];
-                    return (
-                      <div key={item.id} className={["flex items-start gap-4", isUser ? "justify-start" : "justify-end"].join(" ")}>
-                        {!isUser && (
-                          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c8f33f]/40 bg-[#9fbd35]/20 text-[#c8f33f]">
-                            <Bot size={16} />
-                          </div>
-                        )}
-                        <div className={["max-w-[85%] rounded-2xl p-4 text-sm leading-7 backdrop-blur-md", isUser ? "rounded-tr-sm bg-[#c8f33f]/10 border border-[#c8f33f]/30 text-white" : "rounded-tl-sm bg-[#153a25]/80 border border-white/10 text-white/90"].join(" ")}>
-                          {item.imageUrl && (
-                            <button
-                              type="button"
-                              onClick={() => setZoomedImage(item.imageUrl)}
-                              className="mb-3 block max-w-[420px] overflow-hidden rounded-2xl border border-white/10 bg-black/20 text-right transition hover:border-[#c8f33f]/35"
-                              aria-label="تكبير صورة النبات"
-                            >
-                              <img
-                                src={item.imageUrl}
-                                alt="صورة النبات المرفوعة"
-                                className="max-h-64 w-full object-contain"
-                              />
-                            </button>
-                          )}
+                <div className="space-y-4">
+                  <section className="grid gap-4 xl:grid-cols-[360px_minmax(0,1fr)]">
+                    {lastUserImage ? (
+                      <button
+                        type="button"
+                        onClick={() => setZoomedImage(lastUserImage)}
+                        className="group relative min-h-[340px] overflow-hidden rounded-[24px] border border-[#c8f33f]/25 bg-black/25"
+                      >
+                        <img
+                          src={lastUserImage}
+                          alt="صورة النبات المرفوعة"
+                          className="h-full max-h-[430px] w-full object-contain"
+                        />
 
-                          {isUser ? (
-                            <div className="whitespace-pre-line">{item.text}</div>
-                          ) : (
-                            <AssistantReply text={item.text} result={item.result} />
-                          )}
-                          
-                          {/* Products Output Restored */}
-                          {!isUser && products.length > 0 ? (
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                              {products.map((product) => (
-                                <article
-                                  key={product.id}
-                                  className="rounded-2xl border border-[#c8f33f]/30 bg-[#153a25]/60 p-4 backdrop-blur-md"
-                                >
-                                  <p className="text-[11px] font-black text-[#c8f33f]">
-                                    منتج ArtVert مقترح
-                                  </p>
-                                  <h3 className="mt-1 text-sm font-black text-white">
-                                    {product.nameAr}
-                                  </h3>
-                                  {product.reason ? (
-                                    <p className="mt-2 text-xs leading-6 text-white/70">
-                                      {product.reason}
-                                    </p>
-                                  ) : null}
-                                  {product.slug ? (
-                                    <Link
-                                      href={`/products/${product.slug}`}
-                                      className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#c8f33f] px-4 py-2 text-xs font-black text-[#102014] hover:bg-[#d4f85e] transition-colors"
-                                    >
-                                      عرض المنتج
-                                    </Link>
-                                  ) : null}
-                                </article>
-                              ))}
-                            </div>
-                          ) : null}
-
-                        </div>
-                        {isUser && (
-                          <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/70">
-                            <User size={16} />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                  {isRequestPending && (
-                    <div className="flex items-start gap-4 justify-end">
-                      <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#c8f33f]/40 bg-[#9fbd35]/20 text-[#c8f33f]">
-                         <Bot size={16} />
-                      </div>
-                      <div className="flex items-center gap-3 rounded-2xl rounded-tl-sm bg-[#153a25]/80 border border-white/10 px-5 py-3 backdrop-blur-md">
-                        <Loader2 size={16} className="animate-spin text-[#c8f33f]" />
-                        <span className="text-sm font-bold text-white/70">
-                          {transcript.at(-1)?.imageUrl
-                            ? "جاري تحليل الصورة وتجهيز التشخيص..."
-                            : "دكتور ArtVert بيجهز الرد..."}
+                        <span className="absolute left-4 top-4 grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-black/55 text-white backdrop-blur-md transition group-hover:border-[#c8f33f]/60 group-hover:text-[#c8f33f]">
+                          <Search size={19} />
                         </span>
+
+                        <span className="absolute inset-x-0 bottom-0 bg-black/55 px-4 py-3 text-right text-xs font-black text-white backdrop-blur-md">
+                          الصورة المرفوعة
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="grid min-h-[340px] place-items-center rounded-[24px] border border-dashed border-white/15 bg-black/10 text-white/35">
+                        <Camera size={42} />
                       </div>
+                    )}
+
+                    <div className="rounded-[24px] border border-[#c8f33f]/25 bg-[linear-gradient(145deg,rgba(200,243,63,.08),rgba(255,255,255,.025))] p-5 sm:p-6">
+                      <div className="flex items-center gap-3 text-[#c8f33f]">
+                        <Stethoscope size={22} />
+                        <span className="text-sm font-black">التشخيص</span>
+                      </div>
+
+                      <h2 className="mt-5 text-3xl font-black text-white sm:text-4xl">
+                        {diagnosis || "تشخيص مبدئي"}
+                      </h2>
+
+                      {confidence > 0 && (
+                        <>
+                          <div className="mt-6 inline-flex rounded-full border border-[#c8f33f]/30 bg-[#c8f33f]/10 px-5 py-2 text-sm font-black text-[#c8f33f]">
+                            نسبة الثقة {confidence}%
+                          </div>
+
+                          <div className="mt-5 h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/25">
+                            <div
+                              className="h-full rounded-full bg-[linear-gradient(90deg,#8fb92a,#c8f33f)] shadow-[0_0_16px_rgba(200,243,63,.35)]"
+                              style={{
+                                width: `${confidence}%`,
+                              }}
+                            />
+                          </div>
+                        </>
+                      )}
+
+                      {lastResult.reply && (
+                        <p className="mt-6 text-sm leading-8 text-white/65">
+                          {lastResult.reply}
+                        </p>
+                      )}
                     </div>
+                  </section>
+
+                  {observedSymptoms.length > 0 && (
+                    <section className="rounded-[24px] border border-white/10 bg-black/15 p-5 sm:p-6">
+                      <h3 className="flex items-center gap-2 text-xl font-black text-white">
+                        <FlaskConical size={21} className="text-[#c8f33f]" />
+                        الأسباب المحتملة
+                      </h3>
+
+                      <div className="mt-5 grid gap-3">
+                        {observedSymptoms.map((item, index) => (
+                          <div
+                            key={`${item}-${index}`}
+                            className="flex items-start gap-3 text-sm leading-7 text-white/75"
+                          >
+                            <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-[#c8f33f]" />
+                            <span>{item}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
                   )}
+
+                  {(immediateActions.length > 0 ||
+                    treatmentGuidance.length > 0) && (
+                    <section className="rounded-[24px] border border-white/10 bg-black/15 p-5 sm:p-6">
+                      <h3 className="flex items-center gap-2 text-xl font-black text-white">
+                        <Pill size={21} className="text-[#c8f33f]" />
+                        العلاج والممارسات الموصى بها
+                      </h3>
+
+                      <div className="mt-5 grid gap-3">
+                        {[...immediateActions, ...treatmentGuidance].map(
+                          (item, index) => (
+                            <div
+                              key={`${item}-${index}`}
+                              className="grid grid-cols-[34px_minmax(0,1fr)] items-start gap-3 rounded-2xl border border-white/[.07] bg-white/[.025] p-3"
+                            >
+                              <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#c8f33f] text-xs font-black text-[#102014]">
+                                {index + 1}
+                              </span>
+                              <p className="text-sm leading-7 text-white/75">
+                                {item}
+                              </p>
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    </section>
+                  )}
+
+                  {products.length > 0 && (
+                    <section className="rounded-[24px] border border-[#c8f33f]/20 bg-black/15 p-5 sm:p-6">
+                      <h3 className="flex items-center gap-2 text-xl font-black text-white">
+                        <ShieldCheck size={21} className="text-[#c8f33f]" />
+                        منتجات ArtVert المقترحة
+                      </h3>
+
+                      <div className="mt-5 grid gap-4 md:grid-cols-3">
+                        {products.map((product) => (
+                          <article
+                            key={product.id}
+                            className="flex min-h-[220px] flex-col rounded-[20px] border border-[#c8f33f]/20 bg-[#082319]/80 p-4"
+                          >
+                            <div className="grid h-14 w-14 place-items-center rounded-2xl border border-[#c8f33f]/25 bg-[#c8f33f]/10 text-[#c8f33f]">
+                              <Leaf size={26} />
+                            </div>
+
+                            <h4 className="mt-4 text-lg font-black text-white">
+                              {product.nameAr}
+                            </h4>
+
+                            <p className="mt-2 flex-1 text-xs leading-6 text-white/55">
+                              {product.reason ||
+                                product.benefits?.[0] ||
+                                product.composition ||
+                                "منتج ArtVert مناسب للحالة وفق البيانات المنشورة."}
+                            </p>
+
+                            {product.slug ? (
+                              <Link
+                                href={`/products/${product.slug}`}
+                                className="mt-4 flex min-h-11 items-center justify-center rounded-xl bg-[#c8f33f] px-4 text-sm font-black text-[#102014]"
+                              >
+                                عرض المنتج
+                              </Link>
+                            ) : null}
+                          </article>
+                        ))}
+                      </div>
+                    </section>
+                  )}
+
+                  <section className="grid gap-4 md:grid-cols-2">
+                    {followUpQuestion && (
+                      <div className="rounded-[24px] border border-white/10 bg-black/15 p-5">
+                        <h3 className="flex items-center gap-2 text-lg font-black text-white">
+                          <ClipboardList
+                            size={20}
+                            className="text-[#c8f33f]"
+                          />
+                          سؤال المتابعة
+                        </h3>
+
+                        <p className="mt-4 text-sm leading-8 text-white/70">
+                          {followUpQuestion}
+                        </p>
+                      </div>
+                    )}
+
+                    {warning && (
+                      <div className="rounded-[24px] border border-white/10 bg-black/15 p-5">
+                        <h3 className="flex items-center gap-2 text-lg font-black text-white">
+                          <Lightbulb size={20} className="text-[#c8f33f]" />
+                          نصيحة
+                        </h3>
+
+                        <p className="mt-4 text-sm leading-8 text-white/70">
+                          {warning}
+                        </p>
+                      </div>
+                    )}
+                  </section>
                 </div>
               )}
             </div>
 
-            {/* Bottom Input Area */}
-            <div className="relative z-20 shrink-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-              <div className="mx-auto flex w-full max-w-4xl gap-3 rounded-[32px] border border-white/10 bg-black/40 p-2 sm:p-3 backdrop-blur-xl">
-                
-                {/* Media Buttons (Left side visually in RTL) */}
-                <div className="flex shrink-0 gap-2">
-                  <label className="flex h-16 w-20 sm:h-20 sm:w-[90px] cursor-pointer flex-col items-center justify-center gap-1 sm:gap-2 rounded-[22px] border border-white/10 bg-transparent text-white hover:bg-white/5 transition-colors">
-                    <input type="file" accept="image/*" onChange={(e) => void chooseImage(e.target.files?.[0])} disabled={isRequestPending || imageUploading} className="sr-only" />
-                    <ImageIcon size={22} className={imageUploading ? "animate-bounce" : ""} />
-                    <span className="text-[10px] sm:text-xs">تحميل صورة</span>
-                  </label>
+            <div className="border-t border-white/10 bg-[#03170f]/92 p-3 sm:p-4">
+              {imagePreview && (
+                <div className="mb-3 flex items-center justify-between rounded-2xl border border-[#c8f33f]/20 bg-[#c8f33f]/[.06] p-2">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={imagePreview}
+                      alt="معاينة الصورة"
+                      className="h-14 w-14 rounded-xl object-cover"
+                    />
 
-                  <button type="button" onClick={() => setRecording(!recording)} className={["flex h-16 w-20 sm:h-20 sm:w-[90px] flex-col items-center justify-center gap-1 sm:gap-2 rounded-[22px] border transition-colors", recording ? "border-rose-400/50 bg-rose-400/20 text-rose-300" : "border-white/10 bg-transparent text-white hover:bg-white/5"].join(" ")}>
-                    <Mic size={22} className={recording ? "animate-pulse" : ""} />
-                    <span className="text-[10px] sm:text-xs">تسجيل صوتي</span>
+                    <div>
+                      <p className="text-xs font-black text-white">
+                        صورة جاهزة للإرسال
+                      </p>
+                      <p className="mt-1 text-[10px] text-white/45">
+                        سيتم تحليلها مع رسالتك
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    className="grid h-9 w-9 place-items-center rounded-lg border border-rose-300/20 bg-rose-400/10 text-rose-200"
+                    aria-label="حذف الصورة"
+                  >
+                    <X size={16} />
                   </button>
                 </div>
+              )}
 
-                {/* Text Input (Right side visually in RTL) */}
-                <div className="flex min-w-0 flex-1 flex-col justify-center rounded-[22px] bg-white/5 px-4 relative border border-white/5">
-                  {imagePreview && (
-                     <div className="absolute -top-16 right-4 flex items-center gap-2 rounded-xl bg-black/80 p-2 backdrop-blur-md border border-white/10">
-                       <img src={imagePreview} className="h-10 w-10 rounded-lg object-cover" alt="preview" />
-                       <button onClick={removeImage} className="text-rose-400 hover:text-rose-300"><X size={16}/></button>
-                     </div>
-                  )}
+              <div className="flex items-stretch gap-2 rounded-[22px] border border-white/10 bg-black/25 p-2">
+                <label className="grid h-14 w-14 shrink-0 cursor-pointer place-items-center rounded-2xl border border-white/10 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:text-[#c8f33f]">
                   <input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendCurrentMessage())}
-                    placeholder="اكتب هنا واسأل عن مشكلتك..."
-                    className="w-full bg-transparent text-sm leading-loose text-white outline-none placeholder:text-white/40"
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) =>
+                      void chooseImage(event.target.files?.[0])
+                    }
+                    disabled={isRequestPending || imageUploading}
+                    className="sr-only"
                   />
-                  <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    <span className="hidden sm:inline text-xs font-bold text-white/60">محادثة جديدة</span>
-                    <button
-                      onClick={sendCurrentMessage}
-                      disabled={!canSend || isRequestPending || imageUploading}
-                      className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-transparent text-white/60 hover:text-[#c8f33f] transition-colors disabled:opacity-40"
-                    >
-                      <Send size={20} className="-rotate-180" />
-                    </button>
-                  </div>
-                </div>
+                  {imageUploading ? (
+                    <Loader2 size={21} className="animate-spin" />
+                  ) : (
+                    <ImageIcon size={21} />
+                  )}
+                </label>
 
+                <button
+                  type="button"
+                  onClick={() => setRecording((current) => !current)}
+                  className={[
+                    "grid h-14 w-14 shrink-0 place-items-center rounded-2xl border transition",
+                    recording
+                      ? "border-rose-300/35 bg-rose-400/15 text-rose-200"
+                      : "border-white/10 bg-white/[.035] text-white hover:border-[#c8f33f]/45 hover:text-[#c8f33f]",
+                  ].join(" ")}
+                  aria-label="تسجيل صوتي"
+                >
+                  <Mic size={21} className={recording ? "animate-pulse" : ""} />
+                </button>
+
+                <input
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      sendCurrentMessage();
+                    }
+                  }}
+                  placeholder="اكتب رسالتك هنا..."
+                  className="min-w-0 flex-1 bg-transparent px-3 text-sm text-white outline-none placeholder:text-white/35"
+                />
+
+                <button
+                  type="button"
+                  onClick={sendCurrentMessage}
+                  disabled={!canSend || isRequestPending || imageUploading}
+                  className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#c8f33f] text-[#102014] shadow-[0_0_18px_rgba(200,243,63,.22)] disabled:cursor-not-allowed disabled:opacity-35"
+                  aria-label="إرسال"
+                >
+                  {isRequestPending ? (
+                    <Loader2 size={21} className="animate-spin" />
+                  ) : (
+                    <Send size={21} className="-rotate-180" />
+                  )}
+                </button>
               </div>
             </div>
           </section>
 
+          <aside className="flex min-h-[760px] flex-col overflow-hidden rounded-[28px] border border-[#9fbd35]/25 bg-[#041a10]/92 shadow-[0_24px_80px_rgba(0,0,0,.24)] backdrop-blur-xl">
+            <header className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+              <div>
+                <p className="text-xs font-black text-[#c8f33f]">
+                  كل الرسائل في جانب واحد
+                </p>
+                <h2 className="mt-1 text-xl font-black text-white">
+                  المحادثة
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                onClick={resetConversation}
+                className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:text-[#c8f33f]"
+              >
+                <Plus size={16} />
+                محادثة جديدة
+              </button>
+            </header>
+
+            <div
+              ref={chatScrollRef}
+              className="min-h-0 flex-1 overflow-y-auto px-4 py-5"
+            >
+              <div className="space-y-4">
+                <article className="rounded-[20px] border border-white/10 bg-[#082319]/80 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="grid h-8 w-8 place-items-center rounded-full border border-[#c8f33f]/30 bg-[#c8f33f]/10 text-[#c8f33f]">
+                        <Bot size={15} />
+                      </span>
+                      <span className="text-xs font-black text-[#c8f33f]">
+                        دكتور ArtVert
+                      </span>
+                    </div>
+
+                    <span className="text-[10px] text-white/35">
+                      الآن
+                    </span>
+                  </div>
+
+                  <p className="mt-3 text-sm leading-7 text-white/75">
+                    أهلاً بك، اكتب مشكلتك أو ارفع صورة للنبات وسأساعدك في
+                    التشخيص والعلاج.
+                  </p>
+                </article>
+
+                {transcript.map((item) => {
+                  const isUser = item.role === "user";
+
+                  return (
+                    <article
+                      key={item.id}
+                      className={[
+                        "rounded-[20px] border p-4",
+                        isUser
+                          ? "border-[#c8f33f]/25 bg-[#143b25]/90"
+                          : "border-white/10 bg-[#082319]/80",
+                      ].join(" ")}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={[
+                              "grid h-8 w-8 place-items-center rounded-full border",
+                              isUser
+                                ? "border-white/20 bg-white/10 text-white"
+                                : "border-[#c8f33f]/30 bg-[#c8f33f]/10 text-[#c8f33f]",
+                            ].join(" ")}
+                          >
+                            {isUser ? <User size={15} /> : <Bot size={15} />}
+                          </span>
+
+                          <span
+                            className={[
+                              "text-xs font-black",
+                              isUser ? "text-white" : "text-[#c8f33f]",
+                            ].join(" ")}
+                          >
+                            {isUser ? "أنت" : "دكتور ArtVert"}
+                          </span>
+                        </div>
+
+                        <span className="text-[10px] text-white/35">
+                          {timeLabel(item.createdAt)}
+                        </span>
+                      </div>
+
+                      {item.imageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setZoomedImage(item.imageUrl)}
+                          className="mt-3 block overflow-hidden rounded-2xl border border-white/10"
+                        >
+                          <img
+                            src={item.imageUrl}
+                            alt="صورة النبات"
+                            className="max-h-52 w-full object-contain"
+                          />
+                        </button>
+                      )}
+
+                      <p className="mt-3 whitespace-pre-line text-sm leading-7 text-white/75">
+                        {item.text}
+                      </p>
+                    </article>
+                  );
+                })}
+
+                {isRequestPending && (
+                  <article className="rounded-[20px] border border-white/10 bg-[#082319]/80 p-4">
+                    <div className="flex items-center gap-3">
+                      <Loader2 size={17} className="animate-spin text-[#c8f33f]" />
+                      <span className="text-xs font-black text-white/65">
+                        دكتور ArtVert بيحلل الحالة...
+                      </span>
+                    </div>
+                  </article>
+                )}
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 p-4">
+              <div className="rounded-[20px] border border-[#c8f33f]/20 bg-[#c8f33f]/[.05] p-4">
+                <div className="flex items-center gap-3">
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-[#c8f33f]/25 bg-[#082319]">
+                    <Image
+                      src="/doctor/artvert-doctor.png"
+                      alt="دكتور ArtVert"
+                      fill
+                      priority
+                      sizes="56px"
+                      className="object-contain object-bottom"
+                    />
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-black text-white">
+                        دكتور ArtVert AI
+                      </p>
+                      <CheckCircle2 size={15} className="text-[#c8f33f]" />
+                    </div>
+                    <p className="mt-1 text-[11px] text-white/45">
+                      مساعدك الزراعي الذكي — متاح الآن
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
 
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-[120] grid place-items-center bg-black/85 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-[120] grid place-items-center bg-black/88 p-4 backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           aria-label="معاينة صورة النبات"
@@ -1001,7 +1042,7 @@ export function DoctorChat() {
           <button
             type="button"
             onClick={() => setZoomedImage(undefined)}
-            className="absolute left-4 top-4 grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-black/50 text-white transition hover:border-[#c8f33f]/50 hover:text-[#c8f33f]"
+            className="absolute left-4 top-4 grid h-11 w-11 place-items-center rounded-xl border border-white/15 bg-black/55 text-white"
             aria-label="إغلاق الصورة"
           >
             <X size={21} />
