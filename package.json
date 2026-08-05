@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -17,15 +17,21 @@
     "test:knowledge": "tsx scripts/test-knowledge-foundation.ts",
     "test:diseases": "tsx scripts/test-disease-management.ts",
     "plants:cleanup": "tsx scripts/process-plant-cleanup.ts",
+    "plants:import": "tsx scripts/import-plants.ts",
     "diseases:cleanup": "tsx scripts/process-disease-cleanup.ts",
+    "diseases:import": "tsx scripts/import-diseases.ts",
     "test:pests": "tsx scripts/test-pest-management.ts",
     "pests:cleanup": "tsx scripts/process-pest-cleanup.ts",
+    "pests:import": "tsx scripts/import-pests.ts",
     "test:deficiencies": "tsx scripts/test-deficiency-management.ts",
+    "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts",
+    "deficiencies:import": "tsx scripts/import-deficiencies.ts",
     "products:import": "tsx scripts/import-legacy-products.ts",
     "test:products": "tsx scripts/test-product-management.ts",
     "test:doctor": "tsx scripts/test-doctor-engine.ts",
     "test:doctor-ui": "tsx scripts/test-doctor-ui.ts",
     "test:homepage-contract": "tsx scripts/test-homepage-contract.ts",
+    "test:homepage-browser": "node scripts/test-approved-homepage-browser.mjs",
     "test:vision": "tsx scripts/test-vision.ts",
     "test:customers": "node scripts/test-customer-accounts.mjs",
     "test:customers:integration": "tsx scripts/test-customer-integration.ts",
@@ -34,11 +40,11 @@
     "analytics:rollup": "tsx scripts/rollup-analytics.ts",
     "test:production-readiness": "node scripts/production-readiness.mjs",
     "test:load": "node scripts/load-test.mjs",
-    "knowledge:validate-import": "tsx scripts/test-knowledge-import.ts",
-    "deficiencies:cleanup": "tsx scripts/process-deficiency-cleanup.ts"
+    "knowledge:validate-import": "tsx scripts/test-knowledge-import.ts"
   },
   "dependencies": {
     "@prisma/client": "6.19.2",
+    "@vercel/blob": "^2.6.1",
     "bcryptjs": "3.0.3",
     "dotenv": "16.6.1",
     "framer-motion": "^12.43.0",
@@ -47,7 +53,8 @@
     "next-auth": "4.24.15",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "sharp": "0.34.5"
+    "sharp": "0.34.5",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

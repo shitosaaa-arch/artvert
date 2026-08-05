@@ -1,61 +1,268 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth/options";
-import { UserRole } from "@/lib/auth/roles";
-import { getPrismaClient } from "@/lib/db/prisma";
-import { canHardDeletePlant, canManagePlant, canPublishPlant, canViewPlants } from "@/lib/plants/plant-permissions";
-import { PlantCleanupProcessor } from "@/lib/plants/plant-cleanup";
-import { normalizePlantAlias, plantCategories, validatePlantInput } from "@/schemas/plant";
-import { toPlantSlug } from "@/lib/plants/plant-slug";
+import { NextRequest, NextResponse } from "next/server";
+import { getToken } from "next-auth/jwt";
+import { Prisma } from "@prisma/client";
 
-async function actor() { const session = await getServerSession(authOptions); if (!session?.user?.id || !session.user.role) throw new Error("UNAUTHORIZED"); return { id: session.user.id, role: session.user.role as UserRole }; }
-const include = { entity: true, aliases: true, images: { orderBy: { sortOrder: "asc" as const } }, syncState: true };
+import { prisma } from "@/lib/prisma";
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const current = await actor();
-    if (!canViewPlants(current.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    const plant = await getPrismaClient().plant.findUnique({ where: { id: (await params).id }, include });
-    return plant ? NextResponse.json(plant) : NextResponse.json({ error: "Not found" }, { status: 404 });
-  } catch { return NextResponse.json({ error: "Access denied" }, { status: 401 }); }
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+type RouteContext = {
+  params: Promise<{
+    id: string;
+  }>;
+};
+
+async function authorizeAdmin(request: NextRequest) {
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
+
+  if (!token) {
+    return {
+      authorized: false as const,
+      response: NextResponse.json(
+        {
+          error: "UNAUTHORIZED",
+          message: "يجب تسجيل الدخول أولًا.",
+        },
+        {
+          status: 401,
+        },
+      ),
+    };
+  }
+
+  if (
+    typeof token.sessionExpiresAt !== "number" ||
+    token.sessionExpiresAt <= Date.now()
+  ) {
+    return {
+      authorized: false as const,
+      response: NextResponse.json(
+        {
+          error: "SESSION_EXPIRED",
+          message:
+            "انتهت جلسة تسجيل الدخول. سجل الدخول مرة أخرى.",
+        },
+        {
+          status: 401,
+        },
+      ),
+    };
+  }
+
+  const role =
+    typeof token.role === "string"
+      ? token.role.toUpperCase()
+      : "";
+
+  if (
+    role !== "ADMIN" &&
+    role !== "SUPER_ADMIN" &&
+    role !== "AGRONOMIST"
+  ) {
+    return {
+      authorized: false as const,
+      response: NextResponse.json(
+        {
+          error: "FORBIDDEN",
+          message:
+            "ليس لديك صلاحية لحذف النباتات.",
+        },
+        {
+          status: 403,
+        },
+      ),
+    };
+  }
+
+  return {
+    authorized: true as const,
+    token,
+  };
 }
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const current = await actor(); const prisma = getPrismaClient(); const id = (await params).id;
-    const existing = await prisma.plant.findUnique({ where: { id }, include: { entity: true } });
-    if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (!canManagePlant(current.role, current.id, { createdByUserId: existing.createdByUserId, publicationState: existing.entity.publicationState })) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    const body = await request.json();
-    const publicationState = body.publicationState ?? existing.entity.publicationState;
-    if (publicationState !== existing.entity.publicationState && !canPublishPlant(current.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    const input = { name: body.name ?? existing.entity.name, slug: body.slug ?? existing.entity.slug, category: body.category ?? existing.category, scientificName: body.scientificName ?? existing.scientificName ?? undefined, description: body.description ?? existing.description ?? undefined, aliases: body.aliases, publicationState };
-    validatePlantInput({ ...input, aliases: input.aliases ?? [] });
-    if (!plantCategories.includes(input.category)) return NextResponse.json({ error: "Invalid category" }, { status: 400 });
-    const slug = toPlantSlug(input.slug || input.name);
-    if (!slug) return NextResponse.json({ error: "Plant slug is invalid" }, { status: 400 });
-    const updated = await prisma.$transaction(async (tx) => {
-      await tx.knowledgeEntity.update({ where: { id }, data: { name: input.name.trim(), slug, publicationState } });
-      if (input.aliases) await tx.plantAlias.deleteMany({ where: { plantId: id } });
-      return tx.plant.update({ where: { id }, data: { category: input.category, scientificName: input.scientificName?.trim() || null, description: input.description?.trim() || null, updatedByUserId: current.id, ...(input.aliases ? { aliases: { create: input.aliases.map((alias: { value: string; locale?: string }) => ({ value: alias.value.trim(), normalizedValue: normalizePlantAlias(alias.value), locale: alias.locale?.trim() || null })) } } : {}) }, include });
-    });
-    return NextResponse.json(updated);
-  } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Plant could not be updated" }, { status: 400 }); }
+function isRecordNotFound(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2025"
+  );
 }
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+function isForeignKeyConflict(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2003"
+  );
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: RouteContext,
+) {
   try {
-    const current = await actor(); const prisma = getPrismaClient(); const id = (await params).id; const hard = new URL(request.url).searchParams.get("hard") === "true";
-    const plant = await prisma.plant.findUnique({ where: { id }, include: { entity: true, images: { select: { storageKey: true } } } });
-    if (!plant) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (hard) {
-      if (!canHardDeletePlant(current.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      await prisma.$transaction(async (tx) => { await Promise.all(plant.images.map((image) => tx.storageCleanupJob.upsert({ where: { storageKey: image.storageKey }, create: { storageKey: image.storageKey }, update: { status: "PENDING", diagnosticCode: null } }))); await tx.plant.delete({ where: { id } }); await tx.knowledgeEntity.delete({ where: { id } }); });
-      await new PlantCleanupProcessor().processPending();
-    } else {
-      if (!canPublishPlant(current.role)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      await prisma.knowledgeEntity.update({ where: { id }, data: { publicationState: "ARCHIVED" } });
+    const authorization =
+      await authorizeAdmin(request);
+
+    if (!authorization.authorized) {
+      return authorization.response;
     }
-    return new NextResponse(null, { status: 204 });
-  } catch { return NextResponse.json({ error: "Plant could not be deleted" }, { status: 400 }); }
+
+    const { id } = await context.params;
+    const plantId = id.trim();
+
+    if (!plantId) {
+      return NextResponse.json(
+        {
+          error: "INVALID_PLANT_ID",
+          message: "معرّف النبات غير صحيح.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    const plant = await prisma.plant.findUnique({
+      where: {
+        id: plantId,
+      },
+      select: {
+        id: true,
+        entity: {
+          select: {
+            name: true,
+            slug: true,
+            publicationState: true,
+          },
+        },
+        images: {
+          select: {
+            storageKey: true,
+          },
+        },
+        _count: {
+          select: {
+            aliases: true,
+            images: true,
+            diseases: true,
+            pests: true,
+            deficiencies: true,
+            productRecommendations: true,
+            savedByCustomers: true,
+          },
+        },
+      },
+    });
+
+    if (!plant) {
+      return NextResponse.json(
+        {
+          error: "PLANT_NOT_FOUND",
+          message: "النبات غير موجود.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    await prisma.$transaction(
+      async (transaction) => {
+        if (plant.images.length > 0) {
+          await transaction.storageCleanupJob.createMany({
+            data: plant.images.map((image) => ({
+              storageKey: image.storageKey,
+              status: "PENDING",
+            })),
+            skipDuplicates: true,
+          });
+        }
+
+        await transaction.plant.delete({
+          where: {
+            id: plantId,
+          },
+        });
+
+        await transaction.knowledgeEntity.delete({
+          where: {
+            id: plantId,
+          },
+        });
+      },
+      {
+        maxWait: 10000,
+        timeout: 20000,
+      },
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "تم حذف النبات نهائيًا.",
+      plant: {
+        id: plant.id,
+        name: plant.entity.name,
+        slug: plant.entity.slug,
+        publicationState:
+          plant.entity.publicationState,
+        deletedRelations: {
+          aliases: plant._count.aliases,
+          images: plant._count.images,
+          diseases: plant._count.diseases,
+          pests: plant._count.pests,
+          deficiencies:
+            plant._count.deficiencies,
+          productRecommendations:
+            plant._count
+              .productRecommendations,
+          savedByCustomers:
+            plant._count.savedByCustomers,
+        },
+      },
+    });
+  } catch (error) {
+    if (isRecordNotFound(error)) {
+      return NextResponse.json(
+        {
+          error: "PLANT_NOT_FOUND",
+          message: "النبات غير موجود.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    if (isForeignKeyConflict(error)) {
+      return NextResponse.json(
+        {
+          error: "PLANT_DELETE_CONFLICT",
+          message:
+            "تعذر حذف النبات لأنه مرتبط ببيانات تمنع الحذف.",
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
+    console.error(
+      "DELETE /api/admin/plants/[id] failed",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        error: "INTERNAL_SERVER_ERROR",
+        message:
+          "تعذر حذف النبات حاليًا. حاول مرة أخرى.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
 }

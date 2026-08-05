@@ -14,24 +14,24 @@ enum UserRole {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  name            String
-  email           String    @unique
-  passwordHash    String
-  role            UserRole  @default(AGRONOMIST)
-  active          Boolean   @default(true)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  createdPlants   Plant[]   @relation("PlantCreatedBy")
-  updatedPlants   Plant[]   @relation("PlantUpdatedBy")
-  createdDiseases Disease[] @relation("DiseaseCreatedBy")
-  updatedDiseases Disease[] @relation("DiseaseUpdatedBy")
-  createdPests    Pest[]    @relation("PestCreatedBy")
-  updatedPests    Pest[]    @relation("PestUpdatedBy")
+  id                  String       @id @default(cuid())
+  name                String
+  email               String       @unique
+  passwordHash        String?
+  role                UserRole     @default(AGRONOMIST)
+  active              Boolean      @default(true)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  createdPlants       Plant[]      @relation("PlantCreatedBy")
+  updatedPlants       Plant[]      @relation("PlantUpdatedBy")
+  createdDiseases     Disease[]    @relation("DiseaseCreatedBy")
+  updatedDiseases     Disease[]    @relation("DiseaseUpdatedBy")
+  createdPests        Pest[]       @relation("PestCreatedBy")
+  updatedPests        Pest[]       @relation("PestUpdatedBy")
   createdDeficiencies Deficiency[] @relation("DeficiencyCreatedBy")
   updatedDeficiencies Deficiency[] @relation("DeficiencyUpdatedBy")
-  createdProducts Product[] @relation("ProductCreatedBy")
-  updatedProducts Product[] @relation("ProductUpdatedBy")
+  createdProducts     Product[]    @relation("ProductCreatedBy")
+  updatedProducts     Product[]    @relation("ProductUpdatedBy")
 
   @@index([active])
   @@index([role])
@@ -121,26 +121,45 @@ enum NutrientClassification {
   BENEFICIAL_ELEMENT
   OTHER
 }
+
 enum NutrientMobility {
   MOBILE
   IMMOBILE
   CONTEXT_DEPENDENT
   UNKNOWN
 }
+
 enum PlantDeficiencySusceptibility {
- LOW
- MEDIUM
- HIGH
+  LOW
+  MEDIUM
+  HIGH
 }
+
 enum PlantDeficiencyRelationshipType {
- COMMON
- SUSCEPTIBLE
- OCCASIONAL
+  COMMON
+  SUSCEPTIBLE
+  OCCASIONAL
 }
+
 enum ProductImageOwnership {
   LEGACY_PUBLIC
   MANAGED_BLOB
   EXTERNAL
+}
+
+enum ProductImageFit {
+  COVER
+  CONTAIN
+  FILL
+  SCALE_DOWN
+}
+
+enum ProductImagePosition {
+  CENTER
+  TOP
+  BOTTOM
+  LEFT
+  RIGHT
 }
 
 enum ProductRecommendationState {
@@ -187,51 +206,51 @@ enum PlantDiseaseRelationshipType {
 }
 
 model Plant {
-  id              String              @id
-  category        PlantCategory
-  scientificName  String?
-  description     String?
-  createdByUserId String
-  updatedByUserId String?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  entity          KnowledgeEntity     @relation(fields: [id], references: [id], onDelete: Restrict)
-  createdBy       User                @relation("PlantCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy       User?               @relation("PlantUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  aliases         PlantAlias[]
-  images          PlantImage[]
-  syncState       PlantKnowledgeSync?
-  diseases        PlantDisease[]
-  pests           PlantPest[]
-  deficiencies    PlantDeficiency[]
+  id                     String                  @id
+  category               PlantCategory
+  scientificName         String?
+  description            String?
+  createdByUserId        String
+  updatedByUserId        String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  entity                 KnowledgeEntity         @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy              User                    @relation("PlantCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy              User?                   @relation("PlantUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases                PlantAlias[]
+  images                 PlantImage[]
+  syncState              PlantKnowledgeSync?
+  diseases               PlantDisease[]
+  pests                  PlantPest[]
+  deficiencies           PlantDeficiency[]
   productRecommendations ProductRecommendation[]
-  savedByCustomers CustomerSavedPlant[]
+  savedByCustomers       CustomerSavedPlant[]
 
   @@index([category])
   @@index([createdByUserId])
 }
 
 model Pest {
-  id              String               @id
-  classification  PestClassification
-  severity        PestSeverity
-  economicImpact  PestEconomicImpact
-  scientificName  String?
-  description     String?
-  createdByUserId String
-  updatedByUserId String?
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-  entity          KnowledgeEntity      @relation(fields: [id], references: [id], onDelete: Restrict)
-  createdBy       User                 @relation("PestCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy       User?                @relation("PestUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  aliases         PestAlias[]
-  symptoms        PestSymptom[]
-  damagePatterns  PestDamagePattern[]
-  lifecycleStages PestLifecycleStage[]
-  plants          PlantPest[]
-  images          PestImage[]
-  syncState       PestKnowledgeSync?
+  id                     String                  @id
+  classification         PestClassification
+  severity               PestSeverity
+  economicImpact         PestEconomicImpact
+  scientificName         String?
+  description            String?
+  createdByUserId        String
+  updatedByUserId        String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  entity                 KnowledgeEntity         @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy              User                    @relation("PestCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy              User?                   @relation("PestUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases                PestAlias[]
+  symptoms               PestSymptom[]
+  damagePatterns         PestDamagePattern[]
+  lifecycleStages        PestLifecycleStage[]
+  plants                 PlantPest[]
+  images                 PestImage[]
+  syncState              PestKnowledgeSync?
   productRecommendations ProductRecommendation[]
 
   @@index([classification])
@@ -330,142 +349,159 @@ model PestKnowledgeSync {
 }
 
 model Deficiency {
-  id String @id
-  nutrientCode String @unique
-  nutrientNameAr String
-  nutrientNameEn String
-  scientificName String?
-  classification NutrientClassification
-  mobility NutrientMobility @default(UNKNOWN)
-  description String?
-  soilContext Json?
-  phContext Json?
-  createdByUserId String
-  updatedByUserId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  entity KnowledgeEntity @relation(fields: [id], references: [id], onDelete: Restrict)
-  createdBy User @relation("DeficiencyCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy User? @relation("DeficiencyUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  aliases DeficiencyAlias[]
-  symptoms DeficiencySymptom[]
-  visualPatterns DeficiencyVisualPattern[]
-  causes DeficiencyCause[]
-  aggravatingConditions DeficiencyAggravatingCondition[]
-  plants PlantDeficiency[]
-  images DeficiencyImage[]
-  syncState DeficiencyKnowledgeSync?
+  id                     String                           @id
+  nutrientCode           String                           @unique
+  nutrientNameAr         String
+  nutrientNameEn         String
+  scientificName         String?
+  classification         NutrientClassification
+  mobility               NutrientMobility                 @default(UNKNOWN)
+  description            String?
+  soilContext            Json?
+  phContext              Json?
+  createdByUserId        String
+  updatedByUserId        String?
+  createdAt              DateTime                         @default(now())
+  updatedAt              DateTime                         @updatedAt
+  entity                 KnowledgeEntity                  @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy              User                             @relation("DeficiencyCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy              User?                            @relation("DeficiencyUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases                DeficiencyAlias[]
+  symptoms               DeficiencySymptom[]
+  visualPatterns         DeficiencyVisualPattern[]
+  causes                 DeficiencyCause[]
+  aggravatingConditions  DeficiencyAggravatingCondition[]
+  plants                 PlantDeficiency[]
+  images                 DeficiencyImage[]
+  syncState              DeficiencyKnowledgeSync?
   productRecommendations ProductRecommendation[]
+
   @@index([classification])
   @@index([mobility])
   @@index([createdByUserId])
 }
+
 model DeficiencyAlias {
- id String @id @default(cuid())
- deficiencyId String
- value String
- normalizedValue String
- locale String?
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@unique([deficiencyId,normalizedValue])
- @@index([normalizedValue])
+  id              String     @id @default(cuid())
+  deficiencyId    String
+  value           String
+  normalizedValue String
+  locale          String?
+  deficiency      Deficiency @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@unique([deficiencyId, normalizedValue])
+  @@index([normalizedValue])
 }
+
 model DeficiencySymptom {
- id String @id @default(cuid())
- deficiencyId String
- value String
- normalizedValue String
- locations String[]
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@unique([deficiencyId,normalizedValue])
- @@index([normalizedValue])
+  id              String     @id @default(cuid())
+  deficiencyId    String
+  value           String
+  normalizedValue String
+  locations       String[]
+  deficiency      Deficiency @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@unique([deficiencyId, normalizedValue])
+  @@index([normalizedValue])
 }
+
 model DeficiencyVisualPattern {
- id String @id @default(cuid())
- deficiencyId String
- value String
- normalizedValue String
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@unique([deficiencyId,normalizedValue])
+  id              String     @id @default(cuid())
+  deficiencyId    String
+  value           String
+  normalizedValue String
+  deficiency      Deficiency @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@unique([deficiencyId, normalizedValue])
 }
+
 model DeficiencyCause {
- id String @id @default(cuid())
- deficiencyId String
- value String
- normalizedValue String
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@unique([deficiencyId,normalizedValue])
+  id              String     @id @default(cuid())
+  deficiencyId    String
+  value           String
+  normalizedValue String
+  deficiency      Deficiency @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@unique([deficiencyId, normalizedValue])
 }
+
 model DeficiencyAggravatingCondition {
- id String @id @default(cuid())
- deficiencyId String
- value String
- normalizedValue String
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@unique([deficiencyId,normalizedValue])
+  id              String     @id @default(cuid())
+  deficiencyId    String
+  value           String
+  normalizedValue String
+  deficiency      Deficiency @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@unique([deficiencyId, normalizedValue])
 }
+
 model PlantDeficiency {
- plantId String
- deficiencyId String
- susceptibility PlantDeficiencySusceptibility
- relationshipType PlantDeficiencyRelationshipType
- notes String?
- soilContext Json?
- phContext Json?
- plant Plant @relation(fields:[plantId],references:[id],onDelete:Cascade)
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@id([plantId,deficiencyId])
- @@index([deficiencyId])
+  plantId          String
+  deficiencyId     String
+  susceptibility   PlantDeficiencySusceptibility
+  relationshipType PlantDeficiencyRelationshipType
+  notes            String?
+  soilContext      Json?
+  phContext        Json?
+  plant            Plant                           @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  deficiency       Deficiency                      @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@id([plantId, deficiencyId])
+  @@index([deficiencyId])
 }
+
 model DeficiencyImage {
- id String @id @default(cuid())
- deficiencyId String
- storageKey String @unique
- url String
- alt String
- contentType String
- fileSize Int
- width Int
- height Int
- checksum String
- sortOrder Int
- createdAt DateTime @default(now())
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@unique([deficiencyId,sortOrder])
+  id           String     @id @default(cuid())
+  deficiencyId String
+  storageKey   String     @unique
+  url          String
+  alt          String
+  contentType  String
+  fileSize     Int
+  width        Int
+  height       Int
+  checksum     String
+  sortOrder    Int
+  createdAt    DateTime   @default(now())
+  deficiency   Deficiency @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@unique([deficiencyId, sortOrder])
 }
+
 model DeficiencyKnowledgeSync {
- deficiencyId String @id
- status KnowledgeSyncStatus @default(PENDING)
- lastSyncedAt DateTime?
- diagnosticCode String?
- updatedAt DateTime @updatedAt
- deficiency Deficiency @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@index([status])
+  deficiencyId   String              @id
+  status         KnowledgeSyncStatus @default(PENDING)
+  lastSyncedAt   DateTime?
+  diagnosticCode String?
+  updatedAt      DateTime            @updatedAt
+  deficiency     Deficiency          @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@index([status])
 }
 
 model Disease {
-  id              String                @id
-  classification  DiseaseClassification
-  severity        DiseaseSeverity
-  scientificName  String?
-  pathogenGenus   String?
-  pathogenSpecies String?
-  lifecycle       String?
-  createdByUserId String
-  updatedByUserId String?
-  createdAt       DateTime              @default(now())
-  updatedAt       DateTime              @updatedAt
-  entity          KnowledgeEntity       @relation(fields: [id], references: [id], onDelete: Restrict)
-  createdBy       User                  @relation("DiseaseCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy       User?                 @relation("DiseaseUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  aliases         DiseaseAlias[]
-  symptoms        DiseaseSymptom[]
-  causes          DiseaseCause[]
-  plantParts      DiseasePlantPart[]
-  riskFactors     DiseaseRiskFactor[]
-  plants          PlantDisease[]
-  images          DiseaseImage[]
-  syncState       DiseaseKnowledgeSync?
+  id                     String                  @id
+  classification         DiseaseClassification
+  severity               DiseaseSeverity
+  scientificName         String?
+  pathogenGenus          String?
+  pathogenSpecies        String?
+  lifecycle              String?
+  createdByUserId        String
+  updatedByUserId        String?
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  entity                 KnowledgeEntity         @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy              User                    @relation("DiseaseCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy              User?                   @relation("DiseaseUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases                DiseaseAlias[]
+  symptoms               DiseaseSymptom[]
+  causes                 DiseaseCause[]
+  plantParts             DiseasePlantPart[]
+  riskFactors            DiseaseRiskFactor[]
+  plants                 PlantDisease[]
+  images                 DiseaseImage[]
+  syncState              DiseaseKnowledgeSync?
   productRecommendations ProductRecommendation[]
 
   @@index([classification])
@@ -651,11 +687,13 @@ enum KnowledgeSourceStatus {
   APPROVED
   REJECTED
 }
+
 enum KnowledgeReviewStatus {
   PENDING
   APPROVED
   REJECTED
 }
+
 enum KnowledgeImportStatus {
   DRAFT
   VALIDATED
@@ -666,50 +704,50 @@ enum KnowledgeImportStatus {
 }
 
 model KnowledgeSource {
-  id                       String                @id
-  publisher                String
-  url                      String
-  contentType              String
-  license                  String
-  commercialUseAllowed     Boolean
-  attributionRequirements  String?
-  modificationAllowed      Boolean
-  redistributionAllowed    Boolean
-  reviewDate               DateTime
-  status                   KnowledgeSourceStatus @default(PENDING)
-  reviewerNotes            String?
-  createdAt                DateTime              @default(now())
-  updatedAt                DateTime              @updatedAt
-  provenance               KnowledgeProvenance[]
+  id                      String                @id
+  publisher               String
+  url                     String
+  contentType             String
+  license                 String
+  commercialUseAllowed    Boolean
+  attributionRequirements String?
+  modificationAllowed     Boolean
+  redistributionAllowed   Boolean
+  reviewDate              DateTime
+  status                  KnowledgeSourceStatus @default(PENDING)
+  reviewerNotes           String?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  provenance              KnowledgeProvenance[]
 
   @@index([status])
 }
 
 model KnowledgeImportBatch {
-  id          String                @id
-  version     String
-  status      KnowledgeImportStatus @default(DRAFT)
-  report      Json?
-  approvedBy  String?
-  approvedAt  DateTime?
-  importedAt  DateTime?
+  id           String                @id
+  version      String
+  status       KnowledgeImportStatus @default(DRAFT)
+  report       Json?
+  approvedBy   String?
+  approvedAt   DateTime?
+  importedAt   DateTime?
   rolledBackAt DateTime?
-  createdAt   DateTime              @default(now())
-  items       KnowledgeImportItem[]
+  createdAt    DateTime              @default(now())
+  items        KnowledgeImportItem[]
 
   @@unique([version])
   @@index([status])
 }
 
 model KnowledgeImportItem {
-  id          String                @id @default(cuid())
-  batchId     String
-  entityType  KnowledgeEntityType
-  entityId    String
-  payload     Json
-  status      KnowledgeImportStatus @default(DRAFT)
-  diagnostic  String?
-  batch       KnowledgeImportBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  id         String                @id @default(cuid())
+  batchId    String
+  entityType KnowledgeEntityType
+  entityId   String
+  payload    Json
+  status     KnowledgeImportStatus @default(DRAFT)
+  diagnostic String?
+  batch      KnowledgeImportBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
 
   @@unique([batchId, entityId])
 }
@@ -730,112 +768,157 @@ model KnowledgeProvenance {
   @@index([importBatchId])
 }
 
-model KnowledgeImageRights {
+model KnowledgeFieldProvenance {
   id               String                @id @default(cuid())
   entityId         String
-  imageSource      String
-  owner            String
+  fieldPath        String
+  claimKey         String
+  sourceId         String
+  citation         String
   license          String
-  attributionText  String?
-  permittedUse     String
-  originalUrl      String
-  checksum         String                @unique
-  approvalStatus   KnowledgeReviewStatus @default(PENDING)
-  reviewerNotes    String?
+  reviewerStatus   KnowledgeReviewStatus @default(PENDING)
+  scientificReview KnowledgeReviewStatus @default(PENDING)
+  languageReview   KnowledgeReviewStatus @default(PENDING)
+  geographicScope  String?
+  importBatchId    String
   createdAt        DateTime              @default(now())
+
+  @@unique([entityId, fieldPath, sourceId, importBatchId])
+  @@index([importBatchId])
+}
+
+model KnowledgeImageRights {
+  id              String                @id @default(cuid())
+  entityId        String
+  imageSource     String
+  owner           String
+  license         String
+  attributionText String?
+  permittedUse    String
+  originalUrl     String
+  checksum        String                @unique
+  approvalStatus  KnowledgeReviewStatus @default(PENDING)
+  reviewerNotes   String?
+  createdAt       DateTime              @default(now())
 
   @@index([entityId])
   @@index([approvalStatus])
 }
 
 model Product {
-  id String @id
-  legacyId Int? @unique
-  category String
-  nameAr String
-  nameEn String
-  shortDescription String
-  description String
-  composition String
-  dosage String
-  packageSize String
-  benefits Json
-  crops Json
-  createdByUserId String
-  updatedByUserId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  entity KnowledgeEntity @relation(fields: [id], references: [id], onDelete: Restrict)
-  createdBy User @relation("ProductCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  updatedBy User? @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
-  aliases ProductAlias[]
-  images ProductImage[]
-  recommendations ProductRecommendation[]
-  syncState ProductKnowledgeSync?
+  id                   String                    @id
+  legacyId             Int?                      @unique
+  category             String
+  nameAr               String
+  nameEn               String
+  shortDescription     String
+  description          String
+  composition          String
+  dosage               String
+  packageSize          String
+  price                Decimal                   @default(0) @db.Decimal(10, 2)
+  comparePrice         Decimal?                  @db.Decimal(10, 2)
+  benefits             Json
+  crops                Json
+  createdByUserId      String
+  updatedByUserId      String?
+  createdAt            DateTime                  @default(now())
+  updatedAt            DateTime                  @updatedAt
+  entity               KnowledgeEntity           @relation(fields: [id], references: [id], onDelete: Restrict)
+  createdBy            User                      @relation("ProductCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  updatedBy            User?                     @relation("ProductUpdatedBy", fields: [updatedByUserId], references: [id], onDelete: Restrict)
+  aliases              ProductAlias[]
+  images               ProductImage[]
+  recommendations      ProductRecommendation[]
+  syncState            ProductKnowledgeSync?
   favoritedByCustomers CustomerProductFavorite[]
+  orderItems           OrderItem[]
+
   @@index([category])
   @@index([createdByUserId])
 }
+
 model ProductAlias {
- id String @id @default(cuid())
- productId String
- value String
- normalizedValue String
- locale String?
- product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
- @@unique([productId,normalizedValue])
- @@index([normalizedValue])
+  id              String  @id @default(cuid())
+  productId       String
+  value           String
+  normalizedValue String
+  locale          String?
+  product         Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, normalizedValue])
+  @@index([normalizedValue])
 }
+
 model ProductImage {
- id String @id @default(cuid())
- productId String
- ownership ProductImageOwnership
- storageKey String? @unique
- url String
- alt String
- contentType String?
- fileSize Int?
- width Int?
- height Int?
- checksum String?
- sortOrder Int
- createdAt DateTime @default(now())
- product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
- @@unique([productId,sortOrder])
+  id             String               @id @default(cuid())
+  productId      String
+  ownership      ProductImageOwnership
+  storageKey     String?              @unique
+  url            String
+  originalUrl    String?
+  thumbnailUrl   String?
+  webpUrl        String?
+  avifUrl        String?
+  blurDataUrl    String?
+  alt            String
+  contentType    String?
+  fileSize       Int?
+  width          Int?
+  height         Int?
+  checksum       String?
+  sortOrder      Int
+  isPrimary      Boolean              @default(false)
+  objectFit      ProductImageFit      @default(CONTAIN)
+  objectPosition ProductImagePosition @default(CENTER)
+  zoom           Int                  @default(100)
+  cropX          Int                  @default(50)
+  cropY          Int                  @default(50)
+  rotation       Int                  @default(0)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @default(now()) @updatedAt
+  product        Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, sortOrder])
+  @@index([productId, isPrimary])
 }
+
 model ProductRecommendation {
- id String @id @default(cuid())
- productId String
- targetType ProductRecommendationTargetType
- plantId String?
- diseaseId String?
- pestId String?
- deficiencyId String?
- state ProductRecommendationState @default(ACTIVE)
- priority ProductRecommendationPriority @default(NORMAL)
- usageContext String?
- compatibility String?
- contraindications String?
- notes String?
- product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
- plant Plant? @relation(fields:[plantId],references:[id],onDelete:Cascade)
- disease Disease? @relation(fields:[diseaseId],references:[id],onDelete:Cascade)
- pest Pest? @relation(fields:[pestId],references:[id],onDelete:Cascade)
- deficiency Deficiency? @relation(fields:[deficiencyId],references:[id],onDelete:Cascade)
- @@index([targetType])
- @@index([plantId])
- @@index([diseaseId])
- @@index([pestId])
- @@index([deficiencyId])
+  id                String                          @id @default(cuid())
+  productId         String
+  targetType        ProductRecommendationTargetType
+  plantId           String?
+  diseaseId         String?
+  pestId            String?
+  deficiencyId      String?
+  state             ProductRecommendationState      @default(ACTIVE)
+  priority          ProductRecommendationPriority   @default(NORMAL)
+  usageContext      String?
+  compatibility     String?
+  contraindications String?
+  notes             String?
+  product           Product                         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  plant             Plant?                          @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  disease           Disease?                        @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+  pest              Pest?                           @relation(fields: [pestId], references: [id], onDelete: Cascade)
+  deficiency        Deficiency?                     @relation(fields: [deficiencyId], references: [id], onDelete: Cascade)
+
+  @@index([targetType])
+  @@index([plantId])
+  @@index([diseaseId])
+  @@index([pestId])
+  @@index([deficiencyId])
 }
+
 model ProductKnowledgeSync {
- productId String @id
- status KnowledgeSyncStatus @default(PENDING)
- lastSyncedAt DateTime?
- diagnosticCode String?
- updatedAt DateTime @updatedAt
- product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
- @@index([status])
+  productId      String              @id
+  status         KnowledgeSyncStatus @default(PENDING)
+  lastSyncedAt   DateTime?
+  diagnosticCode String?
+  updatedAt      DateTime            @updatedAt
+  product        Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([status])
 }
 
 model KnowledgeRelease {
@@ -893,89 +976,91 @@ enum CustomerAnalyticsEventType {
 }
 
 model Customer {
-  id                    String   @id @default(cuid())
-  email                 String   @unique
-  passwordHash          String
-  displayName           String
-  locale                String   @default("ar-EG")
-  emailVerifiedAt       DateTime?
-  active                Boolean  @default(true)
-  historyOptIn          Boolean  @default(false)
-  imageSavingOptIn      Boolean  @default(false)
-  analyticsOptIn        Boolean  @default(false)
-  marketingOptIn        Boolean  @default(false)
-  deletionRequestedAt   DateTime?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  sessions              CustomerSession[]
-  tokens                CustomerToken[]
-  diagnoses             CustomerDiagnosis[]
-  savedPlants           CustomerSavedPlant[]
-  productFavorites      CustomerProductFavorite[]
-  savedImages           CustomerSavedImage[]
-  jobs                  CustomerJob[]
-  auditLogs             CustomerAuditLog[]
+  id                  String                    @id @default(cuid())
+  email               String                    @unique
+  passwordHash        String
+  displayName         String
+  locale              String                    @default("ar-EG")
+  emailVerifiedAt     DateTime?
+  active              Boolean                   @default(true)
+  historyOptIn        Boolean                   @default(false)
+  imageSavingOptIn    Boolean                   @default(false)
+  analyticsOptIn      Boolean                   @default(false)
+  marketingOptIn      Boolean                   @default(false)
+  deletionRequestedAt DateTime?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @updatedAt
+  sessions            CustomerSession[]
+  tokens              CustomerToken[]
+  diagnoses           CustomerDiagnosis[]
+  savedPlants         CustomerSavedPlant[]
+  productFavorites    CustomerProductFavorite[]
+  savedImages         CustomerSavedImage[]
+  jobs                CustomerJob[]
+  auditLogs           CustomerAuditLog[]
+  addresses           CustomerAddress[]
+  orders              Order[]
 
   @@index([active])
   @@index([createdAt])
 }
 
 model CustomerSession {
-  id          String   @id @default(cuid())
-  customerId  String
-  tokenHash   String   @unique
-  userAgent   String?
-  ipHash      String?
-  createdAt   DateTime @default(now())
-  lastSeenAt  DateTime @default(now())
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  customerId String
+  tokenHash  String    @unique
+  userAgent  String?
+  ipHash     String?
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId, expiresAt])
 }
 
 model CustomerToken {
-  id          String               @id @default(cuid())
-  customerId  String
-  purpose     CustomerTokenPurpose
-  tokenHash   String               @unique
-  expiresAt   DateTime
-  usedAt      DateTime?
-  createdAt   DateTime             @default(now())
-  customer    Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  id         String               @id @default(cuid())
+  customerId String
+  purpose    CustomerTokenPurpose
+  tokenHash  String               @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime             @default(now())
+  customer   Customer             @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId, purpose, expiresAt])
 }
 
 model CustomerDiagnosis {
-  id          String   @id @default(cuid())
-  customerId  String
+  id         String   @id @default(cuid())
+  customerId String
   // Structured outcome only: raw chat messages and temporary image references are forbidden.
-  summary     Json
-  createdAt   DateTime @default(now())
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  summary    Json
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 
   @@index([customerId, createdAt])
 }
 
 model CustomerSavedPlant {
-  customerId  String
-  plantId     String
-  createdAt   DateTime @default(now())
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  plant       Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
+  customerId String
+  plantId    String
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  plant      Plant    @relation(fields: [plantId], references: [id], onDelete: Cascade)
 
   @@id([customerId, plantId])
   @@index([plantId])
 }
 
 model CustomerProductFavorite {
-  customerId  String
-  productId   String
-  createdAt   DateTime @default(now())
-  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  customerId String
+  productId  String
+  createdAt  DateTime @default(now())
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@id([customerId, productId])
   @@index([productId])
@@ -1011,15 +1096,15 @@ model CustomerJob {
 }
 
 model CustomerAuditLog {
-  id          String   @id @default(cuid())
-  customerId  String?
-  actorType   String
-  action      String
-  targetType  String
-  targetId    String?
-  metadata    Json?
-  createdAt   DateTime @default(now())
-  customer    Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  id         String    @id @default(cuid())
+  customerId String?
+  actorType  String
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime  @default(now())
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
   @@index([customerId, createdAt])
   @@index([action, createdAt])
@@ -1040,13 +1125,132 @@ model AnalyticsEvent {
 }
 
 model AnalyticsDailyRollup {
-  id          String                     @id @default(cuid())
-  date        DateTime
-  eventType   CustomerAnalyticsEventType
-  locale      String   @default("all")
-  count       Int
-  updatedAt   DateTime                   @updatedAt
+  id        String                     @id @default(cuid())
+  date      DateTime
+  eventType CustomerAnalyticsEventType
+  locale    String                     @default("all")
+  count     Int
+  updatedAt DateTime                   @updatedAt
 
   @@unique([date, eventType, locale])
   @@index([date])
+}
+
+// Commerce domain: customer addresses, orders, order items, and payment state.
+enum CustomerAddressType {
+  HOME
+  WORK
+  FARM
+  OTHER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum OrderPaymentMethod {
+  CASH_ON_DELIVERY
+  VODAFONE_CASH
+  INSTAPAY
+  BANK_TRANSFER
+  ONLINE_PAYMENT
+  OTHER
+}
+
+enum OrderPaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum OrderSource {
+  WEBSITE
+  WHATSAPP
+  ADMIN
+  PHONE
+}
+
+model CustomerAddress {
+  id               String              @id @default(cuid())
+  customerId       String
+  type             CustomerAddressType @default(HOME)
+  label            String?
+  recipientName    String
+  phone            String
+  alternativePhone String?
+  governorate      String
+  city             String
+  addressLine      String
+  landmark         String?
+  postalCode       String?
+  isDefault        Boolean             @default(false)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  customer         Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  orders           Order[]
+
+  @@index([customerId])
+  @@index([customerId, isDefault])
+}
+
+model Order {
+  id               String             @id @default(cuid())
+  orderNumber      String             @unique
+  customerId       String?
+  addressId        String?
+  status           OrderStatus        @default(PENDING)
+  paymentMethod    OrderPaymentMethod @default(CASH_ON_DELIVERY)
+  paymentStatus    OrderPaymentStatus @default(PENDING)
+  source           OrderSource        @default(WEBSITE)
+  customerName     String
+  phone            String
+  alternativePhone String?
+  governorate      String
+  city             String
+  addressLine      String
+  landmark         String?
+  notes            String?
+  totalItems       Int
+  adminNotes       String?
+  confirmedAt      DateTime?
+  shippedAt        DateTime?
+  deliveredAt      DateTime?
+  cancelledAt      DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  customer         Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  address          CustomerAddress?   @relation(fields: [addressId], references: [id], onDelete: SetNull)
+  items            OrderItem[]
+
+  @@index([customerId])
+  @@index([status, createdAt])
+  @@index([paymentStatus])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  orderId       String
+  productId     String?
+  productSlug   String
+  productNameAr String
+  productNameEn String
+  productImage  String?
+  category      String?
+  packageSize   String?
+  quantity      Int
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+  @@index([productSlug])
 }

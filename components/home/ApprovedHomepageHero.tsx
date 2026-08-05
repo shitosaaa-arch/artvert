@@ -1,0 +1,1 @@
+export { HomeHero as default, HomeHero } from "./HomeHero";

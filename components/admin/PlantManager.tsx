@@ -1,28 +1,620 @@
 "use client";
 
-import Image from "next/image";
-import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Archive, ChevronLeft, ChevronRight, Pencil, Plus, RefreshCw, Trash2, Upload, X } from "lucide-react";
+import Link from "next/link";
+import DeletePlantButton from "@/components/admin/DeletePlantButton";
+import { useRouter } from "next/navigation";
+import {
+  Archive,
+  Bug,
+  ChevronLeft,
+  ChevronRight,
+  FilePenLine,
+  FlaskConical,
+  ImageIcon,
+  Leaf,
+  Plus,
+  Search,
+  Sprout,
+  Stethoscope,
+  TreePine,
+  UsersRound,
+} from "lucide-react";
 
-type Plant = { id: string; category: string; scientificName: string | null; description: string | null; entity: { name: string; slug: string; publicationState: string }; aliases: { id: string; value: string; locale: string | null }[]; images: { id: string; url: string; alt: string; width: number; height: number }[]; syncState: { status: string; diagnosticCode: string | null; lastSyncedAt: string | null } | null };
-const blank = { name: "", slug: "", category: "CROP", scientificName: "", description: "", aliases: "", publicationState: "DRAFT" };
-const labels: Record<string, string> = { CROP: "Crop", HOME_PLANT: "Home plant", ORNAMENTAL: "Ornamental", DRAFT: "Draft", PUBLISHED: "Published", ARCHIVED: "Archived", PENDING: "Pending", SYNCED: "Synced", FAILED: "Failed" };
-function formFor(plant: Plant | null) { return plant ? { name: plant.entity.name, slug: plant.entity.slug, category: plant.category, scientificName: plant.scientificName ?? "", description: plant.description ?? "", aliases: plant.aliases.map((alias) => alias.value).join(", "), publicationState: plant.entity.publicationState } : blank; }
+type PlantItem = {
+  id: string;
+  slug: string;
+  name: string;
+  publicationState:
+    | "DRAFT"
+    | "PUBLISHED"
+    | "ARCHIVED";
+  category:
+    | "CROP"
+    | "HOME_PLANT"
+    | "ORNAMENTAL";
+  scientificName: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  imageAlt: string | null;
+  aliases: Array<{
+    id: string;
+    value: string;
+  }>;
+  diseaseCount: number;
+  pestCount: number;
+  deficiencyCount: number;
+  imageCount: number;
+  savedCount: number;
+  createdAt: string;
+  updatedAt: string;
+};
 
-export default function PlantManager() {
-  const [items, setItems] = useState<Plant[]>([]), [total, setTotal] = useState(0), [page, setPage] = useState(1), [pageCount, setPageCount] = useState(1);
-  const [query, setQuery] = useState(""), [category, setCategory] = useState(""), [publicationState, setPublicationState] = useState(""), [syncStatus, setSyncStatus] = useState(""), [sort, setSort] = useState("updatedAt");
-  const [selected, setSelected] = useState<Plant | null>(null), [editing, setEditing] = useState(false), [form, setForm] = useState(blank), [loading, setLoading] = useState(true), [message, setMessage] = useState("");
-  const load = useCallback(async () => { setLoading(true); const params = new URLSearchParams({ page: String(page), pageSize: "12", sort, direction: "desc" }); if (query) params.set("q", query); if (category) params.set("category", category); if (publicationState) params.set("publicationState", publicationState); if (syncStatus) params.set("syncStatus", syncStatus); const response = await fetch(`/api/admin/plants?${params}`); const data = await response.json(); if (response.ok) { setItems(data.items); setTotal(data.total); setPageCount(data.pageCount); } else setMessage(data.error ?? "Could not load plants."); setLoading(false); }, [page, query, category, publicationState, syncStatus, sort]);
-  // The initial fetch synchronizes the client list with the server catalogue.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { void load(); }, [load]);
-  const close = () => { setSelected(null); setEditing(false); setMessage(""); }, openCreate = () => { setSelected(null); setForm(blank); setEditing(true); setMessage(""); }, openEdit = (plant: Plant) => { setSelected(plant); setForm(formFor(plant)); setEditing(true); setMessage(""); };
-  const submit = async (event: FormEvent) => { event.preventDefault(); const payload = { ...form, aliases: form.aliases.split(",").map((value) => value.trim()).filter(Boolean).map((value) => ({ value })) }; const response = await fetch(selected ? `/api/admin/plants/${selected.id}` : "/api/admin/plants", { method: selected ? "PATCH" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }); const data = await response.json(); if (!response.ok) { setMessage(data.error ?? "Could not save plant."); return; } setEditing(false); setSelected(data); setMessage("Saved."); await load(); };
-  const archive = async (plant: Plant) => { if (!confirm(`Archive ${plant.entity.name}? It will be removed from published knowledge.`)) return; const response = await fetch(`/api/admin/plants/${plant.id}`, { method: "DELETE" }); if (!response.ok) setMessage("Could not archive plant."); await load(); close(); };
-  const remove = async (plant: Plant) => { if (!confirm(`Permanently delete ${plant.entity.name}, its aliases, and images? This cannot be undone.`)) return; const response = await fetch(`/api/admin/plants/${plant.id}?hard=true`, { method: "DELETE" }); if (!response.ok) setMessage("Only a super admin can permanently delete a plant."); await load(); close(); };
-  const retry = async (plant: Plant) => { setMessage("Retrying knowledge sync…"); const response = await fetch(`/api/admin/plants/${plant.id}/sync`, { method: "POST" }); setMessage(response.ok ? "Knowledge sync completed." : "Knowledge sync failed; retry again later."); await load(); };
-  const upload = async (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const data = new FormData(event.currentTarget); const response = await fetch(`/api/admin/plants/${selected.id}/images`, { method: "POST", body: data }); const body = await response.json(); if (!response.ok) { setMessage(body.error ?? "Upload failed."); return; } setSelected({ ...selected, images: [...selected.images, body] }); event.currentTarget.reset(); setMessage("Image uploaded."); await load(); };
-  const removeImage = async (imageId: string) => { if (!selected || !confirm("Delete this image?")) return; const response = await fetch(`/api/admin/plants/${selected.id}/images/${imageId}`, { method: "DELETE" }); if (response.ok) setSelected({ ...selected, images: selected.images.filter((image) => image.id !== imageId) }); else setMessage("Image could not be deleted."); await load(); };
-  return <main className="min-h-screen flex-1 bg-[#07140f] p-5 text-white lg:p-10"><div className="mx-auto max-w-6xl"><div className="mb-7 flex flex-wrap items-end justify-between gap-4"><div><p className="text-sm font-bold text-emerald-300">Knowledge catalogue</p><h1 className="mt-1 text-3xl font-black">Plant management</h1><p className="mt-2 text-sm text-white/55">Create, publish, synchronize, and maintain plant records.</p></div><button onClick={openCreate} className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-4 py-3 font-black text-[#082017]"><Plus size={18} />New plant</button></div><div className="mb-5 grid gap-3 rounded-2xl border border-white/10 bg-white/[.03] p-4 md:grid-cols-5"><input value={query} onChange={(event) => { setQuery(event.target.value); setPage(1); }} placeholder="Search name or alias" className="rounded-lg bg-black/20 px-3 py-2 text-sm" /><select value={category} onChange={(event) => { setCategory(event.target.value); setPage(1); }} className="rounded-lg bg-black/20 px-3 py-2 text-sm"><option value="">All categories</option>{["CROP", "HOME_PLANT", "ORNAMENTAL"].map((value) => <option key={value} value={value}>{labels[value]}</option>)}</select><select value={publicationState} onChange={(event) => { setPublicationState(event.target.value); setPage(1); }} className="rounded-lg bg-black/20 px-3 py-2 text-sm"><option value="">All states</option>{["DRAFT", "PUBLISHED", "ARCHIVED"].map((value) => <option key={value} value={value}>{labels[value]}</option>)}</select><select value={syncStatus} onChange={(event) => { setSyncStatus(event.target.value); setPage(1); }} className="rounded-lg bg-black/20 px-3 py-2 text-sm"><option value="">All sync states</option>{["PENDING", "SYNCED", "FAILED"].map((value) => <option key={value} value={value}>{labels[value]}</option>)}</select><select value={sort} onChange={(event) => setSort(event.target.value)} className="rounded-lg bg-black/20 px-3 py-2 text-sm"><option value="updatedAt">Recently updated</option><option value="createdAt">Recently created</option><option value="name">Name</option></select></div>{message && <p className="mb-4 rounded-xl border border-emerald-200/20 bg-emerald-200/10 p-3 text-sm text-emerald-100">{message}</p>}<div className="overflow-hidden rounded-2xl border border-white/10"><div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 bg-white/[.04] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white/45"><span>Plant</span><span>Actions</span></div>{loading ? <p className="p-8 text-center text-white/50">Loading plants…</p> : items.length === 0 ? <p className="p-8 text-center text-white/50">No plants match these filters.</p> : items.map((plant) => <div key={plant.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-white/10 px-5 py-4"><button onClick={() => { setSelected(plant); setEditing(false); setMessage(""); }} className="min-w-0 text-left"><strong className="block truncate">{plant.entity.name}</strong><span className="mt-1 block text-xs text-white/50">{labels[plant.category]} · {labels[plant.entity.publicationState]} · <span className={plant.syncState?.status === "FAILED" ? "text-rose-300" : "text-emerald-200"}>{labels[plant.syncState?.status ?? "PENDING"]}</span></span></button><div className="flex gap-2"><button aria-label="Edit" onClick={() => openEdit(plant)} className="rounded-lg p-2 text-emerald-200 hover:bg-white/10"><Pencil size={17} /></button><button aria-label="Retry sync" onClick={() => void retry(plant)} className="rounded-lg p-2 text-emerald-200 hover:bg-white/10"><RefreshCw size={17} /></button></div></div>)}</div><div className="mt-4 flex items-center justify-between text-sm text-white/55"><span>{total} total</span><div className="flex items-center gap-2"><button disabled={page === 1} onClick={() => setPage(page - 1)} className="rounded-lg p-2 disabled:opacity-30"><ChevronLeft size={18} /></button><span>Page {page} of {pageCount}</span><button disabled={page === pageCount} onClick={() => setPage(page + 1)} className="rounded-lg p-2 disabled:opacity-30"><ChevronRight size={18} /></button></div></div></div>{(selected || editing) && <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 overflow-y-auto bg-black/70 p-4"><div className="mx-auto my-6 max-w-2xl rounded-2xl border border-white/10 bg-[#0b2118] p-6 shadow-2xl"><div className="mb-5 flex justify-between gap-4"><div><h2 className="text-xl font-black">{editing ? (selected ? "Edit plant" : "New plant") : selected?.entity.name}</h2>{!editing && selected?.syncState && <p className="mt-1 text-sm text-white/55">Sync: {labels[selected.syncState.status]}{selected.syncState.diagnosticCode ? ` (${selected.syncState.diagnosticCode})` : ""}</p>}</div><button onClick={close} className="rounded-lg p-2 text-white/60"><X /></button></div>{editing ? <form onSubmit={submit} className="grid gap-4 md:grid-cols-2">{(["name", "slug", "scientificName"] as const).map((field) => <label key={field} className="grid gap-1 text-sm font-bold"><span className="capitalize">{field.replace("scientificName", "Scientific name")}</span><input required={field === "name"} value={form[field]} onChange={(event) => setForm({ ...form, [field]: event.target.value })} className="rounded-lg bg-black/20 px-3 py-2 font-normal" /></label>)}<label className="grid gap-1 text-sm font-bold"><span>Category</span><select value={form.category} onChange={(event) => setForm({ ...form, category: event.target.value })} className="rounded-lg bg-black/20 px-3 py-2 font-normal">{["CROP", "HOME_PLANT", "ORNAMENTAL"].map((value) => <option key={value} value={value}>{labels[value]}</option>)}</select></label><label className="grid gap-1 text-sm font-bold"><span>Publication</span><select value={form.publicationState} onChange={(event) => setForm({ ...form, publicationState: event.target.value })} className="rounded-lg bg-black/20 px-3 py-2 font-normal">{["DRAFT", "PUBLISHED", "ARCHIVED"].map((value) => <option key={value} value={value}>{labels[value]}</option>)}</select></label><label className="grid gap-1 text-sm font-bold md:col-span-2"><span>Aliases (comma separated)</span><input value={form.aliases} onChange={(event) => setForm({ ...form, aliases: event.target.value })} className="rounded-lg bg-black/20 px-3 py-2 font-normal" /></label><label className="grid gap-1 text-sm font-bold md:col-span-2"><span>Description</span><textarea value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} className="min-h-24 rounded-lg bg-black/20 px-3 py-2 font-normal" /></label><div className="flex justify-end gap-3 md:col-span-2"><button type="button" onClick={() => selected ? setEditing(false) : close()} className="rounded-xl px-4 py-3 text-sm font-bold text-white/65">Cancel</button><button className="rounded-xl bg-emerald-300 px-4 py-3 text-sm font-black text-[#082017]">Save plant</button></div></form> : selected && <div className="space-y-5"><p className="text-sm leading-6 text-white/70">{selected.description || "No description yet."}</p><div className="flex flex-wrap gap-2">{selected.aliases.map((alias) => <span key={alias.id} className="rounded-full bg-white/10 px-3 py-1 text-xs">{alias.value}</span>)}</div><div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{selected.images.map((image) => <div key={image.id} className="relative overflow-hidden rounded-xl border border-white/10"><Image src={image.url} alt={image.alt} width={image.width} height={image.height} className="h-28 w-full object-cover" /><button onClick={() => void removeImage(image.id)} className="absolute right-1 top-1 rounded bg-black/70 p-1 text-rose-300"><Trash2 size={14} /></button></div>)}</div><form onSubmit={upload} className="flex flex-wrap items-end gap-3 rounded-xl border border-dashed border-white/15 p-3"><label className="grid gap-1 text-xs">Image<input required name="file" type="file" accept="image/jpeg,image/png,image/webp" /></label><label className="grid flex-1 gap-1 text-xs">Alt text<input required name="alt" className="rounded bg-black/20 px-2 py-1.5" /></label><button className="inline-flex items-center gap-1 rounded-lg bg-white/10 px-3 py-2 text-sm"><Upload size={15} />Upload</button></form><div className="flex flex-wrap justify-end gap-2 border-t border-white/10 pt-5"><button onClick={() => openEdit(selected)} className="inline-flex items-center gap-2 rounded-xl bg-emerald-300 px-3 py-2 text-sm font-black text-[#082017]"><Pencil size={15} />Edit</button><button onClick={() => void retry(selected)} className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-sm"><RefreshCw size={15} />Retry sync</button><button onClick={() => void archive(selected)} className="inline-flex items-center gap-2 rounded-xl bg-amber-400/15 px-3 py-2 text-sm text-amber-200"><Archive size={15} />Archive</button><button onClick={() => void remove(selected)} className="inline-flex items-center gap-2 rounded-xl bg-rose-400/15 px-3 py-2 text-sm text-rose-200"><Trash2 size={15} />Delete</button></div></div>}</div></div>}</main>;
+type Stats = {
+  totalPlants: number;
+  cropCount: number;
+  homePlantCount: number;
+  ornamentalCount: number;
+  publishedCount: number;
+  draftCount: number;
+  archivedCount: number;
+};
+
+type Props = {
+  search: string;
+  category: string;
+  state: string;
+  currentPage: number;
+  totalPages: number;
+  filteredCount: number;
+  stats: Stats;
+  plants: PlantItem[];
+};
+
+const categoryLabels: Record<string, string> = {
+  CROP: "محصول زراعي",
+  HOME_PLANT: "نبات منزلي",
+  ORNAMENTAL: "نبات زينة",
+};
+
+const stateLabels: Record<string, string> = {
+  DRAFT: "مسودة",
+  PUBLISHED: "منشور",
+  ARCHIVED: "مؤرشف",
+};
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("ar-EG", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Africa/Cairo",
+  }).format(new Date(value));
+}
+
+function getStateClass(state: string) {
+  switch (state) {
+    case "PUBLISHED":
+      return "border-emerald-400/25 bg-emerald-400/10 text-emerald-200";
+    case "ARCHIVED":
+      return "border-white/10 bg-white/[.04] text-white/45";
+    default:
+      return "border-amber-400/25 bg-amber-400/10 text-amber-200";
+  }
+}
+
+function buildPageUrl({
+  search,
+  category,
+  state,
+  page,
+}: {
+  search: string;
+  category: string;
+  state: string;
+  page: number;
+}) {
+  const params = new URLSearchParams();
+
+  if (search) {
+    params.set("search", search);
+  }
+
+  if (category !== "ALL") {
+    params.set("category", category);
+  }
+
+  if (state !== "ALL") {
+    params.set("state", state);
+  }
+
+  if (page > 1) {
+    params.set("page", String(page));
+  }
+
+  const query = params.toString();
+
+  return query
+    ? `/admin/plants?${query}`
+    : "/admin/plants";
+}
+
+export default function PlantManager({
+  search,
+  category,
+  state,
+  currentPage,
+  totalPages,
+  filteredCount,
+  stats,
+  plants,
+}: Props) {
+  const router = useRouter();
+
+  const metricCards = [
+    {
+      label: "إجمالي النباتات",
+      value: stats.totalPlants,
+      icon: Leaf,
+    },
+    {
+      label: "المحاصيل",
+      value: stats.cropCount,
+      icon: Sprout,
+    },
+    {
+      label: "النباتات المنزلية",
+      value: stats.homePlantCount,
+      icon: TreePine,
+    },
+    {
+      label: "نباتات الزينة",
+      value: stats.ornamentalCount,
+      icon: ImageIcon,
+    },
+  ];
+
+  return (
+    <main
+      className="min-h-screen flex-1 bg-[#061008] px-4 py-8 text-white sm:px-6 lg:px-8"
+      dir="rtl"
+    >
+      <div className="mx-auto max-w-[1600px]">
+        <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <span className="text-sm font-black text-lime-300">
+              Doctor Knowledge Base
+            </span>
+
+            <h1 className="mt-2 text-3xl font-black sm:text-4xl">
+              إدارة النباتات والمحاصيل
+            </h1>
+
+            <p className="mt-3 max-w-3xl leading-7 text-white/55">
+              إدارة الكيانات النباتية وربطها بالأمراض والآفات
+              ونواقص العناصر داخل قاعدة المعرفة.
+            </p>
+          </div>
+
+          <Link
+            href="/admin/plants/new"
+            className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl bg-lime-300 px-5 text-sm font-black text-[#071109] transition hover:bg-lime-200"
+          >
+            <Plus
+              aria-hidden="true"
+              size={18}
+            />
+            إضافة نبات
+          </Link>
+        </header>
+
+        <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {metricCards.map((metric) => {
+            const Icon = metric.icon;
+
+            return (
+              <article
+                key={metric.label}
+                className="rounded-2xl border border-white/10 bg-[#0b1a0e] p-5 shadow-xl"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-sm text-white/45">
+                      {metric.label}
+                    </span>
+
+                    <strong className="mt-3 block text-3xl font-black">
+                      {metric.value.toLocaleString("ar-EG")}
+                    </strong>
+                  </div>
+
+                  <div className="grid h-11 w-11 place-items-center rounded-xl bg-lime-300/10 text-lime-300">
+                    <Icon
+                      aria-hidden="true"
+                      size={22}
+                    />
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </section>
+
+        <section className="mt-6 grid gap-3 sm:grid-cols-3">
+          {[
+            {
+              label: "منشور",
+              value: stats.publishedCount,
+              className:
+                "border-emerald-400/20 bg-emerald-400/[.07] text-emerald-200",
+            },
+            {
+              label: "مسودة",
+              value: stats.draftCount,
+              className:
+                "border-amber-400/20 bg-amber-400/[.07] text-amber-200",
+            },
+            {
+              label: "مؤرشف",
+              value: stats.archivedCount,
+              className:
+                "border-white/10 bg-white/[.03] text-white/55",
+            },
+          ].map((item) => (
+            <article
+              key={item.label}
+              className={`rounded-2xl border p-4 ${item.className}`}
+            >
+              <span className="text-sm">
+                {item.label}
+              </span>
+              <strong className="mt-2 block text-2xl font-black">
+                {item.value.toLocaleString("ar-EG")}
+              </strong>
+            </article>
+          ))}
+        </section>
+
+        <section className="mt-8 rounded-3xl border border-white/10 bg-[#0b1a0e] p-5 shadow-2xl sm:p-6">
+          <form
+            action="/admin/plants"
+            method="GET"
+            className="grid gap-4 lg:grid-cols-[minmax(260px,1fr)_220px_220px_auto]"
+          >
+            <label className="relative block">
+              <Search
+                aria-hidden="true"
+                size={18}
+                className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/35"
+              />
+
+              <input
+                name="search"
+                defaultValue={search}
+                placeholder="الاسم، الاسم العلمي، الاسم البديل أو الرابط"
+                className="h-12 w-full rounded-xl border border-white/10 bg-white/[.04] pr-11 pl-4 outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10"
+              />
+            </label>
+
+            <select
+              name="category"
+              defaultValue={category}
+              className="h-12 rounded-xl border border-white/10 bg-[#0d2112] px-4 outline-none"
+            >
+              <option value="ALL">
+                كل التصنيفات
+              </option>
+              <option value="CROP">
+                المحاصيل
+              </option>
+              <option value="HOME_PLANT">
+                النباتات المنزلية
+              </option>
+              <option value="ORNAMENTAL">
+                نباتات الزينة
+              </option>
+            </select>
+
+            <select
+              name="state"
+              defaultValue={state}
+              className="h-12 rounded-xl border border-white/10 bg-[#0d2112] px-4 outline-none"
+            >
+              <option value="ALL">
+                كل حالات النشر
+              </option>
+              <option value="PUBLISHED">
+                منشور
+              </option>
+              <option value="DRAFT">
+                مسودة
+              </option>
+              <option value="ARCHIVED">
+                مؤرشف
+              </option>
+            </select>
+
+            <button
+              type="submit"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-lime-300 px-5 font-black text-[#071109]"
+            >
+              <Search
+                aria-hidden="true"
+                size={18}
+              />
+              بحث
+            </button>
+          </form>
+
+          {(search ||
+            category !== "ALL" ||
+            state !== "ALL") && (
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+              <p className="text-sm text-white/50">
+                تم العثور على{" "}
+                <strong className="text-lime-300">
+                  {filteredCount.toLocaleString("ar-EG")}
+                </strong>{" "}
+                نبات
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  router.push("/admin/plants")
+                }
+                className="text-sm font-bold text-white/60 transition hover:text-lime-300"
+              >
+                مسح البحث والفلاتر
+              </button>
+            </div>
+          )}
+        </section>
+
+        <section className="mt-8 space-y-4">
+          {plants.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-white/15 bg-[#0b1a0e] px-6 py-16 text-center">
+              <Leaf
+                aria-hidden="true"
+                size={34}
+                className="mx-auto text-lime-300"
+              />
+              <h2 className="mt-5 text-2xl font-black">
+                لا توجد نباتات
+              </h2>
+              <p className="mt-3 text-white/50">
+                لا توجد نتائج مطابقة للبحث أو الفلاتر الحالية.
+              </p>
+            </div>
+          ) : (
+            plants.map((plant) => (
+              <article
+                key={plant.id}
+                className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b1a0e] shadow-2xl"
+              >
+                <div className="grid gap-0 xl:grid-cols-[220px_minmax(0,1fr)_340px]">
+                  <div className="border-b border-white/10 p-5 xl:border-l xl:border-b-0">
+                    <div className="aspect-square overflow-hidden rounded-2xl border border-white/10 bg-white/[.03]">
+                      {plant.imageUrl ? (
+                        <img
+                          src={plant.imageUrl}
+                          alt={
+                            plant.imageAlt ??
+                            plant.name
+                          }
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-lime-300/60">
+                          <Leaf
+                            aria-hidden="true"
+                            size={42}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="border-b border-white/10 p-5 sm:p-6 xl:border-l xl:border-b-0">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h2 className="text-2xl font-black">
+                        {plant.name}
+                      </h2>
+
+                      <span
+                        className={`rounded-full border px-3 py-1 text-xs font-black ${getStateClass(
+                          plant.publicationState,
+                        )}`}
+                      >
+                        {stateLabels[
+                          plant.publicationState
+                        ]}
+                      </span>
+
+                      <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1 text-xs font-bold text-white/55">
+                        {categoryLabels[
+                          plant.category
+                        ]}
+                      </span>
+                    </div>
+
+                    {plant.scientificName ? (
+                      <p
+                        className="mt-2 text-sm italic text-white/45"
+                        dir="ltr"
+                      >
+                        {plant.scientificName}
+                      </p>
+                    ) : null}
+
+                    <p
+                      className="mt-3 text-sm text-lime-300"
+                      dir="ltr"
+                    >
+                      /{plant.slug}
+                    </p>
+
+                    {plant.description ? (
+                      <p className="mt-4 line-clamp-3 leading-7 text-white/55">
+                        {plant.description}
+                      </p>
+                    ) : null}
+
+                    {plant.aliases.length > 0 ? (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {plant.aliases.map((alias) => (
+                          <span
+                            key={alias.id}
+                            className="rounded-full bg-white/[.05] px-3 py-1 text-xs text-white/50"
+                          >
+                            {alias.value}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    <p className="mt-5 text-xs text-white/35">
+                      آخر تحديث:{" "}
+                      {formatDate(plant.updatedAt)}
+                    </p>
+                  </div>
+
+                  <div className="p-5 sm:p-6">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Counter
+                        icon={Stethoscope}
+                        label="الأمراض"
+                        value={plant.diseaseCount}
+                      />
+                      <Counter
+                        icon={Bug}
+                        label="الآفات"
+                        value={plant.pestCount}
+                      />
+                      <Counter
+                        icon={FlaskConical}
+                        label="النواقص"
+                        value={plant.deficiencyCount}
+                      />
+                      <Counter
+                        icon={ImageIcon}
+                        label="الصور"
+                        value={plant.imageCount}
+                      />
+                      <Counter
+                        icon={UsersRound}
+                        label="الحفظ"
+                        value={plant.savedCount}
+                      />
+                    </div>
+
+                    <div className="mt-5 grid gap-3">
+                      <Link
+                        href={`/admin/plants/${plant.id}`}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-lime-300 px-4 text-sm font-black text-[#071109]"
+                      >
+                        فتح النبات
+                        <ChevronLeft
+                          aria-hidden="true"
+                          size={17}
+                        />
+                      </Link>
+
+                      <Link
+                        href={`/admin/plants/${plant.id}/edit`}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-sky-400/25 bg-sky-400/[.08] px-4 text-sm font-black text-sky-200"
+                      >
+                        <FilePenLine
+                          aria-hidden="true"
+                          size={17}
+                        />
+                        تعديل
+                      </Link>
+
+                      <DeletePlantButton
+                        plantId={plant.id}
+                        plantName={plant.name}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))
+          )}
+        </section>
+
+        {totalPages > 1 ? (
+          <nav className="mt-8 flex items-center justify-between rounded-2xl border border-white/10 bg-[#0b1a0e] p-4">
+            <span className="text-sm text-white/50">
+              الصفحة{" "}
+              {currentPage.toLocaleString("ar-EG")} من{" "}
+              {totalPages.toLocaleString("ar-EG")}
+            </span>
+
+            <div className="flex gap-3">
+              {currentPage > 1 ? (
+                <Link
+                  href={buildPageUrl({
+                    search,
+                    category,
+                    state,
+                    page: currentPage - 1,
+                  })}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-4 text-sm font-bold"
+                >
+                  <ChevronRight
+                    aria-hidden="true"
+                    size={16}
+                  />
+                  السابق
+                </Link>
+              ) : null}
+
+              {currentPage < totalPages ? (
+                <Link
+                  href={buildPageUrl({
+                    search,
+                    category,
+                    state,
+                    page: currentPage + 1,
+                  })}
+                  className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-lime-300 px-4 text-sm font-black text-[#071109]"
+                >
+                  التالي
+                  <ChevronLeft
+                    aria-hidden="true"
+                    size={16}
+                  />
+                </Link>
+              ) : null}
+            </div>
+          </nav>
+        ) : null}
+      </div>
+    </main>
+  );
+}
+
+function Counter({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: typeof Leaf;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[.03] p-3">
+      <Icon
+        aria-hidden="true"
+        size={16}
+        className="text-lime-300"
+      />
+      <strong className="mt-2 block text-lg">
+        {value.toLocaleString("ar-EG")}
+      </strong>
+      <span className="text-xs text-white/40">
+        {label}
+      </span>
+    </div>
+  );
 }

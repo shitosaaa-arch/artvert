@@ -1,0 +1,121 @@
+enabled	name	slug	category	scientificName	description	aliases	publicationState
+TRUE	مانجو	mango	CROP	Mangifera indica	شجرة فاكهة استوائية دائمة الخضرة تزرع للثمار.	المانجو|Mango	PUBLISHED
+TRUE	طماطم	tomato	CROP	Solanum lycopersicum	محصول خضر واسع الانتشار يزرع للثمار الطازجة والتصنيع.	البندورة|Tomato	PUBLISHED
+TRUE	فلفل	pepper	CROP	Capsicum annuum	محصول خضر يشمل أصناف الفلفل الحلو والحار.	فلفل رومي|فلفل حار|Pepper	PUBLISHED
+TRUE	خيار	cucumber	CROP	Cucumis sativus	محصول خضر زاحف يزرع للثمار الطازجة.	قثاء|Cucumber	PUBLISHED
+TRUE	بطاطس	potato	CROP	Solanum tuberosum	محصول درني غذائي مهم يزرع للدرنات.	بطاطا إفرنجية|Potato	PUBLISHED
+TRUE	فراولة	strawberry	CROP	Fragaria × ananassa	محصول فاكهة عشبي يزرع للثمار الطازجة والتصنيع.	فريز|Strawberry	PUBLISHED
+TRUE	عنب	grape	CROP	Vitis vinifera	كرمة متسلقة تزرع لإنتاج العنب الطازج والزبيب والعصير.	الكرمة|Grape	PUBLISHED
+TRUE	ليمون	lemon	CROP	Citrus limon	شجرة حمضيات تزرع للثمار الغنية بالعصير.	Lemon	PUBLISHED
+TRUE	برتقال	orange	CROP	Citrus sinensis	شجرة حمضيات دائمة الخضرة تزرع للثمار.	Orange	PUBLISHED
+TRUE	يوسفي	mandarin	CROP	Citrus reticulata	شجرة حمضيات تزرع لثمار سهلة التقشير.	مندرين|Mandarin	PUBLISHED
+TRUE	جوافة	guava	CROP	Psidium guajava	شجرة فاكهة شبه استوائية تزرع للثمار العطرية.	Guava	PUBLISHED
+TRUE	زيتون	olive	CROP	Olea europaea	شجرة معمرة تزرع لإنتاج الزيت وثمار المائدة.	Olive	PUBLISHED
+TRUE	قمح	wheat	CROP	Triticum aestivum	محصول حبوب رئيسي لإنتاج الدقيق.	Wheat	PUBLISHED
+TRUE	ذرة شامية	maize	CROP	Zea mays	محصول حبوب وعلف وصناعة واسع الاستخدام.	الذرة|Corn|Maize	PUBLISHED
+TRUE	أرز	rice	CROP	Oryza sativa	محصول حبوب يزرع غالبًا في الأراضي المغمورة.	Rice	PUBLISHED
+TRUE	قطن	cotton	CROP	Gossypium barbadense	محصول ألياف مهم يزرع لإنتاج القطن والبذور.	Cotton	PUBLISHED
+TRUE	فول بلدي	faba-bean	CROP	Vicia faba	محصول بقولي غذائي وتثبيتي للنيتروجين.	فول|Faba bean	PUBLISHED
+TRUE	فاصوليا	common-bean	CROP	Phaseolus vulgaris	محصول بقولي يزرع للحبوب الجافة أو القرون الخضراء.	فاصوليا خضراء|Common bean	PUBLISHED
+TRUE	بازلاء	pea	CROP	Pisum sativum	محصول بقولي شتوي يزرع للبذور والقرون.	بسلة|Pea	PUBLISHED
+TRUE	عدس	lentil	CROP	Lens culinaris	محصول بقولي شتوي يزرع للبذور الجافة.	Lentil	PUBLISHED
+TRUE	حمص	chickpea	CROP	Cicer arietinum	محصول بقولي غذائي متحمل نسبيًا للجفاف.	Chickpea	PUBLISHED
+TRUE	فول سوداني	peanut	CROP	Arachis hypogaea	محصول زيتي بقولي يكوّن القرون تحت سطح التربة.	Peanut|Groundnut	PUBLISHED
+TRUE	فول صويا	soybean	CROP	Glycine max	محصول زيتي وبروتيني مهم.	Soybean	PUBLISHED
+TRUE	لوبيا	cowpea	CROP	Vigna unguiculata	محصول بقولي متحمل للحرارة والجفاف.	Cowpea	PUBLISHED
+TRUE	برسيم مصري	egyptian-clover	CROP	Trifolium alexandrinum	محصول علف شتوي رئيسي في مصر.	برسيم|Berseem	PUBLISHED
+TRUE	برسيم حجازي	alfalfa	CROP	Medicago sativa	محصول علف معمر عالي القيمة الغذائية.	الفصفصة|Alfalfa	PUBLISHED
+TRUE	شعير	barley	CROP	Hordeum vulgare	محصول حبوب وعلف يتحمل الملوحة والجفاف نسبيًا.	Barley	PUBLISHED
+TRUE	شوفان	oat	CROP	Avena sativa	محصول حبوب وعلف شتوي.	Oat	PUBLISHED
+TRUE	سمسم	sesame	CROP	Sesamum indicum	محصول زيتي صيفي يزرع للبذور.	Sesame	PUBLISHED
+TRUE	عباد الشمس	sunflower	CROP	Helianthus annuus	محصول زيتي يزرع للبذور والزيت.	دوار الشمس|Sunflower	PUBLISHED
+TRUE	كانولا	canola	CROP	Brassica napus	محصول زيتي شتوي لإنتاج الزيت.	لفت زيتي|Canola	PUBLISHED
+TRUE	كتان	flax	CROP	Linum usitatissimum	محصول يزرع للألياف والبذور الزيتية.	Flax|Linseed	PUBLISHED
+TRUE	قصب السكر	sugarcane	CROP	Saccharum officinarum	محصول سكري معمر يزرع لإنتاج السكر والعصير.	Sugarcane	PUBLISHED
+TRUE	بنجر السكر	sugar-beet	CROP	Beta vulgaris	محصول جذري شتوي لإنتاج السكر.	Sugar beet	PUBLISHED
+TRUE	بصل	onion	CROP	Allium cepa	محصول بصلي يزرع للاستهلاك والتخزين.	Onion	PUBLISHED
+TRUE	ثوم	garlic	CROP	Allium sativum	محصول بصلي يزرع للفصوص ذات الاستخدام الغذائي.	Garlic	PUBLISHED
+TRUE	كراث	leek	CROP	Allium ampeloprasum var. porrum	محصول خضر ورقي من العائلة النرجسية.	Leek	PUBLISHED
+TRUE	جزر	carrot	CROP	Daucus carota subsp. sativus	محصول جذري يزرع للجذور الملونة.	Carrot	PUBLISHED
+TRUE	بنجر مائدة	beetroot	CROP	Beta vulgaris Conditiva Group	محصول جذري يزرع للاستهلاك الطازج والتصنيع.	شمندر|Beetroot	PUBLISHED
+TRUE	فجل	radish	CROP	Raphanus sativus	محصول جذري سريع النمو.	Radish	PUBLISHED
+TRUE	لفت	turnip	CROP	Brassica rapa subsp. rapa	محصول جذري شتوي.	Turnip	PUBLISHED
+TRUE	ملفوف	cabbage	CROP	Brassica oleracea var. capitata	محصول خضر ورقي يكوّن رؤوسًا متماسكة.	كرنب|Cabbage	PUBLISHED
+TRUE	قرنبيط	cauliflower	CROP	Brassica oleracea var. botrytis	محصول خضر يزرع للنورات البيضاء.	Cauliflower	PUBLISHED
+TRUE	بروكلي	broccoli	CROP	Brassica oleracea var. italica	محصول خضر يزرع للنورات الخضراء.	Broccoli	PUBLISHED
+TRUE	خس	lettuce	CROP	Lactuca sativa	محصول خضر ورقي للاستهلاك الطازج.	Lettuce	PUBLISHED
+TRUE	سبانخ	spinach	CROP	Spinacia oleracea	محصول خضر ورقي شتوي.	Spinach	PUBLISHED
+TRUE	ملوخية	jute-mallow	CROP	Corchorus olitorius	محصول خضر ورقي صيفي مشهور في المنطقة العربية.	Jute mallow|ملوخية خضراء	PUBLISHED
+TRUE	بامية	okra	CROP	Abelmoschus esculentus	محصول خضر صيفي يزرع للقرون الغضة.	Okra	PUBLISHED
+TRUE	كوسة	zucchini	CROP	Cucurbita pepo	محصول قرعي يزرع للثمار الغضة.	قرع كوسة|Zucchini	PUBLISHED
+TRUE	قرع عسلي	pumpkin	CROP	Cucurbita moschata	محصول قرعي يزرع للثمار الناضجة.	يقطين|Pumpkin	PUBLISHED
+TRUE	بطيخ	watermelon	CROP	Citrullus lanatus	محصول قرعي صيفي يزرع للثمار الكبيرة.	Watermelon	PUBLISHED
+TRUE	شمام	melon	CROP	Cucumis melo	محصول قرعي يزرع لثمار حلوة عطرية.	كنتالوب|Melon	PUBLISHED
+TRUE	باذنجان	eggplant	CROP	Solanum melongena	محصول خضر صيفي يزرع للثمار.	Eggplant|Aubergine	PUBLISHED
+TRUE	خرشوف	artichoke	CROP	Cynara cardunculus var. scolymus	محصول خضر معمر يزرع للنورات الغضة.	أرضي شوكي|Artichoke	PUBLISHED
+TRUE	كرفس	celery	CROP	Apium graveolens	محصول خضر يزرع للأعناق والأوراق.	Celery	PUBLISHED
+TRUE	بقدونس	parsley	CROP	Petroselinum crispum	نبات عطري ورقي يستخدم طازجًا.	Parsley	PUBLISHED
+TRUE	كزبرة	coriander	CROP	Coriandrum sativum	نبات عطري يزرع للأوراق والبذور.	Cilantro|Coriander	PUBLISHED
+TRUE	شبت	dill	CROP	Anethum graveolens	نبات عطري حولي يزرع للأوراق والبذور.	Dill	PUBLISHED
+TRUE	نعناع	mint	CROP	Mentha spicata	نبات عطري معمر يزرع للأوراق والزيوت.	نعناع بلدي|Mint	PUBLISHED
+TRUE	ريحان	basil	CROP	Ocimum basilicum	نبات عطري يزرع للأوراق والزيت العطري.	حبق|Basil	PUBLISHED
+TRUE	كمون	cumin	CROP	Cuminum cyminum	نبات عطري شتوي يزرع للبذور.	Cumin	PUBLISHED
+TRUE	يانسون	anise	CROP	Pimpinella anisum	نبات عطري طبي يزرع للبذور.	Anise	PUBLISHED
+TRUE	شمر	fennel	CROP	Foeniculum vulgare	نبات عطري طبي يزرع للأوراق والبذور.	Fennel	PUBLISHED
+TRUE	كركديه	roselle	CROP	Hibiscus sabdariffa	محصول طبي وعطري يزرع للكؤوس الحمراء.	Roselle	PUBLISHED
+TRUE	موز	banana	CROP	Musa acuminata	نبات فاكهة استوائي معمر يزرع للثمار.	Banana	PUBLISHED
+TRUE	نخيل تمر	date-palm	CROP	Phoenix dactylifera	نخلة فاكهة معمرة تزرع لإنتاج التمور.	النخيل|Date palm	PUBLISHED
+TRUE	تين	fig	CROP	Ficus carica	شجرة فاكهة متساقطة الأوراق تزرع للثمار.	تين برشومي|Fig	PUBLISHED
+TRUE	رمان	pomegranate	CROP	Punica granatum	شجرة فاكهة تزرع لثمار ذات حبوب عصيرية.	Pomegranate	PUBLISHED
+TRUE	تفاح	apple	CROP	Malus domestica	شجرة فاكهة متساقطة الأوراق تزرع في المناطق المعتدلة.	Apple	PUBLISHED
+TRUE	كمثرى	pear	CROP	Pyrus communis	شجرة فاكهة متساقطة الأوراق تزرع للثمار.	Pear	PUBLISHED
+TRUE	سانسيفيريا	snake-plant	HOME_PLANT	Dracaena trifasciata	نبات منزلي قوي يتحمل الإضاءة المنخفضة نسبيًا.	جلد النمر|لسان الحماة|Snake plant	PUBLISHED
+TRUE	فيتونيا	fittonia	HOME_PLANT	Fittonia albivenis	نبات منزلي صغير محب للرطوبة ويتميز بعروق أوراق ملونة.	نبات العصب|Fittonia	PUBLISHED
+TRUE	ديفنباخيا	dieffenbachia	HOME_PLANT	Dieffenbachia seguine	نبات منزلي ورقي بأوراق كبيرة مبرقشة.	Dumb cane|Dieffenbachia	PUBLISHED
+TRUE	بوتس	pothos	HOME_PLANT	Epipremnum aureum	نبات متسلق منزلي سريع النمو وسهل العناية.	لبلاب الشيطان|Pothos	PUBLISHED
+TRUE	زاميا كولكاس	zz-plant	HOME_PLANT	Zamioculcas zamiifolia	نبات منزلي يتحمل الجفاف والإضاءة المتوسطة والمنخفضة.	ZZ plant|زاميوكولكاس	PUBLISHED
+TRUE	مونستيرا	monstera	HOME_PLANT	Monstera deliciosa	نبات منزلي استوائي بأوراق كبيرة مثقبة.	نبات الجبن السويسري|Monstera	PUBLISHED
+TRUE	فيلوديندرون قلبي	heartleaf-philodendron	HOME_PLANT	Philodendron hederaceum	نبات متسلق داخلي بأوراق قلبية.	Heartleaf philodendron	PUBLISHED
+TRUE	أجلونيما	aglaonema	HOME_PLANT	Aglaonema commutatum	نبات داخلي ورقي يتحمل الإضاءة المتوسطة.	Chinese evergreen|أغلاونيما	PUBLISHED
+TRUE	زنبق السلام	peace-lily	HOME_PLANT	Spathiphyllum wallisii	نبات منزلي مزهر محب للرطوبة والإضاءة المرشحة.	سباثيفيلوم|Peace lily	PUBLISHED
+TRUE	نبات العنكبوت	spider-plant	HOME_PLANT	Chlorophytum comosum	نبات منزلي سهل الإكثار وينتج فسائل معلقة.	كلوروفيتم|Spider plant	PUBLISHED
+TRUE	دراسينا مارجيناتا	dragon-tree	HOME_PLANT	Dracaena marginata	نبات داخلي قائم بأوراق ضيقة وحواف ملونة.	دراسينا|Dragon tree	PUBLISHED
+TRUE	فيكس مطاط	rubber-plant	HOME_PLANT	Ficus elastica	نبات داخلي بأوراق جلدية كبيرة لامعة.	فيكس إلاستيكا|Rubber plant	PUBLISHED
+TRUE	فيكس بنجامينا	weeping-fig	HOME_PLANT	Ficus benjamina	شجرة داخلية دائمة الخضرة كثيرة التفرع.	بنجامينا|Weeping fig	PUBLISHED
+TRUE	كالاتيا	calathea	HOME_PLANT	Goeppertia orbifolia	نبات ورقي داخلي محب للرطوبة بأوراق مزخرفة.	Calathea	PUBLISHED
+TRUE	مارانتا	prayer-plant	HOME_PLANT	Maranta leuconeura	نبات داخلي بأوراق مزخرفة تتحرك ليلًا.	نبات الصلاة|Prayer plant	PUBLISHED
+TRUE	بيبروميا	peperomia	HOME_PLANT	Peperomia obtusifolia	نبات منزلي صغير بأوراق لحمية.	Peperomia	PUBLISHED
+TRUE	بامبو الحظ	lucky-bamboo	HOME_PLANT	Dracaena sanderiana	نبات داخلي يمكن تربيته في الماء أو التربة.	Lucky bamboo	PUBLISHED
+TRUE	سرخس بوسطن	boston-fern	HOME_PLANT	Nephrolepis exaltata	سرخس داخلي محب للرطوبة والضوء غير المباشر.	Boston fern	PUBLISHED
+TRUE	نخيل الأريكا	areca-palm	HOME_PLANT	Dypsis lutescens	نخلة داخلية متعددة السيقان وذات أوراق ريشية.	Areca palm	PUBLISHED
+TRUE	نخيل الصالون	parlor-palm	HOME_PLANT	Chamaedorea elegans	نخلة منزلية تتحمل الإضاءة المنخفضة نسبيًا.	Parlor palm	PUBLISHED
+TRUE	ألوي فيرا	aloe-vera	HOME_PLANT	Aloe vera	نبات عصاري منزلي بأوراق لحمية.	صبار الألوفيرا|Aloe vera	PUBLISHED
+TRUE	هاورثيا	haworthia	HOME_PLANT	Haworthiopsis attenuata	نبات عصاري صغير مناسب للزراعة الداخلية.	Haworthia	PUBLISHED
+TRUE	كراسولا	jade-plant	HOME_PLANT	Crassula ovata	نبات عصاري بأوراق سميكة ويعرف بنبات اليشم.	شجرة المال|Jade plant	PUBLISHED
+TRUE	بنفسج أفريقي	african-violet	HOME_PLANT	Streptocarpus ionanthus	نبات منزلي مزهر صغير مناسب للإضاءة الساطعة المرشحة.	African violet	PUBLISHED
+TRUE	هويا	wax-plant	HOME_PLANT	Hoya carnosa	نبات متسلق داخلي بأزهار شمعية عطرية.	نبات الشمع|Hoya	PUBLISHED
+TRUE	ورد جوري	rose	ORNAMENTAL	Rosa × hybrida	شجيرة زينة مزهرة واسعة التنوع والألوان.	الورد|Rose	PUBLISHED
+TRUE	ياسمين بلدي	arabian-jasmine	ORNAMENTAL	Jasminum sambac	شجيرة عطرية مزهرة تستخدم في الحدائق والشرفات.	فل|Arabian jasmine	PUBLISHED
+TRUE	جهنمية	bougainvillea	ORNAMENTAL	Bougainvillea glabra	شجيرة متسلقة قوية ذات قنابات زاهية.	Bougainvillea	PUBLISHED
+TRUE	كركديه زينة	chinese-hibiscus	ORNAMENTAL	Hibiscus rosa-sinensis	شجيرة زينة مزهرة بألوان متعددة.	Hibiscus	PUBLISHED
+TRUE	دفلة	oleander	ORNAMENTAL	Nerium oleander	شجيرة زينة دائمة الخضرة ومتحملة للحرارة.	Oleander	PUBLISHED
+TRUE	جازانيا	gazania	ORNAMENTAL	Gazania rigens	نبات زينة أرضي مزهر ومتحمل للشمس.	Gazania	PUBLISHED
+TRUE	بتونيا	petunia	ORNAMENTAL	Petunia × atkinsiana	نبات موسمي مزهر مناسب للأحواض والسلال.	Petunia	PUBLISHED
+TRUE	قطيفة	marigold	ORNAMENTAL	Tagetes erecta	نبات موسمي مزهر بألوان صفراء وبرتقالية.	Marigold	PUBLISHED
+TRUE	ونكا	madagascar-periwinkle	ORNAMENTAL	Catharanthus roseus	نبات زينة مزهر متحمل للحرارة.	ونكا روزا|Periwinkle	PUBLISHED
+TRUE	إبرة الراعي	geranium	ORNAMENTAL	Pelargonium × hortorum	نبات زينة مزهر مناسب للأصص والشرفات.	جيرانيوم|Geranium	PUBLISHED
+TRUE	قرنفل	carnation	ORNAMENTAL	Dianthus caryophyllus	نبات زينة مزهر يستخدم كزهرة قطف.	Carnation	PUBLISHED
+TRUE	أقحوان	chrysanthemum	ORNAMENTAL	Chrysanthemum × morifolium	نبات زينة مزهر خريفي متعدد الألوان.	Chrysanthemum	PUBLISHED
+TRUE	زينية	zinnia	ORNAMENTAL	Zinnia elegans	نبات موسمي مزهر سريع النمو.	Zinnia	PUBLISHED
+TRUE	دوار الشمس الزيني	ornamental-sunflower	ORNAMENTAL	Helianthus annuus	نبات زينة موسمي بأزهار كبيرة.	Ornamental sunflower	PUBLISHED
+TRUE	لافندر	lavender	ORNAMENTAL	Lavandula angustifolia	شجيرة عطرية مزهرة ذات رائحة مميزة.	خزامى|Lavender	PUBLISHED
+TRUE	روزماري	rosemary	ORNAMENTAL	Salvia rosmarinus	شجيرة عطرية دائمة الخضرة تستخدم للزينة والطهي.	إكليل الجبل|Rosemary	PUBLISHED
+TRUE	سرو ليموني	lemon-cypress	ORNAMENTAL	Hesperocyparis macrocarpa	مخروطي زينة عطري بأوراق خضراء مصفرة.	Lemon cypress	PUBLISHED
+TRUE	تويا	thuja	ORNAMENTAL	Platycladus orientalis	شجيرة أو شجرة مخروطية للحدائق والأسوار.	العفص|Thuja	PUBLISHED
+TRUE	فيكس نيتيدا	indian-laurel	ORNAMENTAL	Ficus microcarpa	شجرة زينة دائمة الخضرة تستخدم في الشوارع والحدائق.	فيكس ميكروكاربا|Indian laurel	PUBLISHED
+TRUE	شيفليرا	umbrella-tree	ORNAMENTAL	Heptapleurum arboricola	شجيرة زينة ورقية تصلح للداخل والخارج المعتدل.	نبات المظلة|Schefflera	PUBLISHED
+TRUE	كروتون	croton	ORNAMENTAL	Codiaeum variegatum	شجيرة زينة ورقية بألوان متعددة.	Croton	PUBLISHED
+TRUE	دورانتا	golden-dewdrop	ORNAMENTAL	Duranta erecta	شجيرة زينة تستخدم للأسوار والتشكيل.	Duranta	PUBLISHED
+TRUE	لانتانا	lantana	ORNAMENTAL	Lantana camara	شجيرة مزهرة متحملة للحرارة والجفاف.	Lantana	PUBLISHED
+TRUE	تيكوما	yellow-bells	ORNAMENTAL	Tecoma stans	شجيرة أو شجرة صغيرة بأزهار صفراء جرسية.	Yellow bells	PUBLISHED
+TRUE	بونسيتيا	poinsettia	ORNAMENTAL	Euphorbia pulcherrima	شجيرة زينة تتميز بقنابات حمراء في الشتاء.	نجمة الميلاد|Poinsettia	PUBLISHED

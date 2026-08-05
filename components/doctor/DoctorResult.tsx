@@ -1,46 +1,416 @@
-import type { DoctorCandidate, DoctorChatResponse } from "@/lib/doctor/chat-contract";
+"use client";
 
-const confidenceCopy = { HIGH: "مرجح", MODERATE: "محتمل", LOW: "أقل احتمالاً", INSUFFICIENT: "معلومات غير كافية" } as const;
-const confidenceStyle = { HIGH: "bg-green-500/20 text-green-100 border-green-300/50", MODERATE: "bg-amber-500/20 text-amber-100 border-amber-300/50", LOW: "bg-slate-500/30 text-slate-100 border-slate-300/50", INSUFFICIENT: "bg-slate-500/30 text-slate-100 border-slate-300/50" } as const;
+import type {
+  DoctorCandidate,
+  DoctorChatResponse,
+} from "@/lib/doctor/chat-contract";
 
-function List({ title, items, tone = "text-green-50/85" }: { title: string; items: string[]; tone?: string }) {
-  if (items.length === 0) return null;
-  return <section className="mt-4"><h4 className="text-sm font-black text-lime-200">{title}</h4><ul className={`mt-2 space-y-2 text-sm leading-6 ${tone}`}>{items.map((item) => <li key={item} className="flex gap-2"><span aria-hidden="true">•</span><span>{item}</span></li>)}</ul></section>;
+const confidenceCopy = {
+  HIGH: "مرجح جدًا",
+  MODERATE: "محتمل",
+  LOW: "احتمال ضعيف",
+  INSUFFICIENT: "المعلومات غير كافية",
+} as const;
+
+const candidateTypeCopy = {
+  DISEASE: "مرض",
+  PEST: "آفة",
+  DEFICIENCY: "نقص عنصر",
+} as const;
+
+function unique(items: string[]) {
+  return Array.from(
+    new Set(
+      items
+        .map((item) => item.trim())
+        .filter(Boolean),
+    ),
+  );
 }
 
-function CandidateCard({ candidate, primary = false }: { candidate: DoctorCandidate; primary?: boolean }) {
-  return <article className={`min-w-0 overflow-hidden rounded-2xl border p-4 sm:p-5 ${primary ? "border-lime-300/60 bg-green-950/45" : "border-green-700/60 bg-black/15"}`}>
-    <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="text-lg font-black text-white"><bdi>{candidate.name}</bdi></h3><span className={`rounded-full border px-3 py-1 text-xs font-black ${confidenceStyle[candidate.confidence]}`}>{confidenceCopy[candidate.confidence]}</span></div>
-    <p className="mt-3 break-words text-sm leading-7 text-green-50/85">{candidate.explanation}</p>
-    <List title="الأدلة المتوافقة" items={candidate.matchedEvidence.map((item) => item.detail)} />
-    <List title="معلومات ما زالت مطلوبة" items={candidate.missingEvidence} />
-    <List title="تناقضات يجب التحقق منها" items={candidate.contradictions} tone="text-amber-100" />
-    <List title="أدلة لا تدعم هذا الاحتمال" items={candidate.excludedEvidence} tone="text-green-50/65" />
-  </article>;
+function cleanEnglishFallback(value: string) {
+  const normalized = value.trim();
+
+  const translations: Record<string, string> = {
+    "Gather the next requested observation before selecting a treatment.":
+      "أجب عن سؤال المتابعة التالي قبل اختيار أي معاملة.",
+    "Product compatibility is unknown until sufficient evidence is available.":
+      "لا يمكن تأكيد توافق المنتجات قبل توفر معلومات تشخيصية كافية.",
+    "Active recommendation for likely":
+      "منتج موصى به للحالة الأقرب",
+  };
+
+  return (
+    translations[normalized] ??
+    normalized
+  );
 }
 
-function Treatment({ result }: { result: DoctorChatResponse }) {
-  const treatment = result.treatment;
-  return <section className="mt-6 space-y-4" aria-label="الإرشادات والتوصيات">
-    <List title="إجراءات فورية غير متعلقة بالمنتجات" items={treatment.immediateActions} />
-    <List title="خطوات المتابعة" items={treatment.monitoringSteps} />
-    <List title="إرشادات العلاج" items={treatment.treatmentGuidance} />
-    {treatment.products.length > 0 ? <section><h3 className="text-base font-black text-lime-200">توصيات منتجات ArtVert</h3><div className="mt-3 grid gap-3 sm:grid-cols-2">{treatment.products.map((product) => <article key={product.productId} className="min-w-0 overflow-hidden rounded-2xl border border-green-600/60 bg-green-900/20 p-4"><h4 className="break-words font-black text-white"><bdi>{product.name}</bdi></h4><p className="mt-2 break-words text-sm leading-6 text-green-50/80">{product.reason}</p>{product.compatibilityWarning ? <p role="note" className="mt-3 break-words rounded-lg bg-amber-400/15 p-2 text-xs leading-5 text-amber-100">تنبيه توافق: {product.compatibilityWarning}</p> : null}</article>)}</div></section> : null}
-    <List title="تحذيرات وموانع الاستخدام" items={[...treatment.contraindications, ...treatment.unknownCompatibilityWarnings]} tone="text-amber-100" />
-  </section>;
+function candidateReason(
+  candidate: DoctorCandidate,
+) {
+  const evidence = unique(
+    candidate.matchedEvidence
+      .map((item) => item.detail)
+      .map(cleanEnglishFallback),
+  );
+
+  if (evidence.length > 0) {
+    return evidence
+      .slice(0, 3)
+      .join(" ");
+  }
+
+  if (
+    candidate.explanation?.trim()
+  ) {
+    return cleanEnglishFallback(
+      candidate.explanation,
+    );
+  }
+
+  return "تم ترشيح هذا الاحتمال بناءً على المعلومات المتاحة حتى الآن.";
 }
 
-export function DoctorResult({ result }: { result: DoctorChatResponse }) {
-  const leader = result.candidates[0];
-  const isUnavailable = result.status === "unavailable" || result.status === "session_expired" || result.status === "knowledge_release_unavailable";
-  if (isUnavailable) return <p className="text-sm leading-7 text-amber-100">{result.error || "لا يمكن متابعة التشخيص في هذه الجلسة حالياً."}</p>;
-  return <div className="space-y-5">
-    {result.plant.resolved ? <section className="rounded-2xl border border-green-700/60 bg-green-900/20 p-4"><h3 className="font-black text-lime-200">النبات المحدد</h3><p className="mt-2 text-white"><bdi>{result.plant.resolved.name}</bdi></p></section> : null}
-    {leader ? <section><h2 className="text-xl font-black text-lime-200">{result.status === "insufficient_information" ? "ما زلنا نحتاج معلومات" : "الاحتمال الأرجح"}</h2><div className="mt-3"><CandidateCard candidate={leader} primary /></div></section> : <p className="rounded-2xl border border-green-700/60 p-4 text-sm leading-7 text-green-50/80">صف ما تراه على النبات لنبدأ بفهم الحالة.</p>}
-    {result.candidates.length > 1 ? <section><h2 className="text-xl font-black text-lime-200">احتمالات أخرى</h2><div className="mt-3 space-y-3">{result.candidates.slice(1).map((candidate) => <CandidateCard key={candidate.id} candidate={candidate} />)}</div></section> : null}
-    {result.emergencyFlags.length > 0 ? <section role="alert" className="rounded-2xl border border-amber-300/60 bg-amber-500/15 p-4"><h3 className="font-black text-amber-100">تنبيه عاجل</h3><List title="" items={result.emergencyFlags} tone="text-amber-50" /></section> : null}
-    <Treatment result={result} />
-    {result.disclaimer ? <p role="note" className="border-t border-green-700/50 pt-4 text-xs leading-6 text-green-50/60">{result.disclaimer}</p> : null}
-    {result.knowledgeRelease.version ? <details className="text-xs text-green-50/60"><summary className="cursor-pointer font-bold text-green-50/80">مصدر المعرفة المستخدم</summary><p className="mt-2" dir="ltr">{result.knowledgeRelease.version} · {result.knowledgeRelease.manifestChecksum}</p></details> : null}
-  </div>;
+function renderProductReason(
+  reason: string,
+  candidate?: DoctorCandidate,
+) {
+  const cleaned =
+    cleanEnglishFallback(reason);
+
+  if (
+    cleaned !== reason ||
+    !candidate
+  ) {
+    return cleaned;
+  }
+
+  if (
+    reason
+      .toLowerCase()
+      .includes(
+        "active recommendation",
+      )
+  ) {
+    return `موصى به للحالة الأقرب: ${candidate.name}.`;
+  }
+
+  return cleaned;
+}
+
+function topUsefulCandidate(
+  result: DoctorChatResponse,
+) {
+  return (
+    result.candidates.find(
+      (candidate) =>
+        candidate.confidence !==
+        "INSUFFICIENT",
+    ) ??
+    result.candidates[0]
+  );
+}
+
+function buildSummary(
+  result: DoctorChatResponse,
+) {
+  const leader =
+    topUsefulCandidate(result);
+
+  const plantName =
+    result.plant.resolved?.name;
+
+  const immediateActions = unique(
+    result.treatment.immediateActions.map(
+      cleanEnglishFallback,
+    ),
+  );
+
+  const monitoringSteps = unique(
+    result.treatment.monitoringSteps.map(
+      cleanEnglishFallback,
+    ),
+  );
+
+  const treatmentGuidance = unique(
+    result.treatment.treatmentGuidance.map(
+      cleanEnglishFallback,
+    ),
+  );
+
+  const contraindications = unique([
+    ...result.treatment.contraindications,
+    ...result.treatment
+      .unknownCompatibilityWarnings,
+  ]).map(cleanEnglishFallback);
+
+  return {
+    leader,
+    plantName,
+    immediateActions,
+    monitoringSteps,
+    treatmentGuidance,
+    contraindications,
+  };
+}
+
+function ProductRecommendation({
+  result,
+  candidate,
+}: {
+  result: DoctorChatResponse;
+  candidate?: DoctorCandidate;
+}) {
+  if (
+    result.treatment.products.length ===
+    0
+  ) {
+    return null;
+  }
+
+  const products =
+    result.treatment.products.slice(
+      0,
+      3,
+    );
+
+  return (
+    <div className="mt-5">
+      <h3 className="font-black text-lime-200">
+        منتجات ArtVert المقترحة
+      </h3>
+
+      <div className="mt-3 space-y-3">
+        {products.map((product) => (
+          <div
+            key={product.productId}
+            className="rounded-2xl border border-lime-300/30 bg-lime-300/10 p-4"
+          >
+            <p className="font-black text-white">
+              <bdi>{product.name}</bdi>
+            </p>
+
+            <p className="mt-2 text-sm leading-7 text-green-50/85">
+              {renderProductReason(
+                product.reason,
+                candidate,
+              )}
+            </p>
+
+            {product.compatibilityWarning ? (
+              <p className="mt-2 text-xs leading-6 text-amber-100">
+                تنبيه:{" "}
+                {cleanEnglishFallback(
+                  product.compatibilityWarning,
+                )}
+              </p>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function DoctorResult({
+  result,
+}: {
+  result: DoctorChatResponse;
+}) {
+  const unavailable =
+    result.status ===
+      "unavailable" ||
+    result.status ===
+      "session_expired" ||
+    result.status ===
+      "knowledge_release_unavailable";
+
+  if (unavailable) {
+    return (
+      <div className="rounded-2xl border border-amber-300/40 bg-amber-500/10 p-4">
+        <p className="text-sm leading-7 text-amber-100">
+          {result.error ||
+            "الخدمة غير متاحة حاليًا. حاول مرة أخرى بعد قليل."}
+        </p>
+      </div>
+    );
+  }
+
+  const {
+    leader,
+    plantName,
+    immediateActions,
+    monitoringSteps,
+    treatmentGuidance,
+    contraindications,
+  } = buildSummary(result);
+
+  if (!leader) {
+    return (
+      <div className="rounded-2xl border border-green-700/60 bg-green-950/35 p-5">
+        <p className="text-sm leading-8 text-green-50/90">
+          صف المشكلة الظاهرة على النبات، ويفضل ذكر اسم النبات ومكان ظهور العرض وهل بدأ في الأوراق القديمة أم الحديثة.
+        </p>
+      </div>
+    );
+  }
+
+  const needsMoreInformation =
+    leader.confidence ===
+      "INSUFFICIENT" ||
+    result.status ===
+      "insufficient_information";
+
+  return (
+    <article className="rounded-3xl border border-lime-300/45 bg-gradient-to-b from-green-950/70 to-black/20 p-5 shadow-xl shadow-black/20 sm:p-6">
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm font-bold text-lime-200">
+            ملخص دكتور ArtVert
+          </p>
+
+          <h2 className="mt-2 text-2xl font-black text-white">
+            {needsMoreInformation
+              ? "نحتاج معلومة إضافية قبل تأكيد التشخيص"
+              : "التشخيص الأقرب"}
+          </h2>
+        </div>
+
+        {plantName ? (
+          <p className="text-sm leading-7 text-green-50/90">
+            <span className="font-black text-lime-200">
+              النبات:
+            </span>{" "}
+            <bdi>{plantName}</bdi>
+          </p>
+        ) : null}
+
+        <p className="text-sm leading-7 text-green-50/90">
+          <span className="font-black text-lime-200">
+            الاحتمال الأقرب:
+          </span>{" "}
+          <bdi>{leader.name}</bdi>{" "}
+          <span className="text-green-50/65">
+            (
+            {candidateTypeCopy[
+              leader.type
+            ] ?? "تشخيص"}
+            )
+          </span>
+        </p>
+
+        <p className="text-sm leading-7 text-green-50/90">
+          <span className="font-black text-lime-200">
+            درجة الثقة:
+          </span>{" "}
+          {
+            confidenceCopy[
+              leader.confidence
+            ]
+          }
+        </p>
+
+        <p className="text-sm leading-8 text-green-50/90">
+          <span className="font-black text-lime-200">
+            سبب الترشيح:
+          </span>{" "}
+          {candidateReason(leader)}
+        </p>
+
+        {result.emergencyFlags.length >
+        0 ? (
+          <div
+            role="alert"
+            className="rounded-2xl border border-amber-300/50 bg-amber-500/10 p-4"
+          >
+            <p className="font-black text-amber-100">
+              تنبيه عاجل
+            </p>
+
+            <p className="mt-2 text-sm leading-7 text-amber-50">
+              {unique(
+                result.emergencyFlags,
+              ).join(" ")}
+            </p>
+          </div>
+        ) : null}
+
+        {immediateActions.length >
+        0 ? (
+          <div>
+            <h3 className="font-black text-lime-200">
+              الإجراء الفوري
+            </h3>
+
+            <p className="mt-2 text-sm leading-8 text-green-50/90">
+              {immediateActions.join(
+                " ",
+              )}
+            </p>
+          </div>
+        ) : null}
+
+        {treatmentGuidance.length >
+        0 ? (
+          <div>
+            <h3 className="font-black text-lime-200">
+              الإرشاد العلاجي
+            </h3>
+
+            <p className="mt-2 text-sm leading-8 text-green-50/90">
+              {treatmentGuidance.join(
+                " ",
+              )}
+            </p>
+          </div>
+        ) : null}
+
+        <ProductRecommendation
+          result={result}
+          candidate={leader}
+        />
+
+        {monitoringSteps.length > 0 ? (
+          <div>
+            <h3 className="font-black text-lime-200">
+              المتابعة
+            </h3>
+
+            <p className="mt-2 text-sm leading-8 text-green-50/90">
+              {monitoringSteps.join(
+                " ",
+              )}
+            </p>
+          </div>
+        ) : null}
+
+        {contraindications.length >
+        0 ? (
+          <div className="rounded-2xl border border-amber-300/30 bg-amber-500/10 p-4">
+            <h3 className="font-black text-amber-100">
+              تنبيه مهم
+            </h3>
+
+            <p className="mt-2 text-sm leading-7 text-amber-50">
+              {contraindications.join(
+                " ",
+              )}
+            </p>
+          </div>
+        ) : null}
+
+        {result.disclaimer ? (
+          <p
+            role="note"
+            className="border-t border-green-700/50 pt-4 text-xs leading-6 text-green-50/55"
+          >
+            {cleanEnglishFallback(
+              result.disclaimer,
+            )}
+          </p>
+        ) : null}
+      </div>
+    </article>
+  );
 }
