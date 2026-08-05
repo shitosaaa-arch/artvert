@@ -8,15 +8,25 @@ import {
 } from "react";
 import {
   Globe2,
+  Home,
   Leaf,
   LogIn,
   Menu,
+  Newspaper,
+  Phone,
+  Search,
   ShoppingBag,
   ShoppingCart,
+  Sparkles,
+  Stethoscope,
+  Store,
+  Trees,
+  UserRound,
   X,
 } from "lucide-react";
 import {
   usePathname,
+  useRouter,
 } from "next/navigation";
 
 import {
@@ -24,18 +34,52 @@ import {
 } from "@/components/cart/CartProvider";
 
 const navigation = [
-  { label: "الرئيسية", href: "/" },
-  { label: "المنتجات", href: "/products" },
-  { label: "الزراعة المنزلية", href: "/plant-care" },
-  { label: "نباتات الزينة", href: "/plant-care" },
-  { label: "الرعاية والتشخيص", href: "/doctor" },
-  { label: "المدونة", href: "/blog" },
-  { label: "من نحن", href: "/about" },
-  { label: "تواصل معنا", href: "/contact" },
+  {
+    label: "الرئيسية",
+    href: "/",
+    icon: Home,
+  },
+  {
+    label: "المنتجات",
+    href: "/products",
+    icon: Store,
+  },
+  {
+    label: "الزراعة المنزلية",
+    href: "/plant-care",
+    icon: Trees,
+  },
+  {
+    label: "نباتات الزينة",
+    href: "/plant-care",
+    icon: Leaf,
+  },
+  {
+    label: "الرعاية والتشخيص",
+    href: "/doctor",
+    icon: Stethoscope,
+  },
+  {
+    label: "المدونة",
+    href: "/blog",
+    icon: Newspaper,
+  },
+  {
+    label: "من نحن",
+    href: "/about",
+    icon: Sparkles,
+  },
+  {
+    label: "تواصل معنا",
+    href: "/contact",
+    icon: Phone,
+  },
 ] as const;
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
+
   const {
     totalItems,
     isReady,
@@ -51,11 +95,54 @@ export default function Navbar() {
     setMenuOpen,
   ] = useState(false);
 
+  const [
+    searchOpen,
+    setSearchOpen,
+  ] = useState(false);
+
+  const [
+    searchValue,
+    setSearchValue,
+  ] = useState("");
+
+  const [
+    isScrolled,
+    setIsScrolled,
+  ] = useState(false);
+
   const menuTriggerRef =
     useRef<HTMLButtonElement>(null);
 
+  const searchInputRef =
+    useRef<HTMLInputElement>(null);
+
   const displayedCartCount =
     isReady ? totalItems : 0;
+
+  useEffect(() => {
+    function handleScroll() {
+      setIsScrolled(
+        window.scrollY > 16,
+      );
+    }
+
+    handleScroll();
+
+    window.addEventListener(
+      "scroll",
+      handleScroll,
+      {
+        passive: true,
+      },
+    );
+
+    return () => {
+      window.removeEventListener(
+        "scroll",
+        handleScroll,
+      );
+    };
+  }, []);
 
   useEffect(() => {
     function closeOnEscape(
@@ -68,6 +155,7 @@ export default function Navbar() {
       }
 
       setMenuOpen(false);
+      setSearchOpen(false);
       menuTriggerRef.current?.focus();
     }
 
@@ -86,7 +174,16 @@ export default function Navbar() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setSearchOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (searchOpen) {
+      requestAnimationFrame(() =>
+        searchInputRef.current?.focus(),
+      );
+    }
+  }, [searchOpen]);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -100,43 +197,75 @@ export default function Navbar() {
       : pathname.startsWith(href);
   }
 
+  function submitSearch() {
+    const query =
+      searchValue.trim();
+
+    if (!query) {
+      return;
+    }
+
+    router.push(
+      `/products?search=${encodeURIComponent(
+        query,
+      )}`,
+    );
+
+    setSearchOpen(false);
+    setMenuOpen(false);
+  }
+
   return (
     <header
       data-site-navbar
-      className="sticky top-0 z-50 w-full border-b border-[#9fbd35]/30 bg-[linear-gradient(90deg,#031a10_0%,#052617_50%,#031a10_100%)] text-white shadow-[0_12px_35px_rgba(0,0,0,.35)] backdrop-blur-xl"
+      className={[
+        "sticky top-0 z-50 w-full border-b text-white transition-all duration-300",
+        isScrolled
+          ? "border-[#9fbd35]/35 bg-[#03170e]/96 shadow-[0_16px_42px_rgba(0,0,0,.42)] backdrop-blur-2xl"
+          : "border-[#9fbd35]/22 bg-[linear-gradient(90deg,#031a10_0%,#052617_50%,#031a10_100%)] shadow-[0_10px_30px_rgba(0,0,0,.28)] backdrop-blur-xl",
+      ].join(" ")}
     >
-      <div className="mx-auto grid h-[68px] max-w-[1480px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 sm:px-6 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-5">
+      <div
+        className={[
+          "mx-auto grid max-w-[1480px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 transition-all duration-300 sm:px-5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-5",
+          isScrolled
+            ? "h-[62px]"
+            : "h-[72px]",
+        ].join(" ")}
+      >
         <Link
           href="/"
           className="flex w-fit items-center gap-2 rounded-xl"
           aria-label="ArtVert Egypt - الصفحة الرئيسية"
         >
-          <Leaf
-            aria-hidden="true"
-            size={34}
-            strokeWidth={2.5}
-            className="-rotate-12 text-[#c8f33f]"
-          />
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#c8f33f]/22 bg-[#c8f33f]/10 shadow-[0_0_22px_rgba(200,243,63,.10)]">
+            <Leaf
+              aria-hidden="true"
+              size={29}
+              strokeWidth={2.5}
+              className="-rotate-12 text-[#c8f33f]"
+            />
+          </span>
 
           <span
             className="leading-none"
             dir="ltr"
           >
-            <span className="block text-[24px] font-black tracking-[-0.04em] text-white">
+            <span className="block text-[22px] font-black tracking-[-0.04em] text-white sm:text-[25px]">
               ART
               <span className="text-[#c8f33f]">
                 VERT
               </span>
             </span>
 
-            <span className="mt-1 block text-center text-[10px] font-black tracking-[0.32em] text-[#c8f33f]">
+            <span className="mt-1 block text-center text-[9px] font-black tracking-[0.30em] text-[#c8f33f]">
               EGYPT
             </span>
           </span>
         </Link>
 
         <nav
-          className="hidden min-w-0 items-center justify-center gap-4 whitespace-nowrap text-xs lg:flex"
+          className="hidden min-w-0 items-center justify-center gap-1.5 whitespace-nowrap text-[12px] xl:flex"
           dir="rtl"
           aria-label="التنقل الرئيسي"
         >
@@ -154,7 +283,12 @@ export default function Navbar() {
                       ? "page"
                       : undefined
                   }
-                  className="relative rounded-lg px-2 py-2 text-white/90 transition-all duration-200 hover:bg-white/[.05] hover:text-[#c8f33f] aria-[current=page]:border aria-[current=page]:border-[#c8f33f]/55 aria-[current=page]:bg-[#c8f33f]/10 aria-[current=page]:text-white aria-[current=page]:shadow-[0_0_18px_rgba(200,243,63,.14)]"
+                  className={[
+                    "relative rounded-xl px-3 py-2.5 font-bold text-white/82 transition-all duration-200",
+                    active
+                      ? "border border-[#c8f33f]/45 bg-[#c8f33f]/10 text-white shadow-[0_0_18px_rgba(200,243,63,.10)]"
+                      : "border border-transparent hover:border-white/8 hover:bg-white/[.045] hover:text-[#c8f33f]",
+                  ].join(" ")}
                 >
                   {item.label}
                 </Link>
@@ -167,9 +301,26 @@ export default function Navbar() {
           className="flex items-center justify-self-end gap-2"
           dir="ltr"
         >
+          <button
+            type="button"
+            onClick={() =>
+              setSearchOpen(
+                (open) => !open,
+              )
+            }
+            className="hidden min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:grid"
+            aria-expanded={searchOpen}
+            aria-label="البحث في المنتجات"
+          >
+            <Search
+              aria-hidden="true"
+              size={18}
+            />
+          </button>
+
           <Link
             href="/login"
-            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[.04] px-4 text-sm font-black text-white transition hover:border-[#c8f33f]/50 hover:bg-[#c8f33f]/10 md:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-4 text-sm font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 md:inline-flex"
           >
             <LogIn
               aria-hidden="true"
@@ -191,7 +342,7 @@ export default function Navbar() {
                     : "AR",
               )
             }
-            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/15 bg-white/[.04] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/50 hover:bg-[#c8f33f]/10 sm:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 sm:inline-flex"
             aria-label="تغيير اللغة"
           >
             <Globe2
@@ -203,7 +354,7 @@ export default function Navbar() {
 
           <Link
             href="/cart"
-            className="relative grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/15 bg-white/[.04] text-white transition hover:border-[#c8f33f]/50 hover:bg-[#c8f33f]/10"
+            className="relative grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10"
             aria-label={`سلة التسوق، ${displayedCartCount} عناصر`}
           >
             <ShoppingCart
@@ -211,7 +362,7 @@ export default function Navbar() {
               size={18}
             />
 
-            <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full border border-[var(--artvert-bg)] bg-[var(--artvert-primary)] px-1 text-[10px] font-black text-[var(--artvert-text-dark)]">
+            <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full border border-[#03170e] bg-[#c8f33f] px-1 text-[10px] font-black text-[#102014] shadow-[0_0_14px_rgba(200,243,63,.28)]">
               {displayedCartCount >
               99
                 ? "99+"
@@ -221,7 +372,7 @@ export default function Navbar() {
 
           <Link
             href="/products"
-            className="hidden min-h-11 items-center gap-2 rounded-xl bg-[#c8f33f] px-4 text-sm font-black text-[#102014] shadow-[0_0_24px_rgba(200,243,63,.22)] transition hover:bg-[#d6ff58] sm:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-xl bg-[#c8f33f] px-4 text-sm font-black text-[#102014] shadow-[0_0_24px_rgba(200,243,63,.18)] transition hover:-translate-y-0.5 hover:bg-[#d6ff58] lg:inline-flex"
           >
             <ShoppingBag
               aria-hidden="true"
@@ -245,7 +396,7 @@ export default function Navbar() {
                 ? "إغلاق القائمة"
                 : "فتح القائمة"
             }
-            className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/15 bg-white/[.04] text-white transition hover:border-[#c8f33f]/50 hover:bg-[#c8f33f]/10 lg:hidden"
+            className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 xl:hidden"
           >
             {menuOpen ? (
               <X
@@ -262,111 +413,244 @@ export default function Navbar() {
         </div>
       </div>
 
-      {menuOpen && (
-        <div
-          className="absolute inset-x-3 top-[calc(100%+8px)] rounded-2xl border border-[#9fbd35]/30 bg-[#041b11]/98 p-3 shadow-2xl backdrop-blur-xl lg:hidden"
-          dir="rtl"
-        >
-          <nav
-            id="artvert-mobile-navigation"
-            aria-label="التنقل على الهاتف"
-            className="grid gap-1"
-          >
-            {navigation.map(
-              (item) => {
-                const active =
-                  isActive(item.href);
+      {searchOpen && (
+        <div className="hidden border-t border-white/[.06] bg-[#03170e]/96 px-4 py-3 shadow-inner backdrop-blur-xl lg:block">
+          <div className="mx-auto flex max-w-[900px] items-center gap-2 rounded-2xl border border-[#c8f33f]/22 bg-black/20 p-2">
+            <Search
+              aria-hidden="true"
+              size={19}
+              className="mr-2 shrink-0 text-[#c8f33f]"
+            />
 
-                return (
-                  <Link
-                    key={item.label}
-                    href={item.href}
-                    onClick={closeMenu}
-                    aria-current={
-                      active
-                        ? "page"
-                        : undefined
-                    }
-                    className={[
-                      "min-h-11 rounded-xl px-4 py-3 text-right text-sm font-bold transition",
-                      active
-                        ? "bg-[rgba(200,243,63,.14)] text-[var(--artvert-primary)]"
-                        : "text-white/85 hover:bg-white/[.06]",
-                    ].join(" ")}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              },
-            )}
-
-            <Link
-              href="/cart"
-              onClick={closeMenu}
-              className="mt-1 flex min-h-11 items-center justify-between rounded-xl border border-[var(--artvert-border-soft)] bg-white/[.04] px-4 text-sm font-bold text-white"
-            >
-              <span className="flex items-center gap-2">
-                <ShoppingCart
-                  aria-hidden="true"
-                  size={17}
-                  className="text-[var(--artvert-primary)]"
-                />
-                سلة التسوق
-              </span>
-
-              <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[var(--artvert-primary)] px-1.5 text-xs font-black text-[var(--artvert-text-dark)]">
-                {displayedCartCount >
-                99
-                  ? "99+"
-                  : displayedCartCount}
-              </span>
-            </Link>
-
-            <Link
-              href="/login"
-              onClick={closeMenu}
-              className="mt-1 flex min-h-11 items-center justify-between rounded-xl border border-[var(--artvert-border)] bg-[rgba(200,243,63,.08)] px-4 text-sm font-black text-[var(--artvert-primary)]"
-            >
-              <span className="flex items-center gap-2">
-                <LogIn
-                  aria-hidden="true"
-                  size={16}
-                />
-                تسجيل الدخول
-              </span>
-            </Link>
+            <input
+              ref={searchInputRef}
+              value={searchValue}
+              onChange={(event) =>
+                setSearchValue(
+                  event.target.value,
+                )
+              }
+              onKeyDown={(event) => {
+                if (
+                  event.key ===
+                  "Enter"
+                ) {
+                  submitSearch();
+                }
+              }}
+              placeholder="ابحث عن منتج..."
+              className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-white/35"
+            />
 
             <button
               type="button"
-              onClick={() =>
-                setLocale(
-                  (
-                    currentLocale,
-                  ) =>
-                    currentLocale ===
-                    "AR"
-                      ? "EN"
-                      : "AR",
-                )
-              }
-              className="mt-1 flex min-h-11 items-center justify-between rounded-xl border border-[var(--artvert-border-soft)] px-4 text-sm font-bold text-white"
-              aria-label="تغيير اللغة"
+              onClick={submitSearch}
+              className="min-h-10 rounded-xl bg-[#c8f33f] px-5 text-sm font-black text-[#102014]"
             >
-              <span className="flex items-center gap-2">
-                <Globe2
-                  aria-hidden="true"
-                  size={16}
-                  className="text-[var(--artvert-primary)]"
-                />
-                اللغة
-              </span>
-
-              <span dir="ltr">
-                {locale}
-              </span>
+              بحث
             </button>
-          </nav>
+          </div>
         </div>
+      )}
+
+      {menuOpen && (
+        <>
+          <button
+            type="button"
+            aria-label="إغلاق القائمة"
+            onClick={closeMenu}
+            className="fixed inset-0 top-[62px] z-40 bg-black/55 backdrop-blur-[2px] xl:hidden"
+          />
+
+          <aside
+            id="artvert-mobile-navigation"
+            className="fixed bottom-0 right-0 top-[62px] z-50 flex w-[min(90vw,380px)] flex-col border-l border-[#9fbd35]/28 bg-[#041b11]/98 shadow-[-24px_0_70px_rgba(0,0,0,.45)] backdrop-blur-2xl xl:hidden"
+            dir="rtl"
+            aria-label="التنقل على الهاتف"
+          >
+            <div className="border-b border-white/[.07] p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-white">
+                    ArtVert Egypt
+                  </p>
+                  <p className="mt-1 text-xs text-white/42">
+                    تنقل سريع داخل الموقع
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={closeMenu}
+                  className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[.035] text-white"
+                  aria-label="إغلاق القائمة"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 p-2">
+                <Search
+                  aria-hidden="true"
+                  size={17}
+                  className="mr-1 shrink-0 text-[#c8f33f]"
+                />
+
+                <input
+                  value={searchValue}
+                  onChange={(event) =>
+                    setSearchValue(
+                      event.target.value,
+                    )
+                  }
+                  onKeyDown={(event) => {
+                    if (
+                      event.key ===
+                      "Enter"
+                    ) {
+                      submitSearch();
+                    }
+                  }}
+                  placeholder="ابحث عن منتج..."
+                  className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-white/30"
+                />
+
+                <button
+                  type="button"
+                  onClick={submitSearch}
+                  className="min-h-9 rounded-lg bg-[#c8f33f] px-3 text-xs font-black text-[#102014]"
+                >
+                  بحث
+                </button>
+              </div>
+            </div>
+
+            <nav
+              className="min-h-0 flex-1 overflow-y-auto p-3"
+            >
+              <div className="grid gap-1.5">
+                {navigation.map(
+                  (item) => {
+                    const active =
+                      isActive(
+                        item.href,
+                      );
+
+                    const Icon =
+                      item.icon;
+
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.href}
+                        onClick={closeMenu}
+                        aria-current={
+                          active
+                            ? "page"
+                            : undefined
+                        }
+                        className={[
+                          "flex min-h-12 items-center gap-3 rounded-xl border px-4 py-3 text-right text-sm font-bold transition",
+                          active
+                            ? "border-[#c8f33f]/30 bg-[#c8f33f]/12 text-[#c8f33f]"
+                            : "border-transparent text-white/82 hover:border-white/8 hover:bg-white/[.045]",
+                        ].join(" ")}
+                      >
+                        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[.04] text-[#c8f33f]">
+                          <Icon size={17} />
+                        </span>
+
+                        <span>
+                          {item.label}
+                        </span>
+                      </Link>
+                    );
+                  },
+                )}
+              </div>
+            </nav>
+
+            <div className="border-t border-white/[.07] p-3">
+              <div className="grid gap-2">
+                <Link
+                  href="/cart"
+                  onClick={closeMenu}
+                  className="flex min-h-12 items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-4 text-sm font-bold text-white"
+                >
+                  <span className="flex items-center gap-3">
+                    <ShoppingCart
+                      aria-hidden="true"
+                      size={18}
+                      className="text-[#c8f33f]"
+                    />
+                    سلة التسوق
+                  </span>
+
+                  <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#c8f33f] px-1.5 text-xs font-black text-[#102014]">
+                    {displayedCartCount >
+                    99
+                      ? "99+"
+                      : displayedCartCount}
+                  </span>
+                </Link>
+
+                <Link
+                  href="/login"
+                  onClick={closeMenu}
+                  className="flex min-h-12 items-center gap-3 rounded-xl border border-[#c8f33f]/22 bg-[#c8f33f]/8 px-4 text-sm font-black text-[#c8f33f]"
+                >
+                  <UserRound
+                    aria-hidden="true"
+                    size={18}
+                  />
+                  تسجيل الدخول
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLocale(
+                      (
+                        currentLocale,
+                      ) =>
+                        currentLocale ===
+                        "AR"
+                          ? "EN"
+                          : "AR",
+                    )
+                  }
+                  className="flex min-h-12 items-center justify-between rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm font-bold text-white"
+                  aria-label="تغيير اللغة"
+                >
+                  <span className="flex items-center gap-3">
+                    <Globe2
+                      aria-hidden="true"
+                      size={18}
+                      className="text-[#c8f33f]"
+                    />
+                    اللغة
+                  </span>
+
+                  <span dir="ltr">
+                    {locale}
+                  </span>
+                </button>
+
+                <Link
+                  href="/products"
+                  onClick={closeMenu}
+                  className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c8f33f] px-4 text-sm font-black text-[#102014] shadow-[0_0_22px_rgba(200,243,63,.16)]"
+                >
+                  <ShoppingBag
+                    aria-hidden="true"
+                    size={18}
+                  />
+                  تسوق الآن
+                </Link>
+              </div>
+            </div>
+          </aside>
+        </>
       )}
     </header>
   );
