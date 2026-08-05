@@ -271,6 +271,186 @@ async function loadPublishedProducts(): Promise<
   }));
 }
 
+
+function confidencePercent(
+  confidence:
+    | "HIGH"
+    | "MODERATE"
+    | "LOW"
+    | undefined,
+) {
+  if (confidence === "HIGH") return 96;
+  if (confidence === "MODERATE") return 82;
+  if (confidence === "LOW") return 58;
+  return 0;
+}
+
+function cleanLine(
+  value: string | undefined,
+) {
+  return value?.trim() ?? "";
+}
+
+function bulletLines(
+  values: string[],
+) {
+  return values
+    .map((value) => cleanLine(value))
+    .filter(Boolean)
+    .map((value) => `• ${value}`)
+    .join("\n");
+}
+
+function numberedLines(
+  values: string[],
+) {
+  return values
+    .map((value) => cleanLine(value))
+    .filter(Boolean)
+    .map(
+      (value, index) =>
+        `${index + 1}- ${value}`,
+    )
+    .join("\n");
+}
+
+function structuredDoctorReply({
+  baseReply,
+  diagnoses,
+  observedSymptoms,
+  immediateActions,
+  treatmentGuidance,
+  followUpQuestion,
+  warning,
+  products,
+}: {
+  baseReply: string;
+  diagnoses: Array<{
+    name: string;
+    confidence:
+      | "HIGH"
+      | "MODERATE"
+      | "LOW";
+    reasoning?: string;
+  }>;
+  observedSymptoms: string[];
+  immediateActions: string[];
+  treatmentGuidance: string[];
+  followUpQuestion?: string;
+  warning?: string;
+  products: AgriculturalProductContext[];
+}) {
+  const leader =
+    diagnoses[0];
+
+  const sections: string[] = [];
+
+  if (leader) {
+    sections.push(
+      [
+        "🌿 التشخيص",
+        "",
+        leader.name,
+        "",
+        `نسبة الثقة: ${confidencePercent(leader.confidence)}%`,
+      ].join("\n"),
+    );
+  }
+
+  const reasons = [
+    ...observedSymptoms,
+    ...(leader?.reasoning
+      ? [leader.reasoning]
+      : []),
+  ];
+
+  if (reasons.length > 0) {
+    sections.push(
+      [
+        "📌 الأسباب المحتملة",
+        "",
+        bulletLines(reasons),
+      ].join("\n"),
+    );
+  }
+
+  const actionLines = [
+    ...immediateActions,
+    ...treatmentGuidance,
+  ];
+
+  if (actionLines.length > 0) {
+    sections.push(
+      [
+        "💊 العلاج",
+        "",
+        numberedLines(actionLines),
+      ].join("\n"),
+    );
+  }
+
+  if (products.length > 0) {
+    sections.push(
+      [
+        "🧴 المنتجات المقترحة",
+        "",
+        ...products
+          .slice(0, 3)
+          .map((product) => {
+            const reason =
+              product.reason?.trim() ||
+              product.benefits?.[0]?.trim() ||
+              product.composition?.trim() ||
+              "منتج مناسب للحالة وفق بيانات ArtVert المنشورة.";
+
+            return `• ${product.nameAr}: ${reason}`;
+          }),
+        "",
+        "استخدم المنتجات حسب الجرعة المدونة على العبوة، وتأكد من ملاءمتها للمحصول والحالة.",
+      ].join("\n"),
+    );
+  }
+
+  if (followUpQuestion?.trim()) {
+    sections.push(
+      [
+        "❓ سؤال متابعة",
+        "",
+        followUpQuestion.trim(),
+      ].join("\n"),
+    );
+  }
+
+  if (warning?.trim()) {
+    sections.push(
+      [
+        "💡 نصيحة",
+        "",
+        warning.trim(),
+      ].join("\n"),
+    );
+  }
+
+  if (sections.length === 0) {
+    return baseReply.trim();
+  }
+
+  const cleanBase =
+    baseReply.trim();
+
+  if (cleanBase) {
+    sections.push(
+      [
+        "💡 نصيحة",
+        "",
+        cleanBase,
+      ].join("\n"),
+    );
+  }
+
+  return sections.join("\n\n");
+}
+
 function approvedProducts(
   requestedIds: string[],
   products:
@@ -296,87 +476,6 @@ function approvedProducts(
     );
 }
 
-
-function shouldRecommendAutomatically(
-  diagnoses:
-    Array<{
-      confidence:
-        | "HIGH"
-        | "MODERATE"
-        | "LOW";
-    }>,
-) {
-  const leader =
-    diagnoses[0];
-
-  return (
-    leader?.confidence ===
-      "HIGH" ||
-    leader?.confidence ===
-      "MODERATE"
-  );
-}
-
-function productRecommendationText(
-  products:
-    AgriculturalProductContext[],
-) {
-  if (products.length === 0) {
-    return "";
-  }
-
-  const lines =
-    products
-      .slice(0, 3)
-      .map((product) => {
-        const reason =
-          product.reason?.trim() ||
-          product.benefits?.[0]?.trim() ||
-          product.composition?.trim() ||
-          "منتج مناسب للحالة وفق البيانات المسجلة في ArtVert.";
-
-        return `• ${product.nameAr}: ${reason}`;
-      });
-
-  return [
-    "المنتجات المقترحة من ArtVert:",
-    ...lines,
-    "استخدم المنتجات حسب الجرعة المدونة على العبوة، وتأكد من ملاءمتها للمحصول والحالة.",
-  ].join("\n");
-}
-
-function finalReplyWithProducts(
-  reply: string,
-  diagnoses:
-    Array<{
-      confidence:
-        | "HIGH"
-        | "MODERATE"
-        | "LOW";
-    }>,
-  products:
-    AgriculturalProductContext[],
-) {
-  if (
-    !shouldRecommendAutomatically(
-      diagnoses,
-    ) ||
-    products.length === 0
-  ) {
-    return reply.trim();
-  }
-
-  const productText =
-    productRecommendationText(
-      products,
-    );
-
-  if (!productText) {
-    return reply.trim();
-  }
-
-  return `${reply.trim()}\n\n${productText}`;
-}
 
 export async function POST(
   request: Request,
@@ -524,11 +623,23 @@ export async function POST(
       );
 
     const finalReply =
-      finalReplyWithProducts(
-        result.reply,
-        result.possibleDiagnoses,
-        selectedProducts,
-      );
+      structuredDoctorReply({
+        baseReply: result.reply,
+        diagnoses:
+          result.possibleDiagnoses,
+        observedSymptoms:
+          result.observedSymptoms,
+        immediateActions:
+          result.immediateActions,
+        treatmentGuidance:
+          result.treatmentGuidance,
+        followUpQuestion:
+          result.followUpQuestion,
+        warning:
+          result.warning,
+        products:
+          selectedProducts,
+      });
 
     const now =
       new Date().toISOString();
