@@ -11,7 +11,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Bot,
-  Camera,
   CheckCircle2,
   FlaskConical,
   Image as ImageIcon,
@@ -23,7 +22,6 @@ import {
   Send,
   ShieldCheck,
   ShoppingCart,
-  Trash2,
   User,
   X,
   LogIn,
@@ -233,7 +231,6 @@ export function DoctorChat() {
   const [imagePreview, setImagePreview] = useState<string>();
   const [imageUploading, setImageUploading] = useState(false);
   const [isRequestPending, setIsRequestPending] = useState(false);
-  const [mobileDoctorOpen, setMobileDoctorOpen] = useState(false);
   const [recording, setRecording] = useState(false);
 
   const sessionIdRef = useRef<string | undefined>(undefined);
@@ -361,15 +358,17 @@ export function DoctorChat() {
   async function chooseImage(file: File | undefined) {
     if (!file || isRequestPending || imageUploading) return;
 
+    const selectedFile = file;
+
     setImageUploading(true);
-    const preview = URL.createObjectURL(file);
+    const preview = URL.createObjectURL(selectedFile);
     previewUrlsRef.current.add(preview);
     setImagePreview(preview);
 
     async function upload(activeSessionId?: string) {
       const body = new FormData();
       if (activeSessionId) body.set("sessionId", activeSessionId);
-      body.set("image", file!);
+      body.set("image", selectedFile);
 
       const response = await fetch("/api/doctor/images", {
         method: "POST",
@@ -473,7 +472,7 @@ export function DoctorChat() {
   return (
     <main
       dir="rtl"
-      className="relative h-[100dvh] w-full overflow-hidden bg-[#0a1e12] px-2 py-2 text-white sm:px-3 font-sans"
+      className="relative min-h-[100dvh] w-full overflow-x-hidden bg-[#0a1e12] px-2 py-2 text-white sm:px-3 lg:h-[100dvh] lg:overflow-hidden font-sans"
     >
       {/* Background Gradient & Pattern */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_6%,rgba(143,202,45,.12),transparent_25%),radial-gradient(circle_at_88%_18%,rgba(38,164,83,.12),transparent_27%),linear-gradient(145deg,#02150d_0%,#063220_48%,#02180f_100%)]" />
@@ -489,12 +488,12 @@ export function DoctorChat() {
         }}
       />
 
-      <div className="relative z-10 flex h-full w-full flex-col max-w-screen-2xl mx-auto">
+      <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-16px)] w-full max-w-screen-2xl flex-col lg:h-full lg:min-h-0">
         {/* Top Navbar */}
-        <nav className="mb-2 flex items-center justify-between rounded-full border border-[#9fbd35]/25 bg-black/40 px-6 py-3 backdrop-blur-md">
+        <nav className="mb-2 flex items-center justify-between gap-3 rounded-[20px] border border-[#9fbd35]/25 bg-black/40 px-3 py-2.5 backdrop-blur-md sm:rounded-full sm:px-6 sm:py-3">
           <Link href="/" className="flex items-center gap-2">
             <div className="text-left">
-              <span className="text-3xl font-black text-[#c8f33f]">ArtVert</span>
+              <span className="text-2xl font-black text-[#c8f33f] sm:text-3xl">ArtVert</span>
               <span className="block text-center text-sm font-bold leading-none text-white">Egypt</span>
             </div>
             <Leaf size={32} className="text-[#c8f33f]" />
@@ -510,14 +509,14 @@ export function DoctorChat() {
 
           <Link
             href="/contact"
-            className="rounded-xl border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/20"
+            className="hidden rounded-xl border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/20 sm:inline-flex"
           >
             تواصل معنا
           </Link>
         </nav>
 
         {/* Secondary Navbar */}
-        <div className="mb-4 flex items-center justify-between rounded-[24px] border border-[#9fbd35]/20 bg-[#072517]/80 px-4 py-3 backdrop-blur-md">
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-[18px] border border-[#9fbd35]/20 bg-[#072517]/80 px-2.5 py-2 backdrop-blur-md sm:mb-4 sm:rounded-[24px] sm:px-4 sm:py-3">
           <div className="flex items-center gap-3">
             <button className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white/80 hover:bg-white/10 lg:hidden">
               <Menu size={20} />
@@ -532,13 +531,13 @@ export function DoctorChat() {
               <ShoppingCart size={18} />
               <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c8f33f] text-[10px] font-black text-black">0</span>
             </Link>
-            <Link href="/products" className="flex h-10 items-center rounded-xl bg-[#c8f33f] px-5 text-sm font-black text-[#102014] shadow-[0_0_15px_rgba(200,243,63,.3)] hover:bg-[#d4f85e] transition-colors">
-              تسوق الآن <ShoppingCart size={16} className="ml-2" />
+            <Link href="/products" className="flex h-10 items-center rounded-xl bg-[#c8f33f] px-3 text-xs font-black text-[#102014] shadow-[0_0_15px_rgba(200,243,63,.3)] transition-colors hover:bg-[#d4f85e] sm:px-5 sm:text-sm">
+              تسوق الآن <ShoppingCart size={16} className="ml-2 hidden sm:block" />
             </Link>
           </div>
           
           <div className="flex items-center gap-2">
-            <div className="text-right leading-tight">
+            <div className="hidden text-right leading-tight sm:block">
               <span className="block text-xl font-black text-white">ARTVERT</span>
               <span className="block text-[10px] font-black tracking-widest text-[#c8f33f]">EGYPT</span>
             </div>
@@ -547,7 +546,7 @@ export function DoctorChat() {
         </div>
 
         {/* Main Grid Layout */}
-        <div className="flex min-h-0 flex-1 flex-col gap-4 lg:grid lg:grid-cols-[340px_minmax(0,1fr)]">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 lg:grid lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-4">
           
           {/* Right Sidebar (Doctor Panel) */}
           <aside className="hidden lg:flex flex-col gap-4 order-2 lg:order-1">
@@ -615,27 +614,27 @@ export function DoctorChat() {
           </aside>
 
           {/* Chat Section */}
-          <section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[24px] border border-[#9fbd35]/20 bg-[#072517]/40 backdrop-blur-xl order-1 lg:order-2">
+          <section className="relative order-1 flex min-h-[calc(100dvh-150px)] min-w-0 flex-1 flex-col overflow-hidden rounded-[20px] border border-[#9fbd35]/20 bg-[#072517]/40 backdrop-blur-xl sm:min-h-[calc(100dvh-165px)] sm:rounded-[24px] lg:order-2 lg:min-h-0">
             
             {/* Background Image / Overlay for Chat */}
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('/leaf-bg-placeholder.png')] bg-cover bg-center" />
             
             {/* Chat Header */}
-            <div className="relative z-10 shrink-0 flex items-center justify-between border-b border-white/10 px-6 py-4">
+            <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4">
               <div>
-                <h1 className="text-2xl font-black text-[#c8f33f]">
+                <h1 className="text-lg font-black text-[#c8f33f] sm:text-2xl">
                   اسأل دكتور ArtVert AI
                 </h1>
-                <p className="mt-1 text-sm text-white/70">المهندس الزراعي الذكي</p>
+                <p className="mt-1 text-xs text-white/70 sm:text-sm">المهندس الزراعي الذكي</p>
               </div>
-              <div className="flex items-center gap-2 rounded-full bg-[#153a25] px-4 py-2 border border-[#9fbd35]/30">
+              <div className="flex shrink-0 items-center gap-2 rounded-full border border-[#9fbd35]/30 bg-[#153a25] px-3 py-2 sm:px-4">
                 <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#62ff59]" />
                 <span className="text-[11px] font-bold text-white">{doctorState}</span>
               </div>
             </div>
 
             {/* Chat Messages */}
-            <div ref={scrollRef} className="relative z-10 min-h-0 flex-1 overflow-y-auto px-6 py-6">
+            <div ref={scrollRef} className="relative z-10 min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6">
               {transcript.length === 0 ? (
                 <div className="flex h-full flex-col justify-center">
                   <div className="relative mb-8 max-w-2xl">
@@ -644,16 +643,16 @@ export function DoctorChat() {
                     </div>
                     
                     {/* Welcome Bubbles */}
-                    <div className="space-y-4 pr-12">
+                    <div className="space-y-4 pr-0 sm:pr-12">
                       <div className="relative rounded-2xl rounded-tr-sm bg-[#153a25]/80 border border-white/10 px-5 py-4 text-sm leading-7 text-white backdrop-blur-md">
-                        <div className="absolute -right-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#9fbd35]/20 border border-[#c8f33f]/40 text-[#c8f33f]">
+                        <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-[#c8f33f]/40 bg-[#9fbd35]/20 text-[#c8f33f] sm:absolute sm:-right-10 sm:top-0 sm:mb-0">
                           <Bot size={18} />
                         </div>
                         <p className="font-black text-[#c8f33f] mb-1">مرحباً بك! أنا دكتور آرت فيرت.</p>
                         اسألني عن أي مشكلة في نباتك، وسأساعدك في التشخيص والعلاج خطوة بخطوة لأفضل نتائج.
                       </div>
                       <div className="relative rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-5 py-3 text-sm text-white/90 backdrop-blur-md w-[85%]">
-                        <div className="absolute -right-10 top-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/10 border border-white/20 text-white/70">
+                        <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/70 sm:absolute sm:-right-10 sm:top-0 sm:mb-0">
                           <Bot size={18} />
                         </div>
                         تعبت ندردش في إيه النهاردة؟ أو عندك زرع محتاج متابعة؟
@@ -662,7 +661,7 @@ export function DoctorChat() {
                   </div>
 
                   {/* Trust Cards Grid */}
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 max-w-2xl ml-auto">
+                  <div className="ml-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                     <TrustCard icon={<ShieldCheck size={24} />} title="جودة مضمونة" text="منتجات عالية الفعالية" />
                     <TrustCard featured icon={<CheckCircle2 size={24} />} title="أكثر من 10,000 مزارع" text="يثقون بخبرتنا" />
                     <TrustCard icon={<FlaskConical size={24} />} title="آمنة على" text="الضمير النباتات" />
@@ -689,7 +688,7 @@ export function DoctorChat() {
                           
                           {/* Products Output Restored */}
                           {!isUser && products.length > 0 ? (
-                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            <div className="mt-4 grid gap-3 md:grid-cols-2">
                               {products.map((product) => (
                                 <article
                                   key={product.id}
@@ -744,12 +743,12 @@ export function DoctorChat() {
             </div>
 
             {/* Bottom Input Area */}
-            <div className="relative z-20 shrink-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-              <div className="mx-auto flex w-full max-w-4xl gap-3 rounded-[32px] border border-white/10 bg-black/40 p-2 sm:p-3 backdrop-blur-xl">
+            <div className="relative z-20 shrink-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2.5 sm:p-4">
+              <div className="mx-auto flex w-full max-w-4xl flex-col gap-2 rounded-[22px] border border-white/10 bg-black/40 p-2 backdrop-blur-xl sm:flex-row sm:gap-3 sm:rounded-[32px] sm:p-3">
                 
                 {/* Media Buttons (Left side visually in RTL) */}
-                <div className="flex shrink-0 gap-2">
-                  <label className="flex h-16 w-20 sm:h-20 sm:w-[90px] cursor-pointer flex-col items-center justify-center gap-1 sm:gap-2 rounded-[22px] border border-white/10 bg-transparent text-white hover:bg-white/5 transition-colors">
+                <div className="order-2 flex shrink-0 gap-2 sm:order-1">
+                  <label className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[16px] border border-white/10 bg-transparent text-white transition-colors hover:bg-white/5 sm:h-20 sm:w-[90px] sm:flex-none sm:flex-col sm:gap-2 sm:rounded-[22px]">
                     <input type="file" accept="image/*" onChange={(e) => void chooseImage(e.target.files?.[0])} disabled={isRequestPending || imageUploading} className="sr-only" />
                     <ImageIcon size={22} className={imageUploading ? "animate-bounce" : ""} />
                     <span className="text-[10px] sm:text-xs">تحميل صورة</span>
@@ -762,7 +761,7 @@ export function DoctorChat() {
                 </div>
 
                 {/* Text Input (Right side visually in RTL) */}
-                <div className="flex min-w-0 flex-1 flex-col justify-center rounded-[22px] bg-white/5 px-4 relative border border-white/5">
+                <div className="relative order-1 flex min-h-14 min-w-0 flex-1 flex-col justify-center rounded-[18px] border border-white/5 bg-white/5 px-3 sm:order-2 sm:rounded-[22px] sm:px-4">
                   {imagePreview && (
                      <div className="absolute -top-16 right-4 flex items-center gap-2 rounded-xl bg-black/80 p-2 backdrop-blur-md border border-white/10">
                        <img src={imagePreview} className="h-10 w-10 rounded-lg object-cover" alt="preview" />
@@ -774,7 +773,7 @@ export function DoctorChat() {
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendCurrentMessage())}
                     placeholder="اكتب هنا واسأل عن مشكلتك..."
-                    className="w-full bg-transparent text-sm leading-loose text-white outline-none placeholder:text-white/40"
+                    className="w-full bg-transparent pl-12 text-sm leading-loose text-white outline-none placeholder:text-white/40 sm:pl-16"
                   />
                   <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                     <span className="hidden sm:inline text-xs font-bold text-white/60">محادثة جديدة</span>
