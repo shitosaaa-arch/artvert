@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   ArrowDown,
+  ArrowLeft,
   ArrowRight,
   ArrowUp,
   CheckCircle2,
@@ -451,6 +452,152 @@ function buildInitialForm(
     publicationState:
       product.publicationState,
   };
+}
+
+
+function ProductCardPreview({
+  image,
+  form,
+  parsedPrice,
+  parsedComparePrice,
+}: {
+  image: GalleryImage;
+  form: ProductFormState;
+  parsedPrice: number | null;
+  parsedComparePrice: number | null;
+}) {
+  const hasDiscount =
+    parsedPrice !== null &&
+    parsedComparePrice !== null &&
+    parsedComparePrice > parsedPrice;
+
+  const discount = hasDiscount
+    ? Math.round(
+        ((parsedComparePrice - parsedPrice) /
+          parsedComparePrice) *
+          100,
+      )
+    : 0;
+
+  return (
+    <div className="rounded-2xl border border-lime-300/20 bg-[#07160c] p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black text-lime-300">
+            معاينة الكارت الخارجي
+          </p>
+          <p className="mt-1 text-[11px] text-white/40">
+            نفس شكل الكارت الذي يظهر للعميل في صفحة المنتجات.
+          </p>
+        </div>
+
+        <span className="rounded-full border border-white/10 bg-white/[.04] px-3 py-1 text-[10px] font-bold text-white/55">
+          Live Preview
+        </span>
+      </div>
+
+      <article className="group relative flex h-full flex-col overflow-hidden rounded-[24px] border border-lime-300/15 bg-[#0b1a0e]/95 shadow-[0_16px_38px_rgba(0,0,0,.28)]">
+        <div className="relative">
+          <div className="relative h-[245px] overflow-hidden border-b border-white/[.06] bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,.08),rgba(255,255,255,.015)_68%)] sm:h-[270px]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image.url}
+              alt={image.alt || form.nameAr || "صورة المنتج"}
+              className="absolute inset-0 h-full w-full"
+              style={{
+                objectFit: getObjectFit(image.objectFit),
+                objectPosition: getObjectPosition(image.objectPosition),
+                transform: `translate(${image.cropX}%, ${image.cropY}%) scale(${image.zoom / 100}) rotate(${image.rotation}deg)`,
+                transformOrigin: "center",
+              }}
+              onError={(event) => {
+                event.currentTarget.style.opacity = "0.18";
+              }}
+              onLoad={(event) => {
+                event.currentTarget.style.opacity = "1";
+              }}
+            />
+
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(2,14,8,.22),transparent_42%)]" />
+          </div>
+
+          <div className="pointer-events-none absolute right-4 top-4 flex max-w-[70%] flex-wrap gap-2">
+            <span className="inline-flex items-center rounded-full border border-lime-300/25 bg-[#07140b]/85 px-3 py-1.5 text-[11px] font-black text-lime-300 shadow-lg backdrop-blur-md">
+              {form.category || "التصنيف"}
+            </span>
+
+            {hasDiscount ? (
+              <span className="inline-flex items-center rounded-full bg-lime-300 px-3 py-1.5 text-[11px] font-black text-[#071109] shadow-lg">
+                خصم {discount}%
+              </span>
+            ) : null}
+          </div>
+
+          <span className="pointer-events-none absolute bottom-4 left-4 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] font-bold text-white/80 backdrop-blur-md">
+            <Sparkles size={12} className="text-lime-300" />
+            ArtVert Original
+          </span>
+        </div>
+
+        <div className="flex flex-1 flex-col p-4 sm:p-5">
+          <h3 className="text-xl font-black leading-8 text-white">
+            {form.nameAr || "اسم المنتج"}
+          </h3>
+
+          <p
+            className="mt-1 truncate text-xs font-bold uppercase tracking-[.13em] text-white/38"
+            dir="ltr"
+          >
+            {form.nameEn || "PRODUCT NAME"}
+          </p>
+
+          <p className="mt-3 line-clamp-2 min-h-[48px] text-sm leading-6 text-white/58">
+            {form.shortDescription || "الوصف المختصر للمنتج سيظهر هنا."}
+          </p>
+
+          <div className="mt-5 flex min-h-[52px] items-end justify-between gap-3 border-t border-white/[.07] pt-4">
+            {parsedPrice !== null && parsedPrice > 0 ? (
+              <div>
+                <p className="text-[10px] font-bold text-white/38">
+                  السعر
+                </p>
+
+                <div className="mt-1 flex flex-wrap items-baseline gap-2">
+                  <strong className="text-lg font-black text-lime-300">
+                    {formatMoney(parsedPrice)}
+                  </strong>
+
+                  {hasDiscount && parsedComparePrice !== null ? (
+                    <span className="text-xs font-bold text-white/32 line-through">
+                      {formatMoney(parsedComparePrice)}
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p className="text-[10px] font-bold text-white/38">
+                  السعر
+                </p>
+                <strong className="mt-1 block text-sm font-black text-lime-300">
+                  يُحدد عند الطلب
+                </strong>
+              </div>
+            )}
+
+            <span className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/10 px-4 text-xs font-black text-lime-300">
+              عرض
+              <ArrowLeft size={15} />
+            </span>
+          </div>
+
+          <div className="mt-4 flex min-h-11 items-center justify-center rounded-xl bg-lime-300 px-4 text-sm font-black text-[#071109]">
+            إضافة للسلة
+          </div>
+        </div>
+      </article>
+    </div>
+  );
 }
 
 export default function ProductEditForm({
@@ -1916,41 +2063,13 @@ export default function ProductEditForm({
                     </div>
                   </div>
 
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-white">
-                    <div className="relative aspect-square overflow-hidden bg-[linear-gradient(45deg,#eee_25%,transparent_25%),linear-gradient(-45deg,#eee_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#eee_75%),linear-gradient(-45deg,transparent_75%,#eee_75%)] bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={image.url}
-                        alt={
-                          image.alt ||
-                          form.nameAr
-                        }
-                        className="absolute inset-0 h-full w-full transition-transform duration-200"
-                        style={{
-                          objectFit:
-                            getObjectFit(
-                              image.objectFit,
-                            ),
-                          objectPosition:
-                            getObjectPosition(
-                              image.objectPosition,
-                            ),
-                          transform: `translate(${image.cropX}%, ${image.cropY}%) scale(${image.zoom / 100}) rotate(${image.rotation}deg)`,
-                        }}
-                        onError={(
-                          event,
-                        ) => {
-                          event.currentTarget.style.opacity =
-                            "0.18";
-                        }}
-                        onLoad={(
-                          event,
-                        ) => {
-                          event.currentTarget.style.opacity =
-                            "1";
-                        }}
-                      />
-                    </div>
+                  <div className="mt-4">
+                    <ProductCardPreview
+                      image={image}
+                      form={form}
+                      parsedPrice={parsedPrice}
+                      parsedComparePrice={parsedComparePrice}
+                    />
                   </div>
 
                   <div className="mt-4 grid gap-4">
