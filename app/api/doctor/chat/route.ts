@@ -297,6 +297,87 @@ function approvedProducts(
 }
 
 
+function shouldRecommendAutomatically(
+  diagnoses:
+    Array<{
+      confidence:
+        | "HIGH"
+        | "MODERATE"
+        | "LOW";
+    }>,
+) {
+  const leader =
+    diagnoses[0];
+
+  return (
+    leader?.confidence ===
+      "HIGH" ||
+    leader?.confidence ===
+      "MODERATE"
+  );
+}
+
+function productRecommendationText(
+  products:
+    AgriculturalProductContext[],
+) {
+  if (products.length === 0) {
+    return "";
+  }
+
+  const lines =
+    products
+      .slice(0, 3)
+      .map((product) => {
+        const reason =
+          product.reason?.trim() ||
+          product.benefits?.[0]?.trim() ||
+          product.composition?.trim() ||
+          "منتج مناسب للحالة وفق البيانات المسجلة في ArtVert.";
+
+        return `• ${product.nameAr}: ${reason}`;
+      });
+
+  return [
+    "المنتجات المقترحة من ArtVert:",
+    ...lines,
+    "استخدم المنتجات حسب الجرعة المدونة على العبوة، وتأكد من ملاءمتها للمحصول والحالة.",
+  ].join("\n");
+}
+
+function finalReplyWithProducts(
+  reply: string,
+  diagnoses:
+    Array<{
+      confidence:
+        | "HIGH"
+        | "MODERATE"
+        | "LOW";
+    }>,
+  products:
+    AgriculturalProductContext[],
+) {
+  if (
+    !shouldRecommendAutomatically(
+      diagnoses,
+    ) ||
+    products.length === 0
+  ) {
+    return reply.trim();
+  }
+
+  const productText =
+    productRecommendationText(
+      products,
+    );
+
+  if (!productText) {
+    return reply.trim();
+  }
+
+  return `${reply.trim()}\n\n${productText}`;
+}
+
 export async function POST(
   request: Request,
 ) {
@@ -443,7 +524,11 @@ export async function POST(
       );
 
     const finalReply =
-      result.reply.trim();
+      finalReplyWithProducts(
+        result.reply,
+        result.possibleDiagnoses,
+        selectedProducts,
+      );
 
     const now =
       new Date().toISOString();
