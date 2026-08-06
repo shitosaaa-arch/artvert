@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const isDevelopment = process.env.NODE_ENV === "development";
+const isDevelopment =
+  process.env.NODE_ENV === "development";
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -18,39 +19,65 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   images: {
-    formats: ["image/avif", "image/webp"],
+    formats: [
+      "image/avif",
+      "image/webp",
+    ],
+
     minimumCacheTTL: 31_536_000,
-    remotePatterns: [],
+
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname:
+          "**.public.blob.vercel-storage.com",
+      },
+      {
+        protocol: "https",
+        hostname:
+          "**.blob.vercel-storage.com",
+      },
+    ],
   },
 
   async headers() {
     return [
       {
         source: "/:path*",
+
         headers: [
           {
-            key: "Content-Security-Policy",
-            value: contentSecurityPolicy,
+            key:
+              "Content-Security-Policy",
+            value:
+              contentSecurityPolicy,
           },
           {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
+            key:
+              "Strict-Transport-Security",
+            value:
+              "max-age=63072000; includeSubDomains; preload",
           },
           {
-            key: "X-Frame-Options",
+            key:
+              "X-Frame-Options",
             value: "DENY",
           },
           {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
+            key:
+              "Referrer-Policy",
+            value:
+              "strict-origin-when-cross-origin",
           },
           {
-            key: "Permissions-Policy",
+            key:
+              "Permissions-Policy",
             value:
               "camera=(self), geolocation=(), microphone=(), payment=()",
           },
           {
-            key: "X-Content-Type-Options",
+            key:
+              "X-Content-Type-Options",
             value: "nosniff",
           },
         ],
