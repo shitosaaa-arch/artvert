@@ -9,7 +9,6 @@ import {
   MessageCircle,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Sprout,
   Star,
   Users,
@@ -99,7 +98,7 @@ export function HomeHero({
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center lg:hidden"
+            className="object-contain object-top lg:hidden"
           />
 
           <Image
@@ -166,43 +165,25 @@ export function HomeHero({
           </div>
 
           <div
-            className="relative order-1 flex min-h-[270px] items-center justify-center self-center sm:min-h-[320px] lg:order-2 lg:min-h-[500px]"
+            className="relative order-1 flex min-h-[150px] items-end self-center px-1 pb-3 sm:min-h-[180px] sm:px-3 lg:order-2 lg:min-h-[500px] lg:items-center lg:px-0 lg:pb-0"
             dir="rtl"
           >
-            <div className="w-full max-w-[760px] text-center">
-              <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-[#0b1a0e]/70 px-4 py-2 text-xs font-black text-lime-300 backdrop-blur-xl">
-                <Sparkles size={15} />
-                حلول زراعية ذكية من ArtVert Egypt
-              </span>
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:absolute lg:inset-x-0 lg:bottom-[112px]">
+              <Link
+                href="/doctor"
+                className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200 sm:order-2 lg:absolute lg:right-0 lg:min-w-[210px]"
+              >
+                <MessageCircle aria-hidden="true" size={18} />
+                اسأل دكتور ArtVert
+              </Link>
 
-              <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-black leading-[1.25] text-white sm:text-5xl lg:text-6xl">
-                رعاية أقوى لنباتاتك
-                <span className="mt-2 block text-lime-300">
-                  وتشخيص أسرع لمشكلتك
-                </span>
-              </h1>
-
-              <p className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/72 sm:text-base lg:text-lg">
-                دكتور ArtVert ومنتجاتنا الزراعية المتخصصة يساعدوك في التشخيص، الرعاية، التغذية والحماية بخطوات واضحة.
-              </p>
-
-              <div className="mt-7 flex flex-col items-stretch justify-center gap-3 px-3 sm:flex-row sm:items-center sm:px-0">
-                <Link
-                  href="/doctor"
-                  className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200"
-                >
-                  <MessageCircle aria-hidden="true" size={18} />
-                  اسأل دكتور ArtVert
-                </Link>
-
-                <Link
-                  href="/products"
-                  className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl border border-white/12 bg-white/[.05] px-7 text-sm font-black text-white/88 backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-white/[.09] hover:text-white"
-                >
-                  <ShoppingBag aria-hidden="true" size={18} />
-                  تصفح المنتجات
-                </Link>
-              </div>
+              <Link
+                href="/products"
+                className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl border border-white/12 bg-[#0b1a0e]/72 px-7 text-sm font-black text-white/88 backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#0b1a0e]/88 hover:text-white sm:order-1 lg:absolute lg:left-0 lg:min-w-[190px]"
+              >
+                <ShoppingBag aria-hidden="true" size={18} />
+                تصفح المنتجات
+              </Link>
             </div>
           </div>
 
