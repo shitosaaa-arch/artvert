@@ -349,7 +349,7 @@ export default function Navbar() {
 
           <Link
             href="/login"
-            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 xl:inline-flex xl:px-4 xl:text-sm"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:inline-flex xl:px-4 xl:text-sm"
           >
             <LogIn
               aria-hidden="true"
