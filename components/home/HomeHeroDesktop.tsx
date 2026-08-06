@@ -162,27 +162,25 @@ export function HomeHeroDesktop() {
         </aside>
       </div>
 
-      {/* منطقة الأزرار: تم تعديل الحجم (-40%)، النزول لمستوى الترابيزة (bottom-96px)، والضم للداخل (w-820px) */}
+      {/* منطقة الأزرار: تم جعل الزرين بجوار بعضهما، بنفس الحجم، ومسافة بسيطة بينهما */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-[96px] z-40 mx-auto flex w-[820px] max-w-[calc(100%-64px)] items-center justify-between"
-        dir="ltr"
+        className="pointer-events-none absolute inset-x-0 bottom-[96px] z-40 mx-auto flex w-full items-center justify-center gap-4"
+        dir="rtl"
       >
         <Link
-          href="/products"
-          className="pointer-events-auto flex h-[40px] w-[177px] items-center justify-center gap-2 rounded-full border border-white/20 bg-[#121c15]/85 px-4 text-[12px] font-black text-white shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#18261b]"
-          dir="rtl"
-        >
-          <ShoppingBag aria-hidden="true" size={16} strokeWidth={1.8} />
-          تصفح المنتجات
-        </Link>
-
-        <Link
           href="/doctor"
-          className="pointer-events-auto flex h-[40px] w-[198px] items-center justify-center gap-2 rounded-full bg-[#8cd234] px-4 text-[12px] font-black text-[#071109] shadow-[0_12px_32px_rgba(140,210,52,0.35)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7bc02a]"
-          dir="rtl"
+          className="pointer-events-auto flex h-[40px] w-[195px] items-center justify-center gap-2 rounded-full bg-[#8cd234] px-4 text-[12px] font-black text-[#071109] shadow-[0_12px_32px_rgba(140,210,52,0.35)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7bc02a]"
         >
           <MessageCircle aria-hidden="true" size={17} strokeWidth={1.8} />
           اسأل دكتور ArtVert
+        </Link>
+
+        <Link
+          href="/products"
+          className="pointer-events-auto flex h-[40px] w-[195px] items-center justify-center gap-2 rounded-full border border-white/20 bg-[#121c15]/85 px-4 text-[12px] font-black text-white shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#18261b]"
+        >
+          <ShoppingBag aria-hidden="true" size={16} strokeWidth={1.8} />
+          تصفح المنتجات
         </Link>
       </div>
       {/* نهاية منطقة الأزرار */}
