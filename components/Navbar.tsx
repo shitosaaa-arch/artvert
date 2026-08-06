@@ -20,7 +20,6 @@ import {
   Sparkles,
   Stethoscope,
   Store,
-  Trees,
   UserRound,
   X,
 } from "lucide-react";
@@ -45,22 +44,17 @@ const navigation = [
     icon: Store,
   },
   {
-    label: "الزراعة المنزلية",
-    href: "/plant-care",
-    icon: Trees,
-  },
-  {
-    label: "نباتات الزينة",
-    href: "/plant-care",
-    icon: Leaf,
-  },
-  {
-    label: "الرعاية والتشخيص",
+    label: "دكتور ArtVert",
     href: "/doctor",
     icon: Stethoscope,
   },
   {
-    label: "المدونة",
+    label: "البرامج الزراعية",
+    href: "/plant-care",
+    icon: Leaf,
+  },
+  {
+    label: "المقالات",
     href: "/blog",
     icon: Newspaper,
   },
@@ -88,7 +82,10 @@ export default function Navbar() {
   const [
     locale,
     setLocale,
-  ] = useState<"AR" | "EN">("AR");
+  ] =
+    useState<
+      "AR" | "EN"
+    >("AR");
 
   const [
     menuOpen,
@@ -111,13 +108,19 @@ export default function Navbar() {
   ] = useState(false);
 
   const menuTriggerRef =
-    useRef<HTMLButtonElement>(null);
+    useRef<HTMLButtonElement>(
+      null,
+    );
 
   const searchInputRef =
-    useRef<HTMLInputElement>(null);
+    useRef<HTMLInputElement>(
+      null,
+    );
 
   const displayedCartCount =
-    isReady ? totalItems : 0;
+    isReady
+      ? totalItems
+      : 0;
 
   useEffect(() => {
     function handleScroll() {
@@ -145,7 +148,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    function closeOnEscape(
+    function handleKeyDown(
       event: KeyboardEvent,
     ) {
       if (
@@ -161,13 +164,13 @@ export default function Navbar() {
 
     window.addEventListener(
       "keydown",
-      closeOnEscape,
+      handleKeyDown,
     );
 
     return () => {
       window.removeEventListener(
         "keydown",
-        closeOnEscape,
+        handleKeyDown,
       );
     };
   }, []);
@@ -178,12 +181,28 @@ export default function Navbar() {
   }, [pathname]);
 
   useEffect(() => {
-    if (searchOpen) {
-      requestAnimationFrame(() =>
-        searchInputRef.current?.focus(),
-      );
+    if (!searchOpen) {
+      return;
     }
+
+    requestAnimationFrame(
+      () => {
+        searchInputRef.current?.focus();
+      },
+    );
   }, [searchOpen]);
+
+  useEffect(() => {
+    document.body.style.overflow =
+      menuOpen
+        ? "hidden"
+        : "";
+
+    return () => {
+      document.body.style.overflow =
+        "";
+    };
+  }, [menuOpen]);
 
   function closeMenu() {
     setMenuOpen(false);
@@ -194,7 +213,9 @@ export default function Navbar() {
   ) {
     return href === "/"
       ? pathname === "/"
-      : pathname.startsWith(href);
+      : pathname.startsWith(
+          href,
+        );
   }
 
   function submitSearch() {
@@ -227,7 +248,7 @@ export default function Navbar() {
     >
       <div
         className={[
-          "mx-auto grid max-w-[1480px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 transition-all duration-300 sm:px-5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-5",
+          "mx-auto grid max-w-[1560px] grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 transition-all duration-300 sm:px-5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-4 xl:gap-6",
           isScrolled
             ? "h-[62px]"
             : "h-[72px]",
@@ -235,7 +256,7 @@ export default function Navbar() {
       >
         <Link
           href="/"
-          className="flex w-fit items-center gap-2 rounded-xl"
+          className="flex w-fit items-center gap-2 rounded-xl outline-none focus-visible:ring-4 focus-visible:ring-[#c8f33f]/20"
           aria-label="ArtVert Egypt - الصفحة الرئيسية"
         >
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#c8f33f]/22 bg-[#c8f33f]/10 shadow-[0_0_22px_rgba(200,243,63,.10)]">
@@ -265,29 +286,35 @@ export default function Navbar() {
         </Link>
 
         <nav
-          className="hidden min-w-0 items-center justify-center gap-1.5 whitespace-nowrap text-[12px] xl:flex"
+          className="hidden min-w-0 items-center justify-center gap-1 whitespace-nowrap text-[11px] lg:flex xl:gap-1.5 xl:text-[12px]"
           dir="rtl"
           aria-label="التنقل الرئيسي"
         >
           {navigation.map(
             (item) => {
               const active =
-                isActive(item.href);
+                isActive(
+                  item.href,
+                );
 
               return (
                 <Link
-                  key={item.label}
-                  href={item.href}
+                  key={
+                    item.label
+                  }
+                  href={
+                    item.href
+                  }
                   aria-current={
                     active
                       ? "page"
                       : undefined
                   }
                   className={[
-                    "relative rounded-xl px-3 py-2.5 font-bold text-white/82 transition-all duration-200",
+                    "relative rounded-xl border px-2.5 py-2.5 font-bold transition-all duration-200 xl:px-3",
                     active
-                      ? "border border-[#c8f33f]/45 bg-[#c8f33f]/10 text-white shadow-[0_0_18px_rgba(200,243,63,.10)]"
-                      : "border border-transparent hover:border-white/8 hover:bg-white/[.045] hover:text-[#c8f33f]",
+                      ? "border-[#c8f33f]/45 bg-[#c8f33f]/10 text-white shadow-[0_0_18px_rgba(200,243,63,.10)]"
+                      : "border-transparent text-white/82 hover:border-white/8 hover:bg-white/[.045] hover:text-[#c8f33f]",
                   ].join(" ")}
                 >
                   {item.label}
@@ -309,7 +336,9 @@ export default function Navbar() {
               )
             }
             className="hidden min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:grid"
-            aria-expanded={searchOpen}
+            aria-expanded={
+              searchOpen
+            }
             aria-label="البحث في المنتجات"
           >
             <Search
@@ -320,7 +349,7 @@ export default function Navbar() {
 
           <Link
             href="/login"
-            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-4 text-sm font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 md:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 xl:inline-flex xl:px-4 xl:text-sm"
           >
             <LogIn
               aria-hidden="true"
@@ -363,8 +392,7 @@ export default function Navbar() {
             />
 
             <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full border border-[#03170e] bg-[#c8f33f] px-1 text-[10px] font-black text-[#102014] shadow-[0_0_14px_rgba(200,243,63,.28)]">
-              {displayedCartCount >
-              99
+              {displayedCartCount > 99
                 ? "99+"
                 : displayedCartCount}
             </span>
@@ -372,7 +400,7 @@ export default function Navbar() {
 
           <Link
             href="/products"
-            className="hidden min-h-11 items-center gap-2 rounded-xl bg-[#c8f33f] px-4 text-sm font-black text-[#102014] shadow-[0_0_24px_rgba(200,243,63,.18)] transition hover:-translate-y-0.5 hover:bg-[#d6ff58] lg:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-xl bg-[#c8f33f] px-3 text-xs font-black text-[#102014] shadow-[0_0_24px_rgba(200,243,63,.18)] transition hover:-translate-y-0.5 hover:bg-[#d6ff58] xl:inline-flex xl:px-4 xl:text-sm"
           >
             <ShoppingBag
               aria-hidden="true"
@@ -382,21 +410,25 @@ export default function Navbar() {
           </Link>
 
           <button
-            ref={menuTriggerRef}
+            ref={
+              menuTriggerRef
+            }
             type="button"
             onClick={() =>
               setMenuOpen(
                 (open) => !open,
               )
             }
-            aria-expanded={menuOpen}
+            aria-expanded={
+              menuOpen
+            }
             aria-controls="artvert-mobile-navigation"
             aria-label={
               menuOpen
                 ? "إغلاق القائمة"
                 : "فتح القائمة"
             }
-            className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 xl:hidden"
+            className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:hidden"
           >
             {menuOpen ? (
               <X
@@ -423,14 +455,22 @@ export default function Navbar() {
             />
 
             <input
-              ref={searchInputRef}
-              value={searchValue}
-              onChange={(event) =>
+              ref={
+                searchInputRef
+              }
+              value={
+                searchValue
+              }
+              onChange={(
+                event,
+              ) =>
                 setSearchValue(
                   event.target.value,
                 )
               }
-              onKeyDown={(event) => {
+              onKeyDown={(
+                event,
+              ) => {
                 if (
                   event.key ===
                   "Enter"
@@ -444,7 +484,9 @@ export default function Navbar() {
 
             <button
               type="button"
-              onClick={submitSearch}
+              onClick={
+                submitSearch
+              }
               className="min-h-10 rounded-xl bg-[#c8f33f] px-5 text-sm font-black text-[#102014]"
             >
               بحث
@@ -458,13 +500,15 @@ export default function Navbar() {
           <button
             type="button"
             aria-label="إغلاق القائمة"
-            onClick={closeMenu}
-            className="fixed inset-0 top-[62px] z-40 bg-black/55 backdrop-blur-[2px] xl:hidden"
+            onClick={
+              closeMenu
+            }
+            className="fixed inset-0 top-[62px] z-40 bg-black/58 backdrop-blur-[2px] lg:hidden"
           />
 
           <aside
             id="artvert-mobile-navigation"
-            className="fixed bottom-0 right-0 top-[62px] z-50 flex w-[min(90vw,380px)] flex-col border-l border-[#9fbd35]/28 bg-[#041b11]/98 shadow-[-24px_0_70px_rgba(0,0,0,.45)] backdrop-blur-2xl xl:hidden"
+            className="fixed bottom-0 right-0 top-[62px] z-50 flex w-[min(92vw,390px)] flex-col border-l border-[#9fbd35]/28 bg-[#041b11]/98 shadow-[-24px_0_70px_rgba(0,0,0,.45)] backdrop-blur-2xl lg:hidden"
             dir="rtl"
             aria-label="التنقل على الهاتف"
           >
@@ -474,6 +518,7 @@ export default function Navbar() {
                   <p className="text-sm font-black text-white">
                     ArtVert Egypt
                   </p>
+
                   <p className="mt-1 text-xs text-white/42">
                     تنقل سريع داخل الموقع
                   </p>
@@ -481,7 +526,9 @@ export default function Navbar() {
 
                 <button
                   type="button"
-                  onClick={closeMenu}
+                  onClick={
+                    closeMenu
+                  }
                   className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[.035] text-white"
                   aria-label="إغلاق القائمة"
                 >
@@ -497,13 +544,19 @@ export default function Navbar() {
                 />
 
                 <input
-                  value={searchValue}
-                  onChange={(event) =>
+                  value={
+                    searchValue
+                  }
+                  onChange={(
+                    event,
+                  ) =>
                     setSearchValue(
                       event.target.value,
                     )
                   }
-                  onKeyDown={(event) => {
+                  onKeyDown={(
+                    event,
+                  ) => {
                     if (
                       event.key ===
                       "Enter"
@@ -517,7 +570,9 @@ export default function Navbar() {
 
                 <button
                   type="button"
-                  onClick={submitSearch}
+                  onClick={
+                    submitSearch
+                  }
                   className="min-h-9 rounded-lg bg-[#c8f33f] px-3 text-xs font-black text-[#102014]"
                 >
                   بحث
@@ -525,9 +580,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            <nav
-              className="min-h-0 flex-1 overflow-y-auto p-3"
-            >
+            <nav className="min-h-0 flex-1 overflow-y-auto p-3">
               <div className="grid gap-1.5">
                 {navigation.map(
                   (item) => {
@@ -541,9 +594,15 @@ export default function Navbar() {
 
                     return (
                       <Link
-                        key={item.label}
-                        href={item.href}
-                        onClick={closeMenu}
+                        key={
+                          item.label
+                        }
+                        href={
+                          item.href
+                        }
+                        onClick={
+                          closeMenu
+                        }
                         aria-current={
                           active
                             ? "page"
@@ -574,7 +633,9 @@ export default function Navbar() {
               <div className="grid gap-2">
                 <Link
                   href="/cart"
-                  onClick={closeMenu}
+                  onClick={
+                    closeMenu
+                  }
                   className="flex min-h-12 items-center justify-between rounded-xl border border-white/10 bg-white/[.035] px-4 text-sm font-bold text-white"
                 >
                   <span className="flex items-center gap-3">
@@ -596,7 +657,9 @@ export default function Navbar() {
 
                 <Link
                   href="/login"
-                  onClick={closeMenu}
+                  onClick={
+                    closeMenu
+                  }
                   className="flex min-h-12 items-center gap-3 rounded-xl border border-[#c8f33f]/22 bg-[#c8f33f]/8 px-4 text-sm font-black text-[#c8f33f]"
                 >
                   <UserRound
@@ -638,7 +701,9 @@ export default function Navbar() {
 
                 <Link
                   href="/products"
-                  onClick={closeMenu}
+                  onClick={
+                    closeMenu
+                  }
                   className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#c8f33f] px-4 text-sm font-black text-[#102014] shadow-[0_0_22px_rgba(200,243,63,.16)]"
                 >
                   <ShoppingBag

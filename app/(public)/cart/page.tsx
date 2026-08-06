@@ -258,6 +258,7 @@ export default function CartPage() {
                 <h2 className="text-xl font-black text-white sm:text-2xl">
                   ملخص الطلب
                 </h2>
+
                 <p className="mt-1 text-xs text-white/40">
                   راجع محتويات السلة قبل المتابعة
                 </p>
@@ -329,6 +330,29 @@ export default function CartPage() {
           </aside>
         </div>
       </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-lime-300/15 bg-[#03170e]/96 p-3 shadow-[0_-12px_35px_rgba(0,0,0,.35)] backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex max-w-xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] text-white/45">
+              إجمالي القطع
+            </p>
+
+            <p className="mt-1 text-lg font-black text-lime-300">
+              {totalItems}
+            </p>
+          </div>
+
+          <Link
+            href="/checkout"
+            className="flex min-h-12 flex-[1.35] items-center justify-center rounded-xl bg-lime-300 px-5 text-sm font-black text-[#071109] shadow-[0_8px_20px_rgba(200,243,63,.18)]"
+          >
+            إتمام الطلب
+          </Link>
+        </div>
+      </div>
+
+      <div className="h-24 lg:hidden" />
     </main>
   );
 }

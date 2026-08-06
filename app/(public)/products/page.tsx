@@ -8,44 +8,249 @@ import {
   useState,
 } from "react";
 import {
+  ArrowLeft,
+  BadgePercent,
   Search,
   ShoppingBag,
+  Sparkles,
 } from "lucide-react";
 
+import AddToCartButton from "@/components/cart/AddToCartButton";
 import AnimatedSection from "@/components/AnimatedSection";
 import type {
+  CatalogImageFit,
+  CatalogImagePosition,
   CatalogProduct,
+  CatalogProductImage,
 } from "@/lib/products/product-catalog";
 
-/* =========================================================
-   إعدادات صور كروت صفحة المنتجات
+type ProductWithCardData =
+  CatalogProduct & {
+    price?: string | number | null;
+    comparePrice?: string | number | null;
+    images?: CatalogProductImage[];
+  };
 
-   PRODUCT_CARD_IMAGE_HEIGHT
-   ارتفاع مساحة الصورة داخل الكارت.
+function getObjectFit(
+  value: CatalogImageFit | undefined,
+): "cover" | "contain" | "fill" | "scale-down" {
+  switch (value) {
+    case "COVER":
+      return "cover";
+    case "FILL":
+      return "fill";
+    case "SCALE_DOWN":
+      return "scale-down";
+    default:
+      return "contain";
+  }
+}
 
-   PRODUCT_CARD_IMAGE_SCALE
-   حجم الصورة نفسها:
-   0.75 = أصغر
-   0.90 = أصغر قليلًا
-   1.00 = طبيعي
-   1.10 = أكبر
-   1.20 = أكبر بوضوح
+function getObjectPosition(
+  value: CatalogImagePosition | undefined,
+) {
+  switch (value) {
+    case "TOP":
+      return "center top";
+    case "BOTTOM":
+      return "center bottom";
+    case "LEFT":
+      return "left center";
+    case "RIGHT":
+      return "right center";
+    default:
+      return "center center";
+  }
+}
 
-   PRODUCT_CARD_IMAGE_PADDING
-   المسافة حول الصورة:
-   p-2  = الصورة أكبر
-   p-6  = متوسطة
-   p-10 = أصغر
-   ========================================================= */
+function toNumber(
+  value: string | number | null | undefined,
+) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
 
-const PRODUCT_CARD_IMAGE_HEIGHT =
-  "h-[280px]";
+  const parsed = Number(value);
 
-const PRODUCT_CARD_IMAGE_SCALE =
-  1;
+  return Number.isFinite(parsed) ? parsed : null;
+}
 
-const PRODUCT_CARD_IMAGE_PADDING =
-  "p-4";
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("ar-EG", {
+    style: "currency",
+    currency: "EGP",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function getPrimaryImage(
+  product: ProductWithCardData,
+): CatalogProductImage | null {
+  const images = product.images ?? [];
+
+  return (
+    images.find((image) => image.isPrimary) ??
+    images
+      .slice()
+      .sort((left, right) => left.sortOrder - right.sortOrder)[0] ??
+    null
+  );
+}
+
+function ProductCard({
+  product,
+}: {
+  product: ProductWithCardData;
+}) {
+  const image = getPrimaryImage(product);
+  const imageUrl = image?.url ?? product.image;
+  const price = toNumber(product.price);
+  const comparePrice = toNumber(product.comparePrice);
+
+  const hasDiscount =
+    price !== null &&
+    comparePrice !== null &&
+    comparePrice > price;
+
+  const discount = hasDiscount
+    ? Math.round(((comparePrice - price) / comparePrice) * 100)
+    : 0;
+
+  const zoom =
+    Math.max(25, Math.min(image?.zoom ?? 100, 300)) / 100;
+
+  const cropX =
+    Math.max(0, Math.min(image?.cropX ?? 50, 100)) - 50;
+
+  const cropY =
+    Math.max(0, Math.min(image?.cropY ?? 50, 100)) - 50;
+
+  const rotation = image?.rotation ?? 0;
+
+  return (
+    <AnimatedSection className="group relative flex h-full flex-col overflow-hidden rounded-[26px] border border-lime-300/15 bg-[#0b1a0e]/88 shadow-[0_18px_45px_rgba(0,0,0,.24)] backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-lime-300/35 hover:shadow-[0_24px_60px_rgba(200,243,63,.12)]">
+      <div className="relative">
+        <Link
+          href={`/products/${product.slug}`}
+          className="block"
+          aria-label={`عرض ${product.nameAr}`}
+        >
+          <div className="relative h-[245px] overflow-hidden border-b border-white/[.06] bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,.08),rgba(255,255,255,.015)_68%)] sm:h-[270px]">
+            <Image
+              src={imageUrl}
+              alt={image?.alt || product.nameAr}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              className="transition-[filter] duration-300 group-hover:brightness-105"
+              style={{
+                objectFit: getObjectFit(image?.objectFit),
+                objectPosition: getObjectPosition(image?.objectPosition),
+                transform: `translate(${cropX}%, ${cropY}%) scale(${zoom}) rotate(${rotation}deg)`,
+                transformOrigin: "center",
+              }}
+            />
+
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(2,14,8,.22),transparent_42%)]" />
+          </div>
+        </Link>
+
+        <div className="pointer-events-none absolute right-4 top-4 flex max-w-[70%] flex-wrap gap-2">
+          <span className="inline-flex items-center rounded-full border border-lime-300/25 bg-[#07140b]/85 px-3 py-1.5 text-[11px] font-black text-lime-300 shadow-lg backdrop-blur-md">
+            {product.category}
+          </span>
+
+          {hasDiscount ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-lime-300 px-3 py-1.5 text-[11px] font-black text-[#071109] shadow-lg">
+              <BadgePercent aria-hidden="true" size={13} />
+              خصم {discount}%
+            </span>
+          ) : null}
+        </div>
+
+        <span className="pointer-events-none absolute bottom-4 left-4 inline-flex items-center gap-1 rounded-full border border-white/10 bg-black/45 px-3 py-1.5 text-[10px] font-bold text-white/80 backdrop-blur-md">
+          <Sparkles
+            aria-hidden="true"
+            size={12}
+            className="text-lime-300"
+          />
+          ArtVert Original
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col p-4 sm:p-5">
+        <Link href={`/products/${product.slug}`} className="block">
+          <h2 className="text-xl font-black leading-8 text-white transition group-hover:text-lime-300">
+            {product.nameAr}
+          </h2>
+
+          <p
+            className="mt-1 truncate text-xs font-bold uppercase tracking-[.13em] text-white/38"
+            dir="ltr"
+          >
+            {product.nameEn}
+          </p>
+        </Link>
+
+        <p className="mt-3 line-clamp-2 min-h-[48px] text-sm leading-6 text-white/58">
+          {product.shortDescription}
+        </p>
+
+        <div className="mt-5 flex min-h-[52px] items-end justify-between gap-3 border-t border-white/[.07] pt-4">
+          {price !== null && price > 0 ? (
+            <div>
+              <p className="text-[10px] font-bold text-white/38">
+                السعر
+              </p>
+
+              <div className="mt-1 flex flex-wrap items-baseline gap-2">
+                <strong className="text-lg font-black text-lime-300">
+                  {formatMoney(price)}
+                </strong>
+
+                {hasDiscount && comparePrice !== null ? (
+                  <span className="text-xs font-bold text-white/32 line-through">
+                    {formatMoney(comparePrice)}
+                  </span>
+                ) : null}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-[10px] font-bold text-white/38">
+                السعر
+              </p>
+
+              <strong className="mt-1 block text-sm font-black text-lime-300">
+                يُحدد عند الطلب
+              </strong>
+            </div>
+          )}
+
+          <Link
+            href={`/products/${product.slug}`}
+            className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/10 px-4 text-xs font-black text-lime-300 transition hover:border-lime-300/50 hover:bg-lime-300/15"
+          >
+            عرض
+            <ArrowLeft aria-hidden="true" size={15} />
+          </Link>
+        </div>
+
+        <div className="mt-4">
+          <AddToCartButton
+            product={{
+              id: product.id,
+              slug: product.slug,
+              nameAr: product.nameAr,
+              nameEn: product.nameEn,
+              image: imageUrl,
+              category: product.category,
+            }}
+          />
+        </div>
+      </div>
+    </AnimatedSection>
+  );
+}
 
 const categories = [
   "الكل",
@@ -194,7 +399,7 @@ export default function ProductsPage() {
 
   return (
     <main
-      className="relative min-h-screen overflow-hidden bg-[#061008] py-14 text-white font-sans"
+      className="relative min-h-screen overflow-hidden bg-[#061008] py-10 text-white font-sans sm:py-14"
       dir="rtl"
     >
       {/* شبكة الخلفية الخفيفة المدمجة مع التصميم (Subtle Grid Overlay) */}
@@ -209,7 +414,7 @@ export default function ProductsPage() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-7xl px-3 sm:px-6">
         <AnimatedSection>
           <section className="text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
@@ -260,7 +465,7 @@ export default function ProductsPage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <div className="mt-7 flex flex-wrap justify-center gap-2">
+          <div className="mt-5 flex gap-2 overflow-x-auto pb-2 sm:mt-7 sm:flex-wrap sm:justify-center sm:overflow-visible">
             {categories.map(
               (item) => {
                 const active =
@@ -277,7 +482,7 @@ export default function ProductsPage() {
                       )
                     }
                     className={[
-                      "min-h-10 rounded-full border px-4 py-2 text-sm font-bold transition-all duration-300",
+                      "min-h-10 shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition-all duration-300 sm:text-sm",
                       active
                         ? "border-lime-300 bg-lime-300 text-[#071109] shadow-[0_0_15px_rgba(200,243,63,0.3)]"
                         : "border-white/10 bg-[#0b1a0e]/60 text-white/75 hover:border-lime-300/40 hover:bg-lime-300/10 hover:text-white backdrop-blur-md",
@@ -380,76 +585,15 @@ export default function ProductsPage() {
           !loadError &&
           filteredProducts.length >
             0 && (
-            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="mt-6 grid gap-4 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
               {filteredProducts.map(
                 (product) => (
-                  <AnimatedSection
+                  <ProductCard
                     key={product.id}
-                    className="group flex flex-col overflow-hidden rounded-[24px] border border-lime-300/15 bg-[#0b1a0e]/80 shadow-xl backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-lime-300/40 hover:shadow-[0_15px_30px_rgba(200,243,63,0.15)]"
-                  >
-                    <Link
-                      href={`/products/${product.slug}`}
-                      className="flex h-full flex-col"
-                    >
-                      <div
-                        className={[
-                          "relative overflow-hidden border-b border-white/5 bg-white/[.02] transition-colors group-hover:bg-white/[.04]",
-                          PRODUCT_CARD_IMAGE_HEIGHT,
-                          PRODUCT_CARD_IMAGE_PADDING,
-                        ].join(" ")}
-                      >
-                        <Image
-                          src={
-                            product.image
-                          }
-                          alt={
-                            product.nameAr
-                          }
-                          fill
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          className="object-contain transition duration-500 group-hover:scale-105"
-                          style={{
-                            transform: `scale(${PRODUCT_CARD_IMAGE_SCALE})`,
-                          }}
-                        />
-                      </div>
-
-                      <div className="flex flex-1 flex-col p-5">
-                        <span className="inline-flex w-fit items-center rounded-full bg-lime-300/10 px-3 py-1 text-xs font-bold text-lime-300">
-                          {
-                            product.category
-                          }
-                        </span>
-
-                        <h2 className="mt-3 text-xl font-black text-white transition group-hover:text-lime-300">
-                          {
-                            product.nameAr
-                          }
-                        </h2>
-
-                        <p
-                          className="mt-1 text-xs font-bold uppercase tracking-widest text-white/40"
-                          dir="ltr"
-                        >
-                          {
-                            product.nameEn
-                          }
-                        </p>
-
-                        <p className="mt-3 line-clamp-2 min-h-12 text-sm leading-6 text-white/60">
-                          {
-                            product.shortDescription
-                          }
-                        </p>
-
-                        <div className="mt-auto pt-5">
-                          <div className="flex min-h-[48px] w-full items-center justify-center rounded-xl bg-lime-300 px-6 text-sm font-black text-[#071109] shadow-[0_5px_15px_rgba(200,243,63,0.2)] transition duration-300 group-hover:scale-[1.02] group-hover:bg-lime-200">
-                            تفاصيل المنتج
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </AnimatedSection>
+                    product={
+                      product as ProductWithCardData
+                    }
+                  />
                 ),
               )}
             </div>

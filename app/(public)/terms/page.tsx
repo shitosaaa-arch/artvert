@@ -1,8 +1,13 @@
+import Link from "next/link";
 import {
+  ArrowLeft,
+  CheckCircle2,
   FileCheck2,
+  Mail,
   PackageSearch,
   Scale,
   ScrollText,
+  ShieldCheck,
 } from "lucide-react";
 
 const sections = [
@@ -28,14 +33,20 @@ const sections = [
   },
 ] as const;
 
+const userCommitments = [
+  "تقديم بيانات صحيحة عند إنشاء الطلب أو التواصل مع فريق الدعم.",
+  "عدم إساءة استخدام الموقع أو محاولة التأثير على تشغيله.",
+  "مراجعة تعليمات الاستخدام والجرعات قبل تطبيق أي منتج.",
+] as const;
+
 export default function TermsPage() {
   return (
     <main
-      className="relative min-h-screen overflow-hidden bg-[#061008] py-16 text-white font-sans"
+      className="relative min-h-screen overflow-hidden bg-[#061008] py-10 text-white font-sans sm:py-14 lg:py-16"
       dir="rtl"
     >
-      {/* شبكة الخلفية الخفيفة المدمجة مع التصميم (Subtle Grid Overlay) */}
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_15%_6%,rgba(143,202,45,.12),transparent_25%),radial-gradient(circle_at_88%_18%,rgba(38,164,83,.12),transparent_27%),linear-gradient(145deg,#02150d_0%,#063220_48%,#02180f_100%)]" />
+
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 z-0 opacity-[0.05]"
@@ -46,53 +57,116 @@ export default function TermsPage() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6">
+      <div className="relative z-10 mx-auto max-w-5xl px-3 sm:px-6">
         <section className="text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
             <Scale size={16} />
             الشروط القانونية
           </span>
 
-          <h1 className="mt-6 text-4xl font-black text-lime-300 drop-shadow-[0_0_25px_rgba(200,243,63,0.3)] sm:text-5xl">
+          <h1 className="mt-5 text-3xl font-black leading-tight text-white sm:mt-6 sm:text-5xl">
             الشروط والأحكام
           </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/80">
-            توضح هذه الصفحة قواعد استخدام موقع ArtVert Egypt وحقوق الشركة
-            والتزامات المستخدم.
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-8 text-white/68 sm:mt-6 sm:text-lg">
+            توضح هذه الصفحة قواعد استخدام موقع ArtVert Egypt وحقوق الشركة والتزامات المستخدم.
           </p>
         </section>
 
-        <div className="mt-12 rounded-[32px] border border-lime-300/15 bg-[#0b1a0e]/80 p-6 shadow-[0_0_40px_rgba(200,243,63,0.15)] backdrop-blur-xl sm:p-10">
-          <div className="grid gap-5">
-            {sections.map((section) => {
+        <section className="mt-8 rounded-[28px] border border-lime-300/15 bg-[#0b1a0e]/86 p-4 shadow-[0_18px_45px_rgba(0,0,0,.22)] backdrop-blur-xl sm:mt-12 sm:p-7">
+          <div className="grid gap-4">
+            {sections.map((section, index) => {
               const Icon = section.icon;
 
               return (
-                <section
+                <article
                   key={section.title}
-                  className="rounded-2xl border border-white/5 bg-white/[.02] p-5 backdrop-blur-md transition duration-300 hover:border-lime-300/20 sm:p-6"
+                  className="group rounded-[22px] border border-white/[.06] bg-white/[.025] p-4 transition duration-300 hover:border-lime-300/20 hover:bg-white/[.04] sm:p-6"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lime-300/10 text-lime-300 transition-transform duration-300 hover:scale-110">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-lime-300/15 bg-lime-300/10 text-lime-300 transition group-hover:scale-105">
                       <Icon size={21} />
                     </div>
 
-                    <div>
-                      <h2 className="text-2xl font-black text-white">
-                        {section.title}
-                      </h2>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-xl font-black text-white sm:text-2xl">
+                          {section.title}
+                        </h2>
 
-                      <p className="mt-4 leading-9 text-white/60">
+                        <span className="text-2xl font-black text-white/[.07]">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                      </div>
+
+                      <p className="mt-3 text-sm leading-8 text-white/60 sm:text-base">
                         {section.text}
                       </p>
                     </div>
                   </div>
-                </section>
+                </article>
               );
             })}
           </div>
-        </div>
+        </section>
+
+        <section className="mt-6 rounded-[28px] border border-white/10 bg-[#0b1a0e]/72 p-5 shadow-xl backdrop-blur-xl sm:mt-8 sm:p-7">
+          <div className="flex items-center gap-3">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-lime-300/10 text-lime-300">
+              <ShieldCheck size={20} />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-black text-white sm:text-2xl">
+                التزامات المستخدم
+              </h2>
+              <p className="mt-1 text-xs text-white/40">
+                قواعد أساسية لضمان استخدام آمن وواضح للموقع
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 grid gap-3">
+            {userCommitments.map((item) => (
+              <div
+                key={item}
+                className="flex items-start gap-3 rounded-2xl border border-white/[.06] bg-white/[.025] p-4"
+              >
+                <CheckCircle2
+                  size={18}
+                  className="mt-1 shrink-0 text-lime-300"
+                />
+
+                <p className="text-sm leading-7 text-white/64">
+                  {item}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-6 rounded-[28px] border border-lime-300/20 bg-[linear-gradient(135deg,rgba(200,243,63,.08),rgba(11,26,14,.92))] p-5 text-center shadow-[0_0_40px_rgba(200,243,63,0.10)] backdrop-blur-xl sm:mt-8 sm:p-8">
+          <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
+            <Mail size={15} />
+            تحتاج توضيح؟
+          </span>
+
+          <h2 className="mt-5 text-2xl font-black text-white sm:text-3xl">
+            تواصل معنا بخصوص الشروط
+          </h2>
+
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/60">
+            لو عندك سؤال عن استخدام الموقع أو الطلبات أو حقوق المحتوى، تقدر تتواصل مع فريق ArtVert.
+          </p>
+
+          <Link
+            href="/contact"
+            className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.22)] transition hover:-translate-y-0.5 hover:bg-lime-200"
+          >
+            تواصل معنا
+            <ArrowLeft size={16} />
+          </Link>
+        </section>
       </div>
     </main>
   );

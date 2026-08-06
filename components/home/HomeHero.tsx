@@ -90,15 +90,27 @@ export function HomeHero({
     >
       <section className="relative isolate min-h-[760px] overflow-hidden border-b border-white/10 sm:min-h-[820px] lg:min-h-[calc(100vh-62px)]">
         <div
-          className="absolute inset-0 -z-40 bg-center bg-no-repeat"
-          style={{
-            backgroundImage:
-              "url('/images/artvert-home-background.jpg'), url('/hero.jpeg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center center",
-          }}
           aria-hidden="true"
-        />
+          className="absolute inset-0 -z-40"
+        >
+          <Image
+            src="/images/home-bg-mobile.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center lg:hidden"
+          />
+
+          <Image
+            src="/images/home-bg-desktop.png"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="hidden object-cover object-center lg:block"
+          />
+        </div>
 
         <div
           aria-hidden="true"
