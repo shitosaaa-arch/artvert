@@ -46,6 +46,13 @@ type ExtendedProduct = {
   crops?: string[];
   reason?: string;
   warnings?: string[];
+  image?: string;
+  price?: number;
+  compareAtPrice?: number;
+  currency?: string;
+  productUrl?: string;
+  inStock?: boolean;
+  stockQuantity?: number;
 };
 
 type PossibleDiagnosis = {
@@ -135,6 +142,38 @@ function resultProducts(
       nameAr: product.name,
       reason: product.reason,
     }));
+}
+
+function assistantTextWithoutProductList(
+  text: string,
+  hasProductCards: boolean,
+) {
+  if (!hasProductCards) {
+    return text;
+  }
+
+  const marker = "المنتجات المقترحة من ArtVert:";
+  const markerIndex = text.indexOf(marker);
+
+  return markerIndex >= 0
+    ? text.slice(0, markerIndex).trim()
+    : text;
+}
+
+function formattedProductPrice(product: ExtendedProduct) {
+  if (typeof product.price !== "number") {
+    return undefined;
+  }
+
+  const currency =
+    product.currency === "EGP" || !product.currency
+      ? "ج.م"
+      : product.currency;
+
+  return `${product.price.toLocaleString("ar-EG", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })} ${currency}`;
 }
 
 function AudioWave({ compact = false }: { compact?: boolean }) {
@@ -684,37 +723,122 @@ export function DoctorChat() {
                           {item.imageUrl && (
                             <img src={item.imageUrl} alt="Uploaded plant" className="mb-3 max-h-60 w-full rounded-xl object-cover border border-white/10" />
                           )}
-                          <div className="whitespace-pre-line">{item.text}</div>
+                          <div className="whitespace-pre-line">
+                            {assistantTextWithoutProductList(
+                              item.text,
+                              !isUser && products.length > 0,
+                            )}
+                          </div>
                           
-                          {/* Products Output Restored */}
+                          {/* Product recommendation cards */}
                           {!isUser && products.length > 0 ? (
-                            <div className="mt-4 grid gap-3 md:grid-cols-2">
-                              {products.map((product) => (
-                                <article
-                                  key={product.id}
-                                  className="rounded-2xl border border-[#c8f33f]/30 bg-[#153a25]/60 p-4 backdrop-blur-md"
-                                >
-                                  <p className="text-[11px] font-black text-[#c8f33f]">
-                                    منتج ArtVert مقترح
-                                  </p>
-                                  <h3 className="mt-1 text-sm font-black text-white">
-                                    {product.nameAr}
-                                  </h3>
-                                  {product.reason ? (
-                                    <p className="mt-2 text-xs leading-6 text-white/70">
-                                      {product.reason}
-                                    </p>
-                                  ) : null}
-                                  {product.slug ? (
-                                    <Link
-                                      href={`/products/${product.slug}`}
-                                      className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#c8f33f] px-4 py-2 text-xs font-black text-[#102014] hover:bg-[#d4f85e] transition-colors"
+                            <div className="mt-5">
+                              <div className="mb-3 flex items-center gap-2 text-[#c8f33f]">
+                                <ShoppingCart size={17} aria-hidden="true" />
+                                <p className="text-xs font-black">
+                                  منتجات ArtVert المقترحة
+                                </p>
+                              </div>
+
+                              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                                {products.map((product) => {
+                                  const price = formattedProductPrice(product);
+                                  const hasDiscount =
+                                    typeof product.compareAtPrice === "number" &&
+                                    typeof product.price === "number" &&
+                                    product.compareAtPrice > product.price;
+                                  const href =
+                                    product.productUrl ??
+                                    (product.slug
+                                      ? `/products/${product.slug}`
+                                      : undefined);
+
+                                  return (
+                                    <article
+                                      key={product.id}
+                                      className="group overflow-hidden rounded-2xl border border-[#c8f33f]/25 bg-[#0d2b1a]/90 shadow-[0_12px_30px_rgba(0,0,0,.22)] transition duration-300 hover:-translate-y-0.5 hover:border-[#c8f33f]/50"
                                     >
-                                      عرض المنتج
-                                    </Link>
-                                  ) : null}
-                                </article>
-                              ))}
+                                      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden border-b border-white/10 bg-[radial-gradient(circle_at_50%_40%,rgba(200,243,63,.12),rgba(4,28,16,.2)_65%)]">
+                                        {product.image ? (
+                                          <img
+                                            src={product.image}
+                                            alt={product.nameAr}
+                                            loading="lazy"
+                                            className="h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.04]"
+                                          />
+                                        ) : (
+                                          <div className="flex flex-col items-center gap-2 text-white/35">
+                                            <ImageIcon size={30} aria-hidden="true" />
+                                            <span className="text-[10px] font-bold">
+                                              صورة المنتج غير متاحة
+                                            </span>
+                                          </div>
+                                        )}
+
+                                        <span className="absolute right-2 top-2 rounded-full border border-[#c8f33f]/30 bg-[#071d11]/85 px-2.5 py-1 text-[9px] font-black text-[#c8f33f] backdrop-blur-md">
+                                          موصى به
+                                        </span>
+                                      </div>
+
+                                      <div className="p-3.5">
+                                        <h3 className="line-clamp-2 min-h-10 text-sm font-black leading-5 text-white">
+                                          {product.nameAr}
+                                        </h3>
+
+                                        {product.nameEn ? (
+                                          <p
+                                            dir="ltr"
+                                            className="mt-1 truncate text-[10px] font-bold uppercase tracking-[.08em] text-white/35"
+                                          >
+                                            {product.nameEn}
+                                          </p>
+                                        ) : null}
+
+                                        {product.reason ? (
+                                          <p className="mt-2 line-clamp-2 min-h-10 text-[11px] leading-5 text-white/65">
+                                            {product.reason}
+                                          </p>
+                                        ) : null}
+
+                                        {price ? (
+                                          <div className="mt-3 flex min-h-7 flex-wrap items-center gap-2">
+                                            <span className="text-base font-black text-[#c8f33f]">
+                                              {price}
+                                            </span>
+
+                                            {hasDiscount ? (
+                                              <span className="text-[11px] font-bold text-white/35 line-through">
+                                                {product.compareAtPrice?.toLocaleString(
+                                                  "ar-EG",
+                                                  {
+                                                    minimumFractionDigits: 0,
+                                                    maximumFractionDigits: 2,
+                                                  },
+                                                )}{" "}
+                                                ج.م
+                                              </span>
+                                            ) : null}
+                                          </div>
+                                        ) : null}
+
+                                        {href ? (
+                                          <Link
+                                            href={href}
+                                            className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#c8f33f] px-4 py-2 text-xs font-black text-[#102014] shadow-[0_7px_18px_rgba(200,243,63,.16)] transition hover:bg-[#d9ff63]"
+                                          >
+                                            <ShoppingCart size={15} aria-hidden="true" />
+                                            عرض المنتج
+                                          </Link>
+                                        ) : (
+                                          <div className="mt-3 flex min-h-10 w-full items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white/40">
+                                            رابط المنتج غير متاح
+                                          </div>
+                                        )}
+                                      </div>
+                                    </article>
+                                  );
+                                })}
+                              </div>
                             </div>
                           ) : null}
 

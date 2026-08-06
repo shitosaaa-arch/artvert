@@ -18,8 +18,6 @@ import {
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import AnimatedSection from "@/components/AnimatedSection";
 import type {
-  CatalogImageFit,
-  CatalogImagePosition,
   CatalogProduct,
   CatalogProductImage,
 } from "@/lib/products/product-catalog";
@@ -30,38 +28,6 @@ type ProductWithCardData =
     comparePrice?: string | number | null;
     images?: CatalogProductImage[];
   };
-
-function getObjectFit(
-  value: CatalogImageFit | undefined,
-): "cover" | "contain" | "fill" | "scale-down" {
-  switch (value) {
-    case "COVER":
-      return "cover";
-    case "FILL":
-      return "fill";
-    case "SCALE_DOWN":
-      return "scale-down";
-    default:
-      return "contain";
-  }
-}
-
-function getObjectPosition(
-  value: CatalogImagePosition | undefined,
-) {
-  switch (value) {
-    case "TOP":
-      return "center top";
-    case "BOTTOM":
-      return "center bottom";
-    case "LEFT":
-      return "left center";
-    case "RIGHT":
-      return "right center";
-    default:
-      return "center center";
-  }
-}
 
 function toNumber(
   value: string | number | null | undefined,
@@ -116,17 +82,6 @@ function ProductCard({
     ? Math.round(((comparePrice - price) / comparePrice) * 100)
     : 0;
 
-  const zoom =
-    Math.max(25, Math.min(image?.zoom ?? 100, 300)) / 100;
-
-  const cropX =
-    Math.max(0, Math.min(image?.cropX ?? 50, 100)) - 50;
-
-  const cropY =
-    Math.max(0, Math.min(image?.cropY ?? 50, 100)) - 50;
-
-  const rotation = image?.rotation ?? 0;
-
   return (
     <AnimatedSection className="group relative flex h-full flex-col overflow-hidden rounded-[26px] border border-lime-300/15 bg-[#0b1a0e]/88 shadow-[0_18px_45px_rgba(0,0,0,.24)] backdrop-blur-xl transition duration-300 hover:-translate-y-2 hover:border-lime-300/35 hover:shadow-[0_24px_60px_rgba(200,243,63,.12)]">
       <div className="relative">
@@ -135,22 +90,16 @@ function ProductCard({
           className="block"
           aria-label={`عرض ${product.nameAr}`}
         >
-          <div className="relative h-[245px] overflow-hidden border-b border-white/[.06] bg-[radial-gradient(circle_at_50%_45%,rgba(255,255,255,.08),rgba(255,255,255,.015)_68%)] sm:h-[270px]">
+          <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-white/[.06] bg-[#102819]">
             <Image
               src={imageUrl}
               alt={image?.alt || product.nameAr}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-              className="transition-[filter] duration-300 group-hover:brightness-105"
-              style={{
-                objectFit: getObjectFit(image?.objectFit),
-                objectPosition: getObjectPosition(image?.objectPosition),
-                transform: `translate(${cropX}%, ${cropY}%) scale(${zoom}) rotate(${rotation}deg)`,
-                transformOrigin: "center",
-              }}
+              className="object-cover object-center transition duration-500 group-hover:scale-[1.03] group-hover:brightness-105"
             />
 
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(2,14,8,.22),transparent_42%)]" />
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(2,14,8,.24),transparent_45%)]" />
           </div>
         </Link>
 
