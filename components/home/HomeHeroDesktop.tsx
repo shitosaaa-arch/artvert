@@ -162,29 +162,30 @@ export function HomeHeroDesktop() {
         </aside>
       </div>
 
-
+      {/* منطقة الأزرار: تم التعديل لتطابق الصورة بنسبة 100% مع الحفاظ على المقاسات والموقع */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-[116px] z-40 mx-auto flex w-fit items-center justify-center gap-4"
+        className="pointer-events-none absolute inset-x-0 bottom-[126px] z-40 mx-auto flex w-[1088px] max-w-[calc(100%-64px)] items-center justify-between"
         dir="ltr"
       >
         <Link
           href="/products"
-          className="pointer-events-auto flex h-[58px] w-[250px] items-center justify-center gap-3 rounded-[14px] border border-white/12 bg-[#18261b]/94 px-6 text-[14px] font-black text-white shadow-[0_10px_28px_rgba(0,0,0,.34)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#1d2d20]"
+          className="pointer-events-auto flex h-[64px] w-[295px] items-center justify-center gap-3 rounded-full border border-white/20 bg-[#121c15]/85 px-8 text-[15px] font-black text-white shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#18261b]"
           dir="rtl"
         >
-          <ShoppingBag aria-hidden="true" size={20} strokeWidth={1.8} />
+          <ShoppingBag aria-hidden="true" size={22} strokeWidth={1.8} />
           تصفح المنتجات
         </Link>
 
         <Link
           href="/doctor"
-          className="pointer-events-auto flex h-[58px] w-[270px] items-center justify-center gap-3 rounded-[14px] bg-lime-300 px-6 text-[14px] font-black text-[#071109] shadow-[0_10px_28px_rgba(200,243,63,.28)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200"
+          className="pointer-events-auto flex h-[64px] w-[330px] items-center justify-center gap-3 rounded-full bg-[#8cd234] px-8 text-[15px] font-black text-[#071109] shadow-[0_12px_32px_rgba(140,210,52,0.35)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7bc02a]"
           dir="rtl"
         >
-          <MessageCircle aria-hidden="true" size={21} strokeWidth={1.8} />
+          <MessageCircle aria-hidden="true" size={23} strokeWidth={1.8} />
           اسأل دكتور ArtVert
         </Link>
       </div>
+      {/* نهاية منطقة الأزرار */}
 
       <div className="absolute inset-x-0 bottom-0 z-30 mx-auto grid w-full max-w-[1220px] grid-cols-4 gap-2 px-7 pb-4">
         {trustCards.map((card) => {

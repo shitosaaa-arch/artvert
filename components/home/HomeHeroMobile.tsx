@@ -6,15 +6,15 @@ import {
   Leaf,
   MessageCircle,
   ShoppingBag,
-  Sprout,
-} from "lucide-react"; // تم إزالة Headphones لعدم ظهورها في الجزء المرئي من الصورة
+} from "lucide-react";
 
+// تم تعديل النصوص لتتطابق تماماً مع ما هو مكتوب في الكروت بالصورة
 const mobileServices = [
   {
-    title: "تشخيص المشاكل",
-    description: "تشخيص ذكي وسريع",
+    title: "تشخيص مشاكل",
+    description: "تشخيص سريع",
     href: "/doctor",
-    icon: MessageCircle, // تم تعديل الأيقونة لتطابق الصورة
+    icon: MessageCircle,
   },
   {
     title: "برامج زراعية",
@@ -27,46 +27,44 @@ const mobileServices = [
 export function HomeHeroMobile() {
   return (
     <section
-      className="relative flex min-h-screen w-full flex-col bg-[#080d09] pb-24 lg:hidden font-sans"
+      className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden font-sans lg:hidden"
       dir="rtl"
     >
       {/* 
-        القسم العلوي: البانر الرئيسي (Hero)
-        نفترض أن الخلفية (home-bg-mobile.png) تحتوي على الحقل والمنتجات والنصوص العلوية،
-        وسنقوم بتركيب صورة الدكتور والفقاعة فوقها.
+        الخلفية: تم جعلها تغطي الشاشة بالكامل (بدون خلفية سوداء مصمتة) 
+        ليظهر الجزء السفلي منها (التربة) خلف الأزرار والكروت كما في الصورة.
       */}
-      <div className="relative w-full h-[550px] overflow-hidden shrink-0">
-        {/* خلفية الحقل والمنتجات */}
-        <div aria-hidden="true" className="absolute inset-0 z-0">
-          <Image
-            src="/images/home-bg-mobile.png"
-            alt="خلفية ArtVert"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover object-bottom"
-          />
-        </div>
+      <div aria-hidden="true" className="absolute inset-0 z-0">
+        <Image
+          src="/images/home-bg-mobile.png"
+          alt="خلفية ArtVert"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      </div>
 
-        {/* تدرج لوني خفيف من الأسفل لدمج الصورة مع لون خلفية الموقع */}
-        <div className="absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-[#080d09] to-transparent" />
+      <div className="absolute inset-0 z-10 bg-black/10 pointer-events-none" />
 
+      {/* القسم العلوي (الدكتور والفقاعة) */}
+      <div className="relative z-20 flex-1 w-full min-h-[480px]">
         {/* صورة الدكتور */}
-        <div className="absolute bottom-4 left-[-10px] z-20 w-[48%] h-[75%]">
+        <div className="absolute bottom-4 left-[-15px] z-20 w-[50%] max-w-[220px] h-[75%]">
           <Image
             src="/images/artvert-doctor-approved.png"
             alt="دكتور ArtVert الخبير الزراعي"
             fill
             priority
             sizes="50vw"
-            className="object-contain object-bottom drop-shadow-2xl"
+            className="object-contain object-bottom drop-shadow-[0_15px_25px_rgba(0,0,0,0.6)]"
           />
         </div>
 
-        {/* فقاعة الدكتور - مطابقة تماماً للنص والشكل في الصورة */}
-        <div className="absolute right-4 top-[40%] z-30 w-[55%] max-w-[220px] rounded-3xl bg-[#132015]/85 px-4 py-3 text-right shadow-2xl backdrop-blur-md border border-white/5">
+        {/* فقاعة الدكتور - متطابقة نصاً وشكلاً ولوناً */}
+        <div className="absolute right-4 top-[35%] z-30 w-[55%] max-w-[210px] rounded-[24px] bg-[#0f1a11]/85 px-4 py-3 text-right shadow-2xl backdrop-blur-md border border-white/10">
           <p className="text-[11px] text-white/80">مرحباً بك</p>
-          <strong className="mt-0.5 block text-[15px] font-black text-[#94d538]">
+          <strong className="mt-0.5 block text-[15px] font-black text-[#8cd234]">
             أنا دكتور ArtVert
           </strong>
           <p className="mt-1 text-[11px] leading-5 text-white/80">
@@ -75,74 +73,71 @@ export function HomeHeroMobile() {
         </div>
       </div>
 
-      {/* 
-        القسم السفلي: الأزرار والخدمات
-      */}
-      <div className="relative z-40 -mt-2 flex flex-col gap-4 px-4">
+      {/* القسم السفلي: الأزرار والخدمات */}
+      <div className="relative z-30 flex flex-col gap-4 px-4 pb-12">
         
-        {/* أزرار الإجراء (Action Buttons) - مطابقة لترتيب وألوان الصورة */}
+        {/* أزرار الإجراء (Action Buttons) - زوايا متطابقة وألوان دقيقة */}
         <div className="grid grid-cols-2 gap-3">
-          {/* الزر الأيمن (تصفح المنتجات) - داكن */}
-          <Link
-            href="/products"
-            className="flex h-[72px] flex-row items-center justify-center gap-2.5 rounded-[20px] bg-[#162018] text-white shadow-lg border border-white/5 transition active:scale-[.98]"
-          >
-            <span className="text-[14px] font-bold">تصفح المنتجات</span>
-            <ShoppingBag size={20} className="text-white/70" strokeWidth={1.8} />
-          </Link>
-
-          {/* الزر الأيسر (اسأل دكتور) - أخضر */}
+          {/* الزر الأيمن (اسأل دكتور) - أخضر داكن مطابق للصورة */}
           <Link
             href="/doctor"
-            className="flex h-[72px] flex-row items-center justify-center gap-2.5 rounded-[20px] bg-[#165a18] text-white shadow-lg transition active:scale-[.98]"
+            className="flex h-[64px] flex-row items-center justify-center gap-2 rounded-[16px] bg-[#0e4813] text-white shadow-lg transition active:scale-[.98]"
           >
+            <MessageCircle size={20} className="text-white" strokeWidth={2} />
             <span className="text-[14px] font-bold">اسأل دكتور ArtVert</span>
-            <MessageCircle size={20} className="text-white/90" strokeWidth={1.8} />
+          </Link>
+
+          {/* الزر الأيسر (تصفح المنتجات) - رمادي زجاجي داكن */}
+          <Link
+            href="/products"
+            className="flex h-[64px] flex-row items-center justify-center gap-2 rounded-[16px] bg-[#141f16]/90 border border-white/5 text-white shadow-lg backdrop-blur-md transition active:scale-[.98]"
+          >
+            <ShoppingBag size={20} className="text-white/80" strokeWidth={2} />
+            <span className="text-[14px] font-bold">تصفح المنتجات</span>
           </Link>
         </div>
 
         {/* الخدمات (Services Grid) */}
-        <div className="grid grid-cols-2 gap-3 mt-2" aria-label="خدمات ArtVert">
+        <div className="grid grid-cols-2 gap-3" aria-label="خدمات ArtVert">
           {mobileServices.map((service) => {
             const Icon = service.icon;
             return (
               <Link
                 key={`${service.href}-${service.title}`}
                 href={service.href}
-                className="flex min-h-[110px] flex-row items-center justify-between rounded-[24px] bg-[#121c15] p-5 shadow-lg border border-white/5 transition active:scale-[.98]"
+                className="flex min-h-[96px] flex-row items-center justify-between rounded-[20px] bg-[#0c140f]/90 p-4 shadow-[0_8px_20px_rgba(0,0,0,0.3)] border border-white/5 backdrop-blur-md transition active:scale-[.98]"
               >
                 <div className="flex flex-col text-right">
-                  <span className="text-[15px] font-bold text-white/90">
+                  <span className="text-[14px] font-bold text-white/95">
                     {service.title}
                   </span>
-                  <small className="mt-1 text-[11px] text-white/50">
+                  <small className="mt-0.5 text-[11px] text-white/50">
                     {service.description}
                   </small>
                 </div>
-                {/* الأيقونة تظهر بدون خلفية مربعة كما في الصورة */}
-                <Icon className="text-[#8cd234] opacity-80 mr-2" size={26} strokeWidth={1.5} />
+                <Icon className="text-[#8cd234] opacity-90" size={26} strokeWidth={1.5} />
               </Link>
             );
           })}
         </div>
       </div>
 
-      {/* الزر العائم الثابت (Floating Action Button) الموجود أسفل يسار الصورة */}
+      {/* الزر العائم (FAB) - موضوع بدقة أسفل يمين الشاشة وفوق الكارت الأيمن كما في الصورة */}
       <button 
         aria-label="محادثة الدكتور"
-        className="fixed bottom-6 right-6 z-50 flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[#18231a] shadow-[0_8px_30px_rgba(0,0,0,0.5)] border border-white/10 transition active:scale-95"
+        className="fixed bottom-[32px] right-4 z-50 flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[#18231a] shadow-[0_8px_30px_rgba(0,0,0,0.6)] border border-white/10 transition active:scale-95"
       >
-        <div className="relative h-[56px] w-[56px] overflow-hidden rounded-full bg-black/20">
+        <div className="relative h-[56px] w-[56px] overflow-hidden rounded-full">
           <Image 
             src="/images/artvert-doctor-approved.png" 
             alt="Doctor Avatar" 
             fill 
-            className="object-cover object-top" 
+            className="object-cover object-top scale-[1.3] translate-y-2" 
           />
         </div>
-        {/* أيقونة المحادثة الصغيرة فوق الزر */}
-        <div className="absolute -bottom-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1c2920] border border-white/10 text-white shadow-md">
-          <MessageCircle size={14} className="text-white/80" />
+        {/* أيقونة المحادثة الدائرية متداخلة من أعلى اليسار للزر العائم */}
+        <div className="absolute -top-0 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1e2e21] border border-[#18231a] text-white shadow-md">
+          <MessageCircle size={14} className="text-[#8cd234]" strokeWidth={2.5} />
         </div>
       </button>
     </section>
