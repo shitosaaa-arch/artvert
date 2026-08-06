@@ -98,7 +98,7 @@ export function HomeHero({
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center lg:hidden"
+            className="object-contain object-top lg:hidden"
           />
 
           <Image
@@ -168,7 +168,7 @@ export function HomeHero({
             className="relative order-2 flex min-h-[64px] items-center self-center px-1 sm:min-h-[72px] sm:px-3 lg:order-2 lg:min-h-[500px] lg:px-0"
             dir="rtl"
           >
-            <div className="grid w-full grid-cols-2 gap-2 sm:gap-3 lg:absolute lg:inset-x-0 lg:bottom-[88px] lg:flex lg:items-center lg:justify-between">
+            <div className="grid w-full grid-cols-2 gap-2 sm:gap-3 lg:absolute lg:inset-x-0 lg:bottom-[20px] lg:flex lg:items-center lg:justify-between">
               <Link
                 href="/doctor"
                 className="flex min-h-[50px] items-center justify-center gap-2 rounded-xl bg-lime-300 px-3 text-[12px] font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200 sm:min-h-[52px] sm:px-5 sm:text-sm lg:absolute lg:right-0 lg:min-h-[56px] lg:min-w-[255px] lg:px-8"
