@@ -162,26 +162,26 @@ export function HomeHeroDesktop() {
         </aside>
       </div>
 
-      {/* منطقة الأزرار: تم التعديل لتطابق الصورة بنسبة 100% مع الحفاظ على المقاسات والموقع */}
+      {/* منطقة الأزرار: تم تعديل الحجم (-40%)، النزول لمستوى الترابيزة (bottom-96px)، والضم للداخل (w-820px) */}
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-[126px] z-40 mx-auto flex w-[1088px] max-w-[calc(100%-64px)] items-center justify-between"
+        className="pointer-events-none absolute inset-x-0 bottom-[96px] z-40 mx-auto flex w-[820px] max-w-[calc(100%-64px)] items-center justify-between"
         dir="ltr"
       >
         <Link
           href="/products"
-          className="pointer-events-auto flex h-[64px] w-[295px] items-center justify-center gap-3 rounded-full border border-white/20 bg-[#121c15]/85 px-8 text-[15px] font-black text-white shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#18261b]"
+          className="pointer-events-auto flex h-[40px] w-[177px] items-center justify-center gap-2 rounded-full border border-white/20 bg-[#121c15]/85 px-4 text-[12px] font-black text-white shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#18261b]"
           dir="rtl"
         >
-          <ShoppingBag aria-hidden="true" size={22} strokeWidth={1.8} />
+          <ShoppingBag aria-hidden="true" size={16} strokeWidth={1.8} />
           تصفح المنتجات
         </Link>
 
         <Link
           href="/doctor"
-          className="pointer-events-auto flex h-[64px] w-[330px] items-center justify-center gap-3 rounded-full bg-[#8cd234] px-8 text-[15px] font-black text-[#071109] shadow-[0_12px_32px_rgba(140,210,52,0.35)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7bc02a]"
+          className="pointer-events-auto flex h-[40px] w-[198px] items-center justify-center gap-2 rounded-full bg-[#8cd234] px-4 text-[12px] font-black text-[#071109] shadow-[0_12px_32px_rgba(140,210,52,0.35)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7bc02a]"
           dir="rtl"
         >
-          <MessageCircle aria-hidden="true" size={23} strokeWidth={1.8} />
+          <MessageCircle aria-hidden="true" size={17} strokeWidth={1.8} />
           اسأل دكتور ArtVert
         </Link>
       </div>

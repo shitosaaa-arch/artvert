@@ -8,7 +8,6 @@ import {
   ShoppingBag,
 } from "lucide-react";
 
-// تم تعديل النصوص لتتطابق تماماً مع ما هو مكتوب في الكروت بالصورة
 const mobileServices = [
   {
     title: "تشخيص مشاكل",
@@ -30,10 +29,7 @@ export function HomeHeroMobile() {
       className="relative flex min-h-[100dvh] w-full flex-col overflow-hidden font-sans lg:hidden"
       dir="rtl"
     >
-      {/* 
-        الخلفية: تم جعلها تغطي الشاشة بالكامل (بدون خلفية سوداء مصمتة) 
-        ليظهر الجزء السفلي منها (التربة) خلف الأزرار والكروت كما في الصورة.
-      */}
+      {/* الخلفية */}
       <div aria-hidden="true" className="absolute inset-0 z-0">
         <Image
           src="/images/home-bg-mobile.png"
@@ -49,8 +45,9 @@ export function HomeHeroMobile() {
 
       {/* القسم العلوي (الدكتور والفقاعة) */}
       <div className="relative z-20 flex-1 w-full min-h-[480px]">
-        {/* صورة الدكتور */}
-        <div className="absolute bottom-4 left-[-15px] z-20 w-[50%] max-w-[220px] h-[75%]">
+        
+        {/* صورة الدكتور: تم إنزاله للأسفل (-bottom-20) */}
+        <div className="absolute -bottom-20 left-[-15px] z-20 w-[50%] max-w-[220px] h-[75%]">
           <Image
             src="/images/artvert-doctor-approved.png"
             alt="دكتور ArtVert الخبير الزراعي"
@@ -61,8 +58,8 @@ export function HomeHeroMobile() {
           />
         </div>
 
-        {/* فقاعة الدكتور - متطابقة نصاً وشكلاً ولوناً */}
-        <div className="absolute right-4 top-[35%] z-30 w-[55%] max-w-[210px] rounded-[24px] bg-[#0f1a11]/85 px-4 py-3 text-right shadow-2xl backdrop-blur-md border border-white/10">
+        {/* فقاعة الدكتور: تم تنزيلها للأسفل (top-[58%]) وأقصى اليمين (right-2) لتكون فوق الشكارة الزرقاء */}
+        <div className="absolute right-2 top-[58%] z-30 w-[55%] max-w-[210px] rounded-[24px] bg-[#0f1a11]/85 px-4 py-3 text-right shadow-2xl backdrop-blur-md border border-white/10">
           <p className="text-[11px] text-white/80">مرحباً بك</p>
           <strong className="mt-0.5 block text-[15px] font-black text-[#8cd234]">
             أنا دكتور ArtVert
@@ -73,12 +70,10 @@ export function HomeHeroMobile() {
         </div>
       </div>
 
-      {/* القسم السفلي: الأزرار والخدمات */}
+      {/* القسم السفلي: الأزرار والخدمات (بدون أي تغيير) */}
       <div className="relative z-30 flex flex-col gap-4 px-4 pb-12">
         
-        {/* أزرار الإجراء (Action Buttons) - زوايا متطابقة وألوان دقيقة */}
         <div className="grid grid-cols-2 gap-3">
-          {/* الزر الأيمن (اسأل دكتور) - أخضر داكن مطابق للصورة */}
           <Link
             href="/doctor"
             className="flex h-[64px] flex-row items-center justify-center gap-2 rounded-[16px] bg-[#0e4813] text-white shadow-lg transition active:scale-[.98]"
@@ -87,7 +82,6 @@ export function HomeHeroMobile() {
             <span className="text-[14px] font-bold">اسأل دكتور ArtVert</span>
           </Link>
 
-          {/* الزر الأيسر (تصفح المنتجات) - رمادي زجاجي داكن */}
           <Link
             href="/products"
             className="flex h-[64px] flex-row items-center justify-center gap-2 rounded-[16px] bg-[#141f16]/90 border border-white/5 text-white shadow-lg backdrop-blur-md transition active:scale-[.98]"
@@ -97,7 +91,6 @@ export function HomeHeroMobile() {
           </Link>
         </div>
 
-        {/* الخدمات (Services Grid) */}
         <div className="grid grid-cols-2 gap-3" aria-label="خدمات ArtVert">
           {mobileServices.map((service) => {
             const Icon = service.icon;
@@ -122,7 +115,7 @@ export function HomeHeroMobile() {
         </div>
       </div>
 
-      {/* الزر العائم (FAB) - موضوع بدقة أسفل يمين الشاشة وفوق الكارت الأيمن كما في الصورة */}
+      {/* الزر العائم (FAB) */}
       <button 
         aria-label="محادثة الدكتور"
         className="fixed bottom-[32px] right-4 z-50 flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[#18231a] shadow-[0_8px_30px_rgba(0,0,0,0.6)] border border-white/10 transition active:scale-95"
@@ -135,7 +128,6 @@ export function HomeHeroMobile() {
             className="object-cover object-top scale-[1.3] translate-y-2" 
           />
         </div>
-        {/* أيقونة المحادثة الدائرية متداخلة من أعلى اليسار للزر العائم */}
         <div className="absolute -top-0 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1e2e21] border border-[#18231a] text-white shadow-md">
           <MessageCircle size={14} className="text-[#8cd234]" strokeWidth={2.5} />
         </div>
