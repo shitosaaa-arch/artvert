@@ -3,156 +3,148 @@
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Headphones,
   Leaf,
   MessageCircle,
   ShoppingBag,
   Sprout,
-} from "lucide-react";
+} from "lucide-react"; // تم إزالة Headphones لعدم ظهورها في الجزء المرئي من الصورة
 
 const mobileServices = [
   {
     title: "تشخيص المشاكل",
     description: "تشخيص ذكي وسريع",
     href: "/doctor",
-    icon: Sprout,
+    icon: MessageCircle, // تم تعديل الأيقونة لتطابق الصورة
   },
   {
     title: "برامج زراعية",
     description: "برامج رعاية متخصصة",
     href: "/plant-care",
     icon: Leaf,
-  },
-  {
-    title: "منتجات مضمونة",
-    description: "حلول ArtVert الأصلية",
-    href: "/products",
-    icon: ShoppingBag,
-  },
-  {
-    title: "دعم فني",
-    description: "خبراؤنا معك دائمًا",
-    href: "/contact",
-    icon: Headphones,
-  },
+  }
 ] as const;
 
 export function HomeHeroMobile() {
   return (
     <section
-      className="relative isolate block min-h-[1510px] w-full overflow-hidden border-b border-white/10 bg-[#061008] lg:hidden"
+      className="relative flex min-h-screen w-full flex-col bg-[#080d09] pb-24 lg:hidden font-sans"
       dir="rtl"
     >
-      {/* خلفية الموبايل الطولية */}
-      <div aria-hidden="true" className="absolute inset-0 -z-40">
-        <Image
-          src="/images/home-bg-mobile.png"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-top"
-        />
-      </div>
+      {/* 
+        القسم العلوي: البانر الرئيسي (Hero)
+        نفترض أن الخلفية (home-bg-mobile.png) تحتوي على الحقل والمنتجات والنصوص العلوية،
+        وسنقوم بتركيب صورة الدكتور والفقاعة فوقها.
+      */}
+      <div className="relative w-full h-[550px] overflow-hidden shrink-0">
+        {/* خلفية الحقل والمنتجات */}
+        <div aria-hidden="true" className="absolute inset-0 z-0">
+          <Image
+            src="/images/home-bg-mobile.png"
+            alt="خلفية ArtVert"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-bottom"
+          />
+        </div>
 
-      {/* تظليل خفيف لضمان وضوح العناصر */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-30 bg-[linear-gradient(180deg,rgba(2,13,8,.02)_0%,rgba(2,13,8,.02)_63%,rgba(2,13,8,.20)_78%,rgba(2,13,8,.76)_100%)]"
-      />
+        {/* تدرج لوني خفيف من الأسفل لدمج الصورة مع لون خلفية الموقع */}
+        <div className="absolute inset-x-0 bottom-0 z-10 h-32 bg-gradient-to-t from-[#080d09] to-transparent" />
 
-      <div className="relative mx-auto min-h-[1510px] w-full max-w-[520px]">
-        {/* الدكتور */}
-        <Link
-          href="/doctor"
-          aria-label="افتح دكتور ArtVert"
-          className="absolute left-[-8px] top-[250px] z-20 h-[780px] w-[54%] rounded-[2rem] outline-none focus-visible:ring-4 focus-visible:ring-lime-300/50"
-        >
+        {/* صورة الدكتور */}
+        <div className="absolute bottom-4 left-[-10px] z-20 w-[48%] h-[75%]">
           <Image
             src="/images/artvert-doctor-approved.png"
             alt="دكتور ArtVert الخبير الزراعي"
             fill
             priority
-            sizes="54vw"
-            className="object-contain object-bottom drop-shadow-[0_24px_28px_rgba(0,0,0,.72)]"
+            sizes="50vw"
+            className="object-contain object-bottom drop-shadow-2xl"
           />
-        </Link>
+        </div>
 
-        {/* ظل أسفل الدكتور */}
-        <div
-          aria-hidden="true"
-          className="absolute left-[7%] top-[972px] z-10 h-8 w-[38%] rounded-[50%] bg-black/50 blur-xl"
-        />
-
-        {/* فقاعة الدكتور */}
-        <div className="absolute right-[-8px] top-[390px] z-30 w-[58%] max-w-[305px] rounded-[24px] border border-lime-300/15 bg-[#07130a]/94 px-5 py-4 text-right shadow-[0_18px_40px_rgba(0,0,0,.42)] backdrop-blur-md">
-          <p className="text-[12px] font-bold text-white/78">مرحبًا بك</p>
-
-          <strong className="mt-1 block text-[18px] font-black text-lime-300">
+        {/* فقاعة الدكتور - مطابقة تماماً للنص والشكل في الصورة */}
+        <div className="absolute right-4 top-[40%] z-30 w-[55%] max-w-[220px] rounded-3xl bg-[#132015]/85 px-4 py-3 text-right shadow-2xl backdrop-blur-md border border-white/5">
+          <p className="text-[11px] text-white/80">مرحباً بك</p>
+          <strong className="mt-0.5 block text-[15px] font-black text-[#94d538]">
             أنا دكتور ArtVert
           </strong>
-
-          <p className="mt-2 text-[12px] leading-6 text-white/70">
-            اسألني عن مشكلة نباتك وسأساعدك في التشخيص والعلاج.
+          <p className="mt-1 text-[11px] leading-5 text-white/80">
+            سألني عن مشكلة نباتك وسأساعدك في<br />العلاج.
           </p>
-
-          <span
-            aria-hidden="true"
-            className="absolute -left-3 top-[74px] h-6 w-6 rotate-45 border-b border-l border-lime-300/15 bg-[#07130a]"
-          />
         </div>
+      </div>
 
-        {/* أزرار الإجراء */}
-        <div className="absolute inset-x-0 top-[1015px] z-40 grid grid-cols-2 gap-3 px-3">
-          <Link
-            href="/doctor"
-            className="flex h-[92px] items-center justify-center gap-3 rounded-[22px] bg-[#12620e]/97 px-3 text-center text-[16px] font-black text-white shadow-[0_12px_30px_rgba(0,0,0,.30)] backdrop-blur-sm transition active:scale-[.98]"
-          >
-            <MessageCircle aria-hidden="true" size={29} strokeWidth={1.8} />
-            <span>اسأل دكتور ArtVert</span>
-          </Link>
-
+      {/* 
+        القسم السفلي: الأزرار والخدمات
+      */}
+      <div className="relative z-40 -mt-2 flex flex-col gap-4 px-4">
+        
+        {/* أزرار الإجراء (Action Buttons) - مطابقة لترتيب وألوان الصورة */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* الزر الأيمن (تصفح المنتجات) - داكن */}
           <Link
             href="/products"
-            className="flex h-[92px] items-center justify-center gap-3 rounded-[22px] border border-white/10 bg-[#0b1a0e]/96 px-3 text-center text-[16px] font-black text-white shadow-[0_12px_30px_rgba(0,0,0,.30)] backdrop-blur-sm transition active:scale-[.98]"
+            className="flex h-[72px] flex-row items-center justify-center gap-2.5 rounded-[20px] bg-[#162018] text-white shadow-lg border border-white/5 transition active:scale-[.98]"
           >
-            <ShoppingBag aria-hidden="true" size={28} strokeWidth={1.8} />
-            <span>تصفح المنتجات</span>
+            <span className="text-[14px] font-bold">تصفح المنتجات</span>
+            <ShoppingBag size={20} className="text-white/70" strokeWidth={1.8} />
+          </Link>
+
+          {/* الزر الأيسر (اسأل دكتور) - أخضر */}
+          <Link
+            href="/doctor"
+            className="flex h-[72px] flex-row items-center justify-center gap-2.5 rounded-[20px] bg-[#165a18] text-white shadow-lg transition active:scale-[.98]"
+          >
+            <span className="text-[14px] font-bold">اسأل دكتور ArtVert</span>
+            <MessageCircle size={20} className="text-white/90" strokeWidth={1.8} />
           </Link>
         </div>
 
-        {/* الخدمات */}
-        <aside
-          className="absolute inset-x-0 top-[1125px] z-40 grid grid-cols-2 gap-3 px-3 pb-7"
-          aria-label="خدمات ArtVert"
-        >
+        {/* الخدمات (Services Grid) */}
+        <div className="grid grid-cols-2 gap-3 mt-2" aria-label="خدمات ArtVert">
           {mobileServices.map((service) => {
             const Icon = service.icon;
-
             return (
               <Link
                 key={`${service.href}-${service.title}`}
                 href={service.href}
-                className="group flex min-h-[162px] items-center justify-between gap-3 rounded-[25px] border border-white/8 bg-[#0b1a0e]/91 px-5 text-right shadow-[0_14px_34px_rgba(0,0,0,.32)] backdrop-blur-md transition active:scale-[.98]"
+                className="flex min-h-[110px] flex-row items-center justify-between rounded-[24px] bg-[#121c15] p-5 shadow-lg border border-white/5 transition active:scale-[.98]"
               >
-                <div className="min-w-0">
-                  <span className="block text-[17px] font-black leading-7 text-white">
+                <div className="flex flex-col text-right">
+                  <span className="text-[15px] font-bold text-white/90">
                     {service.title}
                   </span>
-
-                  <small className="mt-2 block text-[11px] leading-5 text-white/52">
+                  <small className="mt-1 text-[11px] text-white/50">
                     {service.description}
                   </small>
                 </div>
-
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-lime-300/10 text-lime-300 transition group-active:scale-95">
-                  <Icon aria-hidden="true" size={29} strokeWidth={1.7} />
-                </div>
+                {/* الأيقونة تظهر بدون خلفية مربعة كما في الصورة */}
+                <Icon className="text-[#8cd234] opacity-80 mr-2" size={26} strokeWidth={1.5} />
               </Link>
             );
           })}
-        </aside>
+        </div>
       </div>
+
+      {/* الزر العائم الثابت (Floating Action Button) الموجود أسفل يسار الصورة */}
+      <button 
+        aria-label="محادثة الدكتور"
+        className="fixed bottom-6 right-6 z-50 flex h-[64px] w-[64px] items-center justify-center rounded-full bg-[#18231a] shadow-[0_8px_30px_rgba(0,0,0,0.5)] border border-white/10 transition active:scale-95"
+      >
+        <div className="relative h-[56px] w-[56px] overflow-hidden rounded-full bg-black/20">
+          <Image 
+            src="/images/artvert-doctor-approved.png" 
+            alt="Doctor Avatar" 
+            fill 
+            className="object-cover object-top" 
+          />
+        </div>
+        {/* أيقونة المحادثة الصغيرة فوق الزر */}
+        <div className="absolute -bottom-1 -left-1 flex h-7 w-7 items-center justify-center rounded-full bg-[#1c2920] border border-white/10 text-white shadow-md">
+          <MessageCircle size={14} className="text-white/80" />
+        </div>
+      </button>
     </section>
   );
 }

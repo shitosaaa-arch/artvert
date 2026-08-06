@@ -164,24 +164,24 @@ export function HomeHeroDesktop() {
 
 
       <div
-        className="pointer-events-none absolute inset-x-0 bottom-[126px] z-40 mx-auto flex w-[1088px] max-w-[calc(100%-64px)] items-center justify-between"
+        className="pointer-events-none absolute inset-x-0 bottom-[116px] z-40 mx-auto flex w-fit items-center justify-center gap-4"
         dir="ltr"
       >
         <Link
           href="/products"
-          className="pointer-events-auto flex h-[64px] w-[295px] items-center justify-center gap-3 rounded-[14px] border border-white/12 bg-[#18261b]/94 px-8 text-[15px] font-black text-white shadow-[0_10px_28px_rgba(0,0,0,.34)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#1d2d20]"
+          className="pointer-events-auto flex h-[58px] w-[250px] items-center justify-center gap-3 rounded-[14px] border border-white/12 bg-[#18261b]/94 px-6 text-[14px] font-black text-white shadow-[0_10px_28px_rgba(0,0,0,.34)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#1d2d20]"
           dir="rtl"
         >
-          <ShoppingBag aria-hidden="true" size={22} strokeWidth={1.8} />
+          <ShoppingBag aria-hidden="true" size={20} strokeWidth={1.8} />
           تصفح المنتجات
         </Link>
 
         <Link
           href="/doctor"
-          className="pointer-events-auto flex h-[64px] w-[330px] items-center justify-center gap-3 rounded-[14px] bg-lime-300 px-8 text-[15px] font-black text-[#071109] shadow-[0_10px_28px_rgba(200,243,63,.28)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200"
+          className="pointer-events-auto flex h-[58px] w-[270px] items-center justify-center gap-3 rounded-[14px] bg-lime-300 px-6 text-[14px] font-black text-[#071109] shadow-[0_10px_28px_rgba(200,243,63,.28)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200"
           dir="rtl"
         >
-          <MessageCircle aria-hidden="true" size={23} strokeWidth={1.8} />
+          <MessageCircle aria-hidden="true" size={21} strokeWidth={1.8} />
           اسأل دكتور ArtVert
         </Link>
       </div>
