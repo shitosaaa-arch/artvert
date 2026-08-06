@@ -37,6 +37,8 @@ export type CatalogProductImage = {
 type LegacyProduct = (typeof legacyProducts)[number];
 
 export type CatalogProduct = LegacyProduct & {
+  price: number | null;
+  comparePrice: number | null;
   images: CatalogProductImage[];
 };
 
@@ -88,11 +90,43 @@ function toStringArray(
   return value;
 }
 
+function optionalLegacyNumber(
+  product: LegacyProduct,
+  field: "price" | "comparePrice",
+): number | null {
+  const value = (
+    product as LegacyProduct &
+      Record<string, unknown>
+  )[field];
+
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed)
+    ? parsed
+    : null;
+}
+
 function mapLegacyProduct(
   product: LegacyProduct,
 ): CatalogProduct {
   return {
     ...product,
+    price: optionalLegacyNumber(
+      product,
+      "price",
+    ),
+    comparePrice: optionalLegacyNumber(
+      product,
+      "comparePrice",
+    ),
     images: [
       {
         id: `legacy-${product.slug}-0`,
@@ -103,8 +137,8 @@ function mapLegacyProduct(
         objectFit: "CONTAIN",
         objectPosition: "CENTER",
         zoom: 100,
-        cropX: 0,
-        cropY: 0,
+        cropX: 50,
+        cropY: 50,
         rotation: 0,
         thumbnailUrl: null,
         webpUrl: null,
@@ -118,41 +152,62 @@ function mapLegacyProduct(
 function mapProduct(
   product: DatabaseProduct,
 ): CatalogProduct {
-  const orderedImages = [...product.images]
+  const orderedImages = [
+    ...product.images,
+  ]
     .sort((a, b) => {
-      if (a.isPrimary !== b.isPrimary) {
-        return a.isPrimary ? -1 : 1;
+      if (
+        a.isPrimary !==
+        b.isPrimary
+      ) {
+        return a.isPrimary
+          ? -1
+          : 1;
       }
 
-      return a.sortOrder - b.sortOrder;
+      return (
+        a.sortOrder -
+        b.sortOrder
+      );
     })
     .map(
-      (image): CatalogProductImage => ({
+      (
+        image,
+      ): CatalogProductImage => ({
         id: image.id,
         url:
           image.avifUrl ??
           image.webpUrl ??
           image.url,
         alt: image.alt,
-        sortOrder: image.sortOrder,
-        isPrimary: image.isPrimary,
-        objectFit: image.objectFit,
+        sortOrder:
+          image.sortOrder,
+        isPrimary:
+          image.isPrimary,
+        objectFit:
+          image.objectFit,
         objectPosition:
           image.objectPosition,
         zoom: image.zoom,
         cropX: image.cropX,
         cropY: image.cropY,
-        rotation: image.rotation,
-        thumbnailUrl: image.thumbnailUrl,
-        webpUrl: image.webpUrl,
-        avifUrl: image.avifUrl,
-        blurDataUrl: image.blurDataUrl,
+        rotation:
+          image.rotation,
+        thumbnailUrl:
+          image.thumbnailUrl,
+        webpUrl:
+          image.webpUrl,
+        avifUrl:
+          image.avifUrl,
+        blurDataUrl:
+          image.blurDataUrl,
       }),
     );
 
   const primaryImage =
     orderedImages.find(
-      (image) => image.isPrimary,
+      (image) =>
+        image.isPrimary,
     ) ?? orderedImages[0];
 
   if (!primaryImage) {
@@ -162,61 +217,95 @@ function mapProduct(
   }
 
   return {
-    id: product.legacyId ?? 0,
-    slug: product.entity.slug,
-    nameAr: product.nameAr,
-    nameEn: product.nameEn,
-    category: product.category,
-    image: primaryImage.url,
-    images: orderedImages,
+    id:
+      product.legacyId ??
+      0,
+    slug:
+      product.entity.slug,
+    nameAr:
+      product.nameAr,
+    nameEn:
+      product.nameEn,
+    category:
+      product.category,
+    image:
+      primaryImage.url,
+    images:
+      orderedImages,
     shortDescription:
       product.shortDescription,
-    description: product.description,
-    benefits: toStringArray(
-      product.benefits,
-      "benefits",
-    ),
-    composition: product.composition,
-    dosage: product.dosage,
-    packageSize: product.packageSize,
-    crops: toStringArray(
-      product.crops,
-      "crops",
-    ),
+    description:
+      product.description,
+    benefits:
+      toStringArray(
+        product.benefits,
+        "benefits",
+      ),
+    composition:
+      product.composition,
+    dosage:
+      product.dosage,
+    packageSize:
+      product.packageSize,
+    crops:
+      toStringArray(
+        product.crops,
+        "crops",
+      ),
+    price:
+      Number(
+        product.price,
+      ),
+    comparePrice:
+      product.comparePrice ===
+      null
+        ? null
+        : Number(
+            product.comparePrice,
+          ),
   };
 }
 
 export class ProductCatalog {
-  async list(): Promise<CatalogProduct[]> {
+  async list(): Promise<
+    CatalogProduct[]
+  > {
     if (
-      productCatalogSource() === "LEGACY"
+      productCatalogSource() ===
+      "LEGACY"
     ) {
       return legacyProducts.map(
         mapLegacyProduct,
       );
     }
 
-    const prisma = getPrismaClient();
+    const prisma =
+      getPrismaClient();
 
     const products =
-      await prisma.product.findMany({
-        where: {
-          entity: {
-            publicationState: "PUBLISHED",
-          },
-        },
-        include: {
-          entity: true,
-          images: {
-            orderBy: {
-              sortOrder: "asc",
+      await prisma.product.findMany(
+        {
+          where: {
+            entity: {
+              publicationState:
+                "PUBLISHED",
             },
           },
+          include: {
+            entity: true,
+            images: {
+              orderBy: {
+                sortOrder:
+                  "asc",
+              },
+            },
+          },
+          orderBy: {
+            legacyId:
+              "asc",
+          },
         },
-        orderBy: {
-          legacyId: "asc",
-        },
-      });
+      );
 
     if (
       products.length !==
@@ -227,16 +316,21 @@ export class ProductCatalog {
       );
     }
 
-    return products.map(mapProduct);
+    return products.map(
+      mapProduct,
+    );
   }
 
   async findBySlug(
     slug: string,
   ): Promise<CatalogProduct | null> {
     return (
-      (await this.list()).find(
+      (
+        await this.list()
+      ).find(
         (product) =>
-          product.slug === slug,
+          product.slug ===
+          slug,
       ) ?? null
     );
   }
