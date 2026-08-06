@@ -46,7 +46,7 @@ export function HomeHeroMobile() {
       {/* القسم العلوي (الدكتور والفقاعة) */}
       <div className="relative z-20 flex-1 w-full min-h-[480px]">
         
-        {/* صورة الدكتور: تم إنزاله للأسفل (-bottom-20) */}
+        {/* صورة الدكتور */}
         <div className="absolute -bottom-20 left-[-15px] z-20 w-[50%] max-w-[220px] h-[75%]">
           <Image
             src="/images/artvert-doctor-approved.png"
@@ -58,19 +58,19 @@ export function HomeHeroMobile() {
           />
         </div>
 
-        {/* فقاعة الدكتور: تم تنزيلها للأسفل (top-[58%]) وأقصى اليمين (right-2) لتكون فوق الشكارة الزرقاء */}
-        <div className="absolute right-2 top-[58%] z-30 w-[55%] max-w-[210px] rounded-[24px] bg-[#0f1a11]/85 px-4 py-3 text-right shadow-2xl backdrop-blur-md border border-white/10">
-          <p className="text-[11px] text-white/80">مرحباً بك</p>
-          <strong className="mt-0.5 block text-[15px] font-black text-[#8cd234]">
+        {/* فقاعة الدكتور: تم تطبيق تأثير الزجاج الشفاف (Glassmorphism) مع الحفاظ على المكان */}
+        <div className="absolute right-0 top-[54%] z-30 w-[55%] max-w-[210px] rounded-[24px] bg-[#0f1a11]/30 px-4 py-3 text-right shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-lg border border-white/20">
+          <p className="text-[11px] text-white/90 drop-shadow-md">مرحباً بك</p>
+          <strong className="mt-0.5 block text-[15px] font-black text-[#8cd234] drop-shadow-md">
             أنا دكتور ArtVert
           </strong>
-          <p className="mt-1 text-[11px] leading-5 text-white/80">
+          <p className="mt-1 text-[11px] leading-5 text-white/90 drop-shadow-md">
             سألني عن مشكلة نباتك وسأساعدك في<br />العلاج.
           </p>
         </div>
       </div>
 
-      {/* القسم السفلي: الأزرار والخدمات (بدون أي تغيير) */}
+      {/* القسم السفلي: الأزرار والخدمات */}
       <div className="relative z-30 flex flex-col gap-4 px-4 pb-12">
         
         <div className="grid grid-cols-2 gap-3">
