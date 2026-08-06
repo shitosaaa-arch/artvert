@@ -129,23 +129,7 @@ export function HomeHeroDesktop() {
           </Link>
         </div>
 
-        <div className="relative order-2 min-h-[500px]" dir="rtl">
-          <Link
-            href="/doctor"
-            className="absolute bottom-[42px] right-0 flex min-h-[56px] min-w-[315px] items-center justify-center gap-2 rounded-xl bg-lime-300 px-10 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200"
-          >
-            <MessageCircle aria-hidden="true" size={18} />
-            اسأل دكتور ArtVert
-          </Link>
-
-          <Link
-            href="/products"
-            className="absolute bottom-[42px] left-0 flex min-h-[56px] min-w-[295px] items-center justify-center gap-2 rounded-xl border border-white/12 bg-[#0b1a0e]/82 px-10 text-sm font-black text-white/88 backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#0b1a0e]/92 hover:text-white"
-          >
-            <ShoppingBag aria-hidden="true" size={18} />
-            تصفح المنتجات
-          </Link>
-        </div>
+        <div className="relative order-2 min-h-[500px]" aria-hidden="true" />
 
         <aside
           className="order-3 grid grid-cols-1 gap-2 self-center"
@@ -176,6 +160,30 @@ export function HomeHeroDesktop() {
             );
           })}
         </aside>
+      </div>
+
+
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-[126px] z-40 mx-auto flex w-[1088px] max-w-[calc(100%-64px)] items-center justify-between"
+        dir="ltr"
+      >
+        <Link
+          href="/products"
+          className="pointer-events-auto flex h-[64px] w-[295px] items-center justify-center gap-3 rounded-[14px] border border-white/12 bg-[#18261b]/94 px-8 text-[15px] font-black text-white shadow-[0_10px_28px_rgba(0,0,0,.34)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#1d2d20]"
+          dir="rtl"
+        >
+          <ShoppingBag aria-hidden="true" size={22} strokeWidth={1.8} />
+          تصفح المنتجات
+        </Link>
+
+        <Link
+          href="/doctor"
+          className="pointer-events-auto flex h-[64px] w-[330px] items-center justify-center gap-3 rounded-[14px] bg-lime-300 px-8 text-[15px] font-black text-[#071109] shadow-[0_10px_28px_rgba(200,243,63,.28)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200"
+          dir="rtl"
+        >
+          <MessageCircle aria-hidden="true" size={23} strokeWidth={1.8} />
+          اسأل دكتور ArtVert
+        </Link>
       </div>
 
       <div className="absolute inset-x-0 bottom-0 z-30 mx-auto grid w-full max-w-[1220px] grid-cols-4 gap-2 px-7 pb-4">
