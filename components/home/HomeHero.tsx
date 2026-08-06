@@ -98,7 +98,7 @@ export function HomeHero({
             fill
             priority
             sizes="100vw"
-            className="object-contain object-top lg:hidden"
+            className="object-cover object-center lg:hidden"
           />
 
           <Image
@@ -117,10 +117,10 @@ export function HomeHero({
         />
 
         <div
-          className="relative mx-auto grid min-h-[660px] w-full max-w-[1480px] gap-5 px-3 pb-32 pt-5 sm:px-6 lg:min-h-[650px] lg:grid-cols-[320px_minmax(500px,1fr)_150px] lg:items-center lg:px-7 lg:pb-24 xl:grid-cols-[340px_minmax(600px,1fr)_160px]"
+          className="relative mx-auto grid min-h-[720px] w-full max-w-[1480px] gap-4 px-3 pb-32 pt-4 sm:min-h-[760px] sm:px-6 lg:min-h-[650px] lg:grid-cols-[320px_minmax(500px,1fr)_150px] lg:items-center lg:gap-5 lg:px-7 lg:pb-24 lg:pt-5 xl:grid-cols-[340px_minmax(600px,1fr)_160px]"
           dir="ltr"
         >
-          <div className="relative order-2 mx-auto h-[390px] w-full max-w-[290px] self-end sm:h-[430px] sm:max-w-[320px] lg:order-1 lg:h-[520px] lg:max-w-[340px]">
+          <div className="relative order-1 mx-auto h-[430px] w-full max-w-[310px] self-end sm:h-[470px] sm:max-w-[340px] lg:order-1 lg:h-[520px] lg:max-w-[340px]">
             <div
               className="absolute bottom-0 left-1/2 h-8 w-[62%] -translate-x-1/2 rounded-[50%] bg-black/70 blur-xl"
               aria-hidden="true"
@@ -165,13 +165,13 @@ export function HomeHero({
           </div>
 
           <div
-            className="relative order-1 flex min-h-[150px] items-end self-center px-1 pb-3 sm:min-h-[180px] sm:px-3 lg:order-2 lg:min-h-[500px] lg:items-center lg:px-0 lg:pb-0"
+            className="relative order-2 flex min-h-[64px] items-center self-center px-1 sm:min-h-[72px] sm:px-3 lg:order-2 lg:min-h-[500px] lg:px-0"
             dir="rtl"
           >
-            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:absolute lg:inset-x-0 lg:bottom-[112px]">
+            <div className="grid w-full grid-cols-2 gap-2 sm:gap-3 lg:absolute lg:inset-x-0 lg:bottom-[88px] lg:flex lg:items-center lg:justify-between">
               <Link
                 href="/doctor"
-                className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200 sm:order-2 lg:absolute lg:right-0 lg:min-w-[210px]"
+                className="flex min-h-[50px] items-center justify-center gap-2 rounded-xl bg-lime-300 px-3 text-[12px] font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.25)] transition duration-300 hover:-translate-y-0.5 hover:bg-lime-200 sm:min-h-[52px] sm:px-5 sm:text-sm lg:absolute lg:right-0 lg:min-h-[56px] lg:min-w-[255px] lg:px-8"
               >
                 <MessageCircle aria-hidden="true" size={18} />
                 اسأل دكتور ArtVert
@@ -179,7 +179,7 @@ export function HomeHero({
 
               <Link
                 href="/products"
-                className="flex min-h-[52px] items-center justify-center gap-2 rounded-xl border border-white/12 bg-[#0b1a0e]/72 px-7 text-sm font-black text-white/88 backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#0b1a0e]/88 hover:text-white sm:order-1 lg:absolute lg:left-0 lg:min-w-[190px]"
+                className="flex min-h-[50px] items-center justify-center gap-2 rounded-xl border border-white/12 bg-[#0b1a0e]/82 px-3 text-[12px] font-black text-white/88 backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#0b1a0e]/92 hover:text-white sm:min-h-[52px] sm:px-5 sm:text-sm lg:absolute lg:left-0 lg:min-h-[56px] lg:min-w-[235px] lg:px-8"
               >
                 <ShoppingBag aria-hidden="true" size={18} />
                 تصفح المنتجات
