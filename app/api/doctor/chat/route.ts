@@ -245,6 +245,13 @@ async function loadPublishedProducts(): Promise<
       },
       include: {
         entity: true,
+        images: {
+          orderBy: [
+            { isPrimary: "desc" },
+            { sortOrder: "asc" },
+          ],
+          take: 1,
+        },
       },
       orderBy: {
         nameAr: "asc",
@@ -267,6 +274,16 @@ async function loadPublishedProducts(): Promise<
       ),
     crops:
       stringArray(product.crops),
+    price: Number(product.price),
+    compareAtPrice:
+      product.comparePrice === null
+        ? undefined
+        : Number(product.comparePrice),
+    currency: "EGP",
+    image:
+      product.images[0]?.url,
+    productUrl:
+      `/products/${product.entity.slug}`,
     warnings: [],
   }));
 }
@@ -335,7 +352,17 @@ function productRecommendationText(
           product.composition?.trim() ||
           "منتج مناسب للحالة وفق البيانات المسجلة في ArtVert.";
 
-        return `• ${product.nameAr}: ${reason}`;
+        const priceText =
+          typeof product.price === "number"
+            ? ` — ${product.price.toLocaleString("ar-EG")} ${product.currency ?? "جنيه"}`
+            : "";
+
+        const linkText =
+          product.productUrl
+            ? `\n  ${product.productUrl}`
+            : "";
+
+        return `• ${product.nameAr}${priceText}: ${reason}${linkText}`;
       });
 
   return [

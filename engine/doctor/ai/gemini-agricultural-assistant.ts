@@ -25,6 +25,13 @@ export type AgriculturalProductContext = {
   dosage?: string;
   benefits?: string[];
   crops?: string[];
+  price?: number;
+  compareAtPrice?: number;
+  currency?: string;
+  image?: string;
+  productUrl?: string;
+  inStock?: boolean;
+  stockQuantity?: number;
   reason?: string;
   warnings?: string[];
 };
