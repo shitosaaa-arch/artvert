@@ -7,6 +7,7 @@ import "../globals.css";
 
 import { CartProvider } from "@/components/cart/CartProvider";
 import SiteChrome from "@/components/SiteChrome";
+import { LanguageProvider } from "@/components/i18n/LanguageProvider";
 
 const cairo = Cairo({
   subsets: ["arabic"],
@@ -88,16 +89,19 @@ export default function PublicRootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div
-      dir="rtl"
-      className={`${cairo.className} min-h-screen bg-[#0a150f] text-white font-sans`}
-    >
-      <CartProvider>
-        <SiteChrome>{children}</SiteChrome>
-      </CartProvider>
+    <html lang="ar" dir="rtl">
+      <body
+        className={`${cairo.className} min-h-screen bg-[#0a150f] font-sans text-white`}
+      >
+        <LanguageProvider>
+          <CartProvider>
+            <SiteChrome>{children}</SiteChrome>
+          </CartProvider>
 
-      <Analytics />
-      <SpeedInsights />
-    </div>
+          <Analytics />
+          <SpeedInsights />
+        </LanguageProvider>
+      </body>
+    </html>
   );
 }

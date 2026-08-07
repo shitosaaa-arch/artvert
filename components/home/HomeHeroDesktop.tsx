@@ -13,28 +13,38 @@ import {
   Users,
 } from "lucide-react";
 
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 const services = [
   {
-    title: "تشخيص المشاكل",
-    description: "تشخيص ذكي وسريع",
+    titleAr: "تشخيص المشاكل",
+    titleEn: "Problem Diagnosis",
+    descriptionAr: "تشخيص ذكي وسريع",
+    descriptionEn: "Smart and fast diagnosis",
     href: "/doctor",
     icon: Sprout,
   },
   {
-    title: "برامج زراعية",
-    description: "برامج رعاية متخصصة",
+    titleAr: "برامج زراعية",
+    titleEn: "Plant Care",
+    descriptionAr: "برامج رعاية متخصصة",
+    descriptionEn: "Specialized care programs",
     href: "/plant-care",
     icon: Leaf,
   },
   {
-    title: "منتجات مضمونة",
-    description: "حلول ArtVert الأصلية",
+    titleAr: "منتجات مضمونة",
+    titleEn: "Trusted Products",
+    descriptionAr: "حلول ArtVert الأصلية",
+    descriptionEn: "Original ArtVert solutions",
     href: "/products",
     icon: ShoppingBag,
   },
   {
-    title: "دعم فني",
-    description: "خبراؤنا معك دائمًا",
+    titleAr: "دعم فني",
+    titleEn: "Technical Support",
+    descriptionAr: "خبراؤنا معك دائمًا",
+    descriptionEn: "Our experts are always with you",
     href: "/contact",
     icon: Headphones,
   },
@@ -42,32 +52,70 @@ const services = [
 
 const trustCards = [
   {
-    title: "جودة مضمونة",
-    description: "منتجات عالية الجودة مضمونة الفعالية",
+    titleAr: "جودة مضمونة",
+    titleEn: "Guaranteed Quality",
+    descriptionAr: "منتجات عالية الجودة مضمونة الفعالية",
+    descriptionEn: "High-quality products with reliable performance",
     icon: ShieldCheck,
     type: "standard",
   },
   {
-    title: "آمنة على النباتات",
-    description: "تركيبات متوازنة وآمنة على المحاصيل والبيئة",
+    titleAr: "آمنة على النباتات",
+    titleEn: "Plant Safe",
+    descriptionAr: "تركيبات متوازنة وآمنة على المحاصيل والبيئة",
+    descriptionEn: "Balanced formulas designed for crops and the environment",
     icon: Leaf,
     type: "standard",
   },
   {
-    title: "تكنولوجيا متقدمة",
-    description: "أحدث التقنيات العالمية في خدمة الزراعة",
+    titleAr: "تكنولوجيا متقدمة",
+    titleEn: "Advanced Technology",
+    descriptionAr: "أحدث التقنيات العالمية في خدمة الزراعة",
+    descriptionEn: "Modern technologies serving agriculture",
     icon: Sprout,
     type: "standard",
   },
   {
-    title: "أكثر من 10,000 مزارع",
-    description: "يثقون بدكتور ArtVert وخبرائنا الزراعيين",
+    titleAr: "أكثر من 10,000 مزارع",
+    titleEn: "Trusted by 10,000+ Growers",
+    descriptionAr: "يثقون بدكتور ArtVert وخبرائنا الزراعيين",
+    descriptionEn: "Trust Doctor ArtVert and our agricultural experts",
     icon: Users,
     type: "farmers",
   },
 ] as const;
 
+const translations = {
+  AR: {
+    welcome: "مرحبًا بك",
+    doctorIntro: "أنا دكتور ArtVert",
+    doctorDescription:
+      "اسألني عن مشكلة نباتك وسأساعدك في التشخيص والعلاج.",
+    doctorAria: "افتح دكتور ArtVert",
+    doctorImageAlt: "دكتور ArtVert الخبير الزراعي",
+    servicesAria: "خدمات ArtVert",
+    askDoctor: "اسأل دكتور ArtVert",
+    browseProducts: "تصفح المنتجات",
+    fiveStars: "تقييم خمس نجوم",
+  },
+  EN: {
+    welcome: "Welcome",
+    doctorIntro: "I’m Doctor ArtVert",
+    doctorDescription:
+      "Ask me about your plant problem and I’ll help you with diagnosis and treatment.",
+    doctorAria: "Open Doctor ArtVert",
+    doctorImageAlt: "Doctor ArtVert agricultural expert",
+    servicesAria: "ArtVert Services",
+    askDoctor: "Ask Doctor ArtVert",
+    browseProducts: "Browse Products",
+    fiveStars: "Five-star rating",
+  },
+} as const;
+
 export function HomeHeroDesktop() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
   return (
     <section className="relative isolate hidden min-h-[calc(100vh-62px)] overflow-hidden border-b border-white/10 lg:block">
       <div aria-hidden="true" className="absolute inset-0 -z-40">
@@ -100,12 +148,12 @@ export function HomeHeroDesktop() {
             className="absolute right-[-42px] top-16 z-30 w-[190px] rounded-2xl border border-lime-300/20 bg-[#0b1a0e]/92 px-4 py-3 text-right shadow-[0_0_24px_rgba(200,243,63,0.16)] backdrop-blur-xl"
             dir="rtl"
           >
-            <p className="text-[10px] font-bold text-white/75">مرحبًا بك</p>
+            <p className="text-[10px] font-bold text-white/75">{t.welcome}</p>
             <strong className="mt-1 block text-[13px] font-black text-lime-300">
-              أنا دكتور ArtVert
+              {t.doctorIntro}
             </strong>
             <p className="mt-1.5 text-[9px] leading-[17px] text-white/60">
-              اسألني عن مشكلة نباتك وسأساعدك في التشخيص والعلاج.
+              {t.doctorDescription}
             </p>
             <span
               aria-hidden="true"
@@ -115,12 +163,12 @@ export function HomeHeroDesktop() {
 
           <Link
             href="/doctor"
-            aria-label="افتح دكتور ArtVert"
+            aria-label={t.doctorAria}
             className="absolute inset-x-0 bottom-0 z-20 block h-[500px] rounded-[2rem] outline-none focus-visible:ring-4 focus-visible:ring-lime-300/50"
           >
             <Image
               src="/images/artvert-doctor-approved.png"
-              alt="دكتور ArtVert الخبير الزراعي"
+              alt={t.doctorImageAlt}
               fill
               priority
               sizes="340px"
@@ -133,7 +181,7 @@ export function HomeHeroDesktop() {
 
         <aside
           className="order-3 grid grid-cols-1 gap-2 self-center"
-          aria-label="خدمات ArtVert"
+          aria-label={t.servicesAria}
           dir="rtl"
         >
           {services.map((service) => {
@@ -141,7 +189,7 @@ export function HomeHeroDesktop() {
 
             return (
               <Link
-                key={`${service.href}-${service.title}`}
+                key={`${service.href}-${service.titleAr}`}
                 href={service.href}
                 className="group flex min-h-[92px] flex-col items-center justify-center gap-3 rounded-2xl border border-white/8 bg-[#0b1a0e]/58 px-3 text-center backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-lime-300/30 hover:bg-[#0b1a0e]/75 hover:shadow-[0_10px_20px_rgba(200,243,63,0.1)]"
               >
@@ -150,10 +198,10 @@ export function HomeHeroDesktop() {
                 </div>
                 <div>
                   <span className="block text-[12px] font-black leading-4 text-white">
-                    {service.title}
+                    {isArabic ? service.titleAr : service.titleEn}
                   </span>
                   <small className="mt-1 block text-[9px] leading-4 text-white/48">
-                    {service.description}
+                    {isArabic ? service.descriptionAr : service.descriptionEn}
                   </small>
                 </div>
               </Link>
@@ -172,7 +220,7 @@ export function HomeHeroDesktop() {
           className="pointer-events-auto flex h-[40px] w-[195px] items-center justify-center gap-2 rounded-full bg-[#8cd234] px-4 text-[12px] font-black text-[#071109] shadow-[0_12px_32px_rgba(140,210,52,0.35)] transition duration-300 hover:-translate-y-0.5 hover:bg-[#7bc02a]"
         >
           <MessageCircle aria-hidden="true" size={17} strokeWidth={1.8} />
-          اسأل دكتور ArtVert
+          {t.askDoctor}
         </Link>
 
         <Link
@@ -180,7 +228,7 @@ export function HomeHeroDesktop() {
           className="pointer-events-auto flex h-[40px] w-[195px] items-center justify-center gap-2 rounded-full border border-white/20 bg-[#121c15]/85 px-4 text-[12px] font-black text-white shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-300 hover:-translate-y-0.5 hover:border-lime-300/40 hover:bg-[#18261b]"
         >
           <ShoppingBag aria-hidden="true" size={16} strokeWidth={1.8} />
-          تصفح المنتجات
+          {t.browseProducts}
         </Link>
       </div>
       {/* نهاية منطقة الأزرار */}
@@ -192,7 +240,7 @@ export function HomeHeroDesktop() {
 
           return (
             <article
-              key={card.title}
+              key={card.titleAr}
               className={[
                 "flex min-h-[82px] items-center gap-3 rounded-[18px] border px-4 py-3 backdrop-blur-xl transition duration-300",
                 featured
@@ -206,15 +254,15 @@ export function HomeHeroDesktop() {
               </div>
               <div className="min-w-0">
                 <h2 className="text-[12px] font-black leading-5 text-white">
-                  {card.title}
+                  {isArabic ? card.titleAr : card.titleEn}
                 </h2>
                 <p className="mt-0.5 text-[9px] leading-4 text-white/58">
-                  {card.description}
+                  {isArabic ? card.descriptionAr : card.descriptionEn}
                 </p>
                 {featured && (
                   <div
                     className="mt-1 flex items-center gap-0.5 text-lime-300"
-                    aria-label="تقييم خمس نجوم"
+                    aria-label={t.fiveStars}
                   >
                     {[1, 2, 3, 4, 5].map((star) => (
                       <Star

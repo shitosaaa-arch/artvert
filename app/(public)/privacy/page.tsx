@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -10,36 +12,95 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 const sections = [
   {
     icon: ShieldCheck,
-    title: "مقدمة",
-    text: "تحرص ArtVert Egypt على حماية خصوصية عملائها وزوار الموقع، ونلتزم باستخدام البيانات بطريقة آمنة لتحسين تجربة المستخدم وتقديم أفضل خدمة.",
+    titleAr: "مقدمة",
+    titleEn: "Introduction",
+    textAr:
+      "تحرص ArtVert Egypt على حماية خصوصية عملائها وزوار الموقع، ونلتزم باستخدام البيانات بطريقة آمنة لتحسين تجربة المستخدم وتقديم أفضل خدمة.",
+    textEn:
+      "ArtVert Egypt is committed to protecting the privacy of its customers and website visitors, and we use data securely to improve the user experience and provide the best possible service.",
   },
   {
     icon: Database,
-    title: "البيانات التي يتم جمعها",
-    text: "قد يتم جمع بيانات التواصل مثل الاسم ورقم الهاتف عند طلب المنتجات أو التواصل مع فريق الدعم.",
+    titleAr: "البيانات التي يتم جمعها",
+    titleEn: "Data We Collect",
+    textAr:
+      "قد يتم جمع بيانات التواصل مثل الاسم ورقم الهاتف عند طلب المنتجات أو التواصل مع فريق الدعم.",
+    textEn:
+      "Contact information such as name and phone number may be collected when ordering products or contacting the support team.",
   },
   {
     icon: UserRoundCheck,
-    title: "استخدام البيانات",
-    text: "تستخدم البيانات للرد على الاستفسارات، متابعة الطلبات، وتحسين خدمات ومنتجات الشركة.",
+    titleAr: "استخدام البيانات",
+    titleEn: "How We Use Data",
+    textAr:
+      "تستخدم البيانات للرد على الاستفسارات، متابعة الطلبات، وتحسين خدمات ومنتجات الشركة.",
+    textEn:
+      "Data is used to respond to inquiries, follow up on orders, and improve the company’s services and products.",
   },
   {
     icon: LockKeyhole,
-    title: "حماية المعلومات",
-    text: "نحرص على حماية معلومات العملاء وعدم مشاركتها مع أي جهة خارجية بدون موافقة.",
+    titleAr: "حماية المعلومات",
+    titleEn: "Information Protection",
+    textAr:
+      "نحرص على حماية معلومات العملاء وعدم مشاركتها مع أي جهة خارجية بدون موافقة.",
+    textEn:
+      "We take care to protect customer information and do not share it with external parties without consent.",
   },
 ] as const;
 
 const commitments = [
-  "استخدام البيانات فقط للأغراض المرتبطة بالخدمة والطلب.",
-  "اتخاذ إجراءات مناسبة لحماية المعلومات من الوصول غير المصرح به.",
-  "عدم بيع بيانات العملاء أو مشاركتها لأغراض تسويقية خارجية.",
+  {
+    ar: "استخدام البيانات فقط للأغراض المرتبطة بالخدمة والطلب.",
+    en: "Use data only for purposes related to the service and order.",
+  },
+  {
+    ar: "اتخاذ إجراءات مناسبة لحماية المعلومات من الوصول غير المصرح به.",
+    en: "Take appropriate measures to protect information from unauthorized access.",
+  },
+  {
+    ar: "عدم بيع بيانات العملاء أو مشاركتها لأغراض تسويقية خارجية.",
+    en: "Do not sell customer data or share it for external marketing purposes.",
+  },
 ] as const;
 
+const translations = {
+  AR: {
+    privacySecurity: "الخصوصية والأمان",
+    title: "سياسة الخصوصية",
+    intro:
+      "نوضح هنا كيفية التعامل مع بيانات العملاء وزوار موقع ArtVert Egypt وحمايتها.",
+    commitmentsTitle: "التزاماتنا تجاه بياناتك",
+    commitmentsSub: "مبادئ أساسية نتبعها في التعامل مع المعلومات",
+    question: "لديك استفسار؟",
+    contactPrivacy: "تواصل معنا بخصوص الخصوصية",
+    contactText:
+      "لو عندك سؤال عن بياناتك أو طريقة استخدامها، تقدر تتواصل مع فريق ArtVert مباشرة.",
+    contactUs: "تواصل معنا",
+  },
+  EN: {
+    privacySecurity: "Privacy & Security",
+    title: "Privacy Policy",
+    intro:
+      "Here we explain how ArtVert Egypt handles and protects customer and website visitor data.",
+    commitmentsTitle: "Our Commitments to Your Data",
+    commitmentsSub: "Core principles we follow when handling information",
+    question: "Have a Question?",
+    contactPrivacy: "Contact Us About Privacy",
+    contactText:
+      "If you have a question about your data or how it is used, you can contact the ArtVert team directly.",
+    contactUs: "Contact Us",
+  },
+} as const;
+
 export default function PrivacyPage() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
   return (
     <main
       className="relative min-h-screen overflow-hidden bg-[#061008] py-10 text-white font-sans sm:py-14 lg:py-16"
@@ -61,15 +122,15 @@ export default function PrivacyPage() {
         <section className="text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
             <ShieldCheck size={16} />
-            الخصوصية والأمان
+            {t.privacySecurity}
           </span>
 
           <h1 className="mt-5 text-3xl font-black leading-tight text-white sm:mt-6 sm:text-5xl">
-            سياسة الخصوصية
+            {t.title}
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-8 text-white/68 sm:mt-6 sm:text-lg">
-            نوضح هنا كيفية التعامل مع بيانات العملاء وزوار موقع ArtVert Egypt وحمايتها.
+            {t.intro}
           </p>
         </section>
 
@@ -80,7 +141,7 @@ export default function PrivacyPage() {
 
               return (
                 <article
-                  key={section.title}
+                  key={section.titleAr}
                   className="group rounded-[22px] border border-white/[.06] bg-white/[.025] p-4 transition duration-300 hover:border-lime-300/20 hover:bg-white/[.04] sm:p-6"
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -91,7 +152,7 @@ export default function PrivacyPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3">
                         <h2 className="text-xl font-black text-white sm:text-2xl">
-                          {section.title}
+                          {isArabic ? section.titleAr : section.titleEn}
                         </h2>
 
                         <span className="text-2xl font-black text-white/[.07]">
@@ -100,7 +161,7 @@ export default function PrivacyPage() {
                       </div>
 
                       <p className="mt-3 text-sm leading-8 text-white/60 sm:text-base">
-                        {section.text}
+                        {isArabic ? section.textAr : section.textEn}
                       </p>
                     </div>
                   </div>
@@ -118,10 +179,10 @@ export default function PrivacyPage() {
 
             <div>
               <h2 className="text-xl font-black text-white sm:text-2xl">
-                التزاماتنا تجاه بياناتك
+                {t.commitmentsTitle}
               </h2>
               <p className="mt-1 text-xs text-white/40">
-                مبادئ أساسية نتبعها في التعامل مع المعلومات
+                {t.commitmentsSub}
               </p>
             </div>
           </div>
@@ -129,7 +190,7 @@ export default function PrivacyPage() {
           <div className="mt-5 grid gap-3">
             {commitments.map((item) => (
               <div
-                key={item}
+                key={item.ar}
                 className="flex items-start gap-3 rounded-2xl border border-white/[.06] bg-white/[.025] p-4"
               >
                 <CheckCircle2
@@ -138,7 +199,7 @@ export default function PrivacyPage() {
                 />
 
                 <p className="text-sm leading-7 text-white/64">
-                  {item}
+                  {isArabic ? item.ar : item.en}
                 </p>
               </div>
             ))}
@@ -148,22 +209,22 @@ export default function PrivacyPage() {
         <section className="mt-6 rounded-[28px] border border-lime-300/20 bg-[linear-gradient(135deg,rgba(200,243,63,.08),rgba(11,26,14,.92))] p-5 text-center shadow-[0_0_40px_rgba(200,243,63,.10)] backdrop-blur-xl sm:mt-8 sm:p-8">
           <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
             <Mail size={15} />
-            لديك استفسار؟
+            {t.question}
           </span>
 
           <h2 className="mt-5 text-2xl font-black text-white sm:text-3xl">
-            تواصل معنا بخصوص الخصوصية
+            {t.contactPrivacy}
           </h2>
 
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/60">
-            لو عندك سؤال عن بياناتك أو طريقة استخدامها، تقدر تتواصل مع فريق ArtVert مباشرة.
+            {t.contactText}
           </p>
 
           <Link
             href="/contact"
             className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.22)] transition hover:-translate-y-0.5 hover:bg-lime-200"
           >
-            تواصل معنا
+            {t.contactUs}
             <ArrowLeft size={16} />
           </Link>
         </section>

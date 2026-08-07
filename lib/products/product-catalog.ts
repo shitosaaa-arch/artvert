@@ -34,24 +34,27 @@ export type CatalogProductImage = {
   blurDataUrl: string | null;
 };
 
-type LegacyProduct = (typeof legacyProducts)[number];
+type LegacyProduct =
+  (typeof legacyProducts)[number];
 
-export type CatalogProduct = LegacyProduct & {
-  price: number | null;
-  comparePrice: number | null;
-  images: CatalogProductImage[];
-};
+export type CatalogProduct =
+  LegacyProduct & {
+    price: number | null;
+    comparePrice: number | null;
+    images: CatalogProductImage[];
+  };
 
-type DatabaseProduct = Prisma.ProductGetPayload<{
-  include: {
-    entity: true;
-    images: {
-      orderBy: {
-        sortOrder: "asc";
+type DatabaseProduct =
+  Prisma.ProductGetPayload<{
+    include: {
+      entity: true;
+      images: {
+        orderBy: {
+          sortOrder: "asc";
+        };
       };
     };
-  };
-}>;
+  }>;
 
 export function productCatalogSource():
   | "LEGACY"
@@ -114,6 +117,24 @@ function optionalLegacyNumber(
     : null;
 }
 
+function findLegacyProductBySlug(
+  slug: string,
+): LegacyProduct {
+  const legacyProduct =
+    legacyProducts.find(
+      (product) =>
+        product.slug === slug,
+    );
+
+  if (!legacyProduct) {
+    throw new Error(
+      `No legacy product translation fallback found for slug: ${slug}`,
+    );
+  }
+
+  return legacyProduct;
+}
+
 function mapLegacyProduct(
   product: LegacyProduct,
 ): CatalogProduct {
@@ -123,10 +144,11 @@ function mapLegacyProduct(
       product,
       "price",
     ),
-    comparePrice: optionalLegacyNumber(
-      product,
-      "comparePrice",
-    ),
+    comparePrice:
+      optionalLegacyNumber(
+        product,
+        "comparePrice",
+      ),
     images: [
       {
         id: `legacy-${product.slug}-0`,
@@ -216,6 +238,11 @@ function mapProduct(
     );
   }
 
+  const legacyProduct =
+    findLegacyProductBySlug(
+      product.entity.slug,
+    );
+
   return {
     id:
       product.legacyId ??
@@ -226,32 +253,56 @@ function mapProduct(
       product.nameAr,
     nameEn:
       product.nameEn,
+
     category:
       product.category,
+    categoryEn:
+      legacyProduct.categoryEn,
+
     image:
       primaryImage.url,
     images:
       orderedImages,
+
     shortDescription:
       product.shortDescription,
+    shortDescriptionEn:
+      legacyProduct.shortDescriptionEn,
+
     description:
       product.description,
+    descriptionEn:
+      legacyProduct.descriptionEn,
+
     benefits:
       toStringArray(
         product.benefits,
         "benefits",
       ),
+    benefitsEn:
+      legacyProduct.benefitsEn,
+
     composition:
       product.composition,
+    compositionEn:
+      legacyProduct.compositionEn,
+
     dosage:
       product.dosage,
+    dosageEn:
+      legacyProduct.dosageEn,
+
     packageSize:
       product.packageSize,
+
     crops:
       toStringArray(
         product.crops,
         "crops",
       ),
+    cropsEn:
+      legacyProduct.cropsEn,
+
     price:
       Number(
         product.price,
@@ -323,7 +374,9 @@ export class ProductCatalog {
 
   async findBySlug(
     slug: string,
-  ): Promise<CatalogProduct | null> {
+  ): Promise<
+    CatalogProduct | null
+  > {
     return (
       (
         await this.list()

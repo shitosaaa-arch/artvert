@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import AddToCartButton from "@/components/cart/AddToCartButton";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import AnimatedSection from "@/components/AnimatedSection";
 import type {
   CatalogProduct,
@@ -41,8 +42,8 @@ function toNumber(
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat("ar-EG", {
+function formatMoney(value: number, isArabic: boolean) {
+  return new Intl.NumberFormat(isArabic ? "ar-EG" : "en-EG", {
     style: "currency",
     currency: "EGP",
     maximumFractionDigits: 2,
@@ -68,6 +69,8 @@ function ProductCard({
 }: {
   product: ProductWithCardData;
 }) {
+  const { isArabic } = useLanguage();
+
   const image = getPrimaryImage(product);
   const imageUrl = image?.url ?? product.image;
   const price = toNumber(product.price);
@@ -88,12 +91,12 @@ function ProductCard({
         <Link
           href={`/products/${product.slug}`}
           className="block"
-          aria-label={`عرض ${product.nameAr}`}
+          aria-label={`${isArabic ? "عرض" : "View"} ${isArabic ? product.nameAr : product.nameEn}`}
         >
           <div className="relative aspect-[4/3] w-full overflow-hidden border-b border-white/[.06] bg-[#102819]">
             <Image
               src={imageUrl}
-              alt={image?.alt || product.nameAr}
+              alt={image?.alt || (isArabic ? product.nameAr : product.nameEn)}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
               className="object-cover object-center transition duration-500 group-hover:scale-[1.03] group-hover:brightness-105"
@@ -111,7 +114,7 @@ function ProductCard({
           {hasDiscount ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-lime-300 px-3 py-1.5 text-[11px] font-black text-[#071109] shadow-lg">
               <BadgePercent aria-hidden="true" size={13} />
-              خصم {discount}%
+              {isArabic ? "خصم" : "Save"} {discount}%
             </span>
           ) : null}
         </div>
@@ -129,14 +132,14 @@ function ProductCard({
       <div className="flex flex-1 flex-col p-4 sm:p-5">
         <Link href={`/products/${product.slug}`} className="block">
           <h2 className="text-xl font-black leading-8 text-white transition group-hover:text-lime-300">
-            {product.nameAr}
+            {isArabic ? product.nameAr : product.nameEn}
           </h2>
 
           <p
             className="mt-1 truncate text-xs font-bold uppercase tracking-[.13em] text-white/38"
-            dir="ltr"
+            dir={isArabic ? "ltr" : "rtl"}
           >
-            {product.nameEn}
+            {isArabic ? product.nameEn : product.nameAr}
           </p>
         </Link>
 
@@ -148,17 +151,17 @@ function ProductCard({
           {price !== null && price > 0 ? (
             <div>
               <p className="text-[10px] font-bold text-white/38">
-                السعر
+                {isArabic ? "السعر" : "Price"}
               </p>
 
               <div className="mt-1 flex flex-wrap items-baseline gap-2">
                 <strong className="text-lg font-black text-lime-300">
-                  {formatMoney(price)}
+                  {formatMoney(price, isArabic)}
                 </strong>
 
                 {hasDiscount && comparePrice !== null ? (
                   <span className="text-xs font-bold text-white/32 line-through">
-                    {formatMoney(comparePrice)}
+                    {formatMoney(comparePrice, isArabic)}
                   </span>
                 ) : null}
               </div>
@@ -166,11 +169,11 @@ function ProductCard({
           ) : (
             <div>
               <p className="text-[10px] font-bold text-white/38">
-                السعر
+                {isArabic ? "السعر" : "Price"}
               </p>
 
               <strong className="mt-1 block text-sm font-black text-lime-300">
-                يُحدد عند الطلب
+                {isArabic ? "يُحدد عند الطلب" : "Price on request"}
               </strong>
             </div>
           )}
@@ -179,7 +182,7 @@ function ProductCard({
             href={`/products/${product.slug}`}
             className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/10 px-4 text-xs font-black text-lime-300 transition hover:border-lime-300/50 hover:bg-lime-300/15"
           >
-            عرض
+            {isArabic ? "عرض" : "View"}
             <ArrowLeft aria-hidden="true" size={15} />
           </Link>
         </div>
@@ -202,24 +205,54 @@ function ProductCard({
 }
 
 const categories = [
-  "الكل",
-  "المنشطات الحيوية",
-  "الأحماض الأمينية",
-  "المبيدات الحشرية",
-  "الأسمدة المتخصصة",
-  "محسنات التربة",
-  "الزراعة المنزلية",
-  "العناصر الصغرى",
-  "الأسمدة العضوية",
-  "أسمدة الكالسيوم",
-  "محسنات الامتصاص",
-  "العناصر الكبرى والصغرى",
-  "الأسمدة المركبة",
-  "منشطات الجذور",
-  "منظمات النمو",
+  { ar: "الكل", en: "All" },
+  { ar: "المنشطات الحيوية", en: "Biostimulants" },
+  { ar: "الأحماض الأمينية", en: "Amino Acids" },
+  { ar: "المبيدات الحشرية", en: "Insecticides" },
+  { ar: "الأسمدة المتخصصة", en: "Specialty Fertilizers" },
+  { ar: "محسنات التربة", en: "Soil Improvers" },
+  { ar: "الزراعة المنزلية", en: "Home Gardening" },
+  { ar: "العناصر الصغرى", en: "Micronutrients" },
+  { ar: "الأسمدة العضوية", en: "Organic Fertilizers" },
+  { ar: "أسمدة الكالسيوم", en: "Calcium Fertilizers" },
+  { ar: "محسنات الامتصاص", en: "Absorption Enhancers" },
+  { ar: "العناصر الكبرى والصغرى", en: "Macro & Micronutrients" },
+  { ar: "الأسمدة المركبة", en: "Compound Fertilizers" },
+  { ar: "منشطات الجذور", en: "Root Stimulants" },
+  { ar: "منظمات النمو", en: "Growth Regulators" },
 ] as const;
 
+const translations = {
+  AR: {
+    catalog: "كتالوج ArtVert",
+    products: "منتجات",
+    intro: "حلول زراعية متخصصة لتغذية النبات، تحسين النمو، حماية المحاصيل، ورفع الإنتاجية.",
+    searchPlaceholder: "ابحث باسم المنتج أو الوصف...",
+    productCount: "عدد المنتجات:",
+    clearFilters: "مسح التصفية",
+    loadErrorTitle: "تعذر تحميل المنتجات",
+    loadErrorText: "تأكد أن مسار /api/products يعمل ثم أعد تحميل الصفحة.",
+    noProductsTitle: "لا توجد منتجات مطابقة",
+    noProductsText: "جرّب كلمة بحث مختلفة أو اختر قسمًا آخر.",
+  },
+  EN: {
+    catalog: "ArtVert Catalog",
+    products: "Products",
+    intro: "Specialized agricultural solutions for plant nutrition, improved growth, crop protection, and higher productivity.",
+    searchPlaceholder: "Search by product name or description...",
+    productCount: "Products:",
+    clearFilters: "Clear filters",
+    loadErrorTitle: "Unable to load products",
+    loadErrorText: "Make sure /api/products is working, then reload the page.",
+    noProductsTitle: "No matching products",
+    noProductsText: "Try a different search term or choose another category.",
+  },
+} as const;
+
 export default function ProductsPage() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
   const [
     products,
     setProducts,
@@ -349,7 +382,7 @@ export default function ProductsPage() {
   return (
     <main
       className="relative min-h-screen overflow-hidden bg-[#061008] py-10 text-white font-sans sm:py-14"
-      dir="rtl"
+      dir={isArabic ? "rtl" : "ltr"}
     >
       {/* شبكة الخلفية الخفيفة المدمجة مع التصميم (Subtle Grid Overlay) */}
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_15%_6%,rgba(143,202,45,.12),transparent_25%),radial-gradient(circle_at_88%_18%,rgba(38,164,83,.12),transparent_27%),linear-gradient(145deg,#02150d_0%,#063220_48%,#02180f_100%)]" />
@@ -371,21 +404,18 @@ export default function ProductsPage() {
                 aria-hidden="true"
                 size={16}
               />
-              كتالوج ArtVert
+              {t.catalog}
             </span>
 
             <h1 className="mt-6 text-4xl font-black text-white sm:text-5xl lg:text-6xl">
-              منتجات{" "}
+              {t.products}{" "}
               <span className="text-lime-300 drop-shadow-[0_0_25px_rgba(200,243,63,0.3)]">
                 ArtVert Egypt
               </span>
             </h1>
 
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-white/80">
-              حلول زراعية متخصصة
-              لتغذية النبات، تحسين
-              النمو، حماية المحاصيل،
-              ورفع الإنتاجية.
+              {t.intro}
             </p>
           </section>
         </AnimatedSection>
@@ -395,12 +425,15 @@ export default function ProductsPage() {
             <Search
               aria-hidden="true"
               size={20}
-              className="absolute right-5 top-1/2 -translate-y-1/2 text-lime-300"
+              className={[
+                "absolute top-1/2 -translate-y-1/2 text-lime-300",
+                isArabic ? "right-5" : "left-5",
+              ].join(" ")}
             />
 
             <input
               type="search"
-              placeholder="ابحث باسم المنتج أو الوصف..."
+              placeholder={t.searchPlaceholder}
               value={search}
               onChange={(event) =>
                 setSearch(
@@ -408,7 +441,10 @@ export default function ProductsPage() {
                     .value,
                 )
               }
-              className="h-14 w-full rounded-2xl border border-lime-300/20 bg-[#0b1a0e]/90 pr-12 pl-5 text-base text-white outline-none backdrop-blur-xl transition placeholder:text-white/40 focus:border-lime-300/60 focus:ring-4 focus:ring-lime-300/10 shadow-lg"
+              className={[
+                "h-14 w-full rounded-2xl border border-lime-300/20 bg-[#0b1a0e]/90 text-base text-white outline-none backdrop-blur-xl transition placeholder:text-white/40 focus:border-lime-300/60 focus:ring-4 focus:ring-lime-300/10 shadow-lg",
+                isArabic ? "pr-12 pl-5" : "pl-12 pr-5",
+              ].join(" ")}
             />
           </div>
         </AnimatedSection>
@@ -419,15 +455,15 @@ export default function ProductsPage() {
               (item) => {
                 const active =
                   category ===
-                  item;
+                  item.ar;
 
                 return (
                   <button
-                    key={item}
+                    key={item.ar}
                     type="button"
                     onClick={() =>
                       setCategory(
-                        item,
+                        item.ar,
                       )
                     }
                     className={[
@@ -437,7 +473,7 @@ export default function ProductsPage() {
                         : "border-white/10 bg-[#0b1a0e]/60 text-white/75 hover:border-lime-300/40 hover:bg-lime-300/10 hover:text-white backdrop-blur-md",
                     ].join(" ")}
                   >
-                    {item}
+                    {isArabic ? item.ar : item.en}
                   </button>
                 );
               },
@@ -447,7 +483,7 @@ export default function ProductsPage() {
 
         <div className="mt-10 flex items-center justify-between gap-4">
           <p className="text-sm font-bold text-white/60">
-            عدد المنتجات:
+            {t.productCount}
             <span className="mr-2 text-lg font-black text-lime-300">
               {
                 filteredProducts.length
@@ -468,7 +504,7 @@ export default function ProductsPage() {
               }}
               className="text-sm font-bold text-lime-300 underline underline-offset-4 transition hover:text-white"
             >
-              مسح التصفية
+              {t.clearFilters}
             </button>
           )}
         </div>
@@ -500,16 +536,11 @@ export default function ProductsPage() {
           loadError && (
             <div className="mt-10 rounded-[24px] border border-rose-400/25 bg-rose-400/10 p-8 text-center backdrop-blur-xl">
               <h2 className="text-xl font-black text-white">
-                تعذر تحميل المنتجات
+                {t.loadErrorTitle}
               </h2>
 
               <p className="mt-3 text-sm leading-7 text-white/60">
-                تأكد أن مسار
-                <span className="mx-1 font-bold text-lime-300">
-                  /api/products
-                </span>
-                يعمل ثم أعد تحميل
-                الصفحة.
+                {t.loadErrorText}
               </p>
             </div>
           )}
@@ -520,12 +551,11 @@ export default function ProductsPage() {
             0 && (
             <div className="mt-10 rounded-[24px] border border-lime-300/15 bg-[#0b1a0e]/80 p-10 text-center shadow-[0_0_40px_rgba(200,243,63,0.15)] backdrop-blur-xl">
               <h2 className="text-xl font-black text-white">
-                لا توجد منتجات مطابقة
+                {t.noProductsTitle}
               </h2>
 
               <p className="mt-3 text-sm text-white/60">
-                جرّب كلمة بحث مختلفة
-                أو اختر قسمًا آخر.
+                {t.noProductsText}
               </p>
             </div>
           )}

@@ -1,9 +1,5 @@
-import {
-  getServerSession,
-} from "next-auth";
-import {
-  redirect,
-} from "next/navigation";
+"use client";
+
 import {
   Leaf,
   LockKeyhole,
@@ -11,54 +7,43 @@ import {
 } from "lucide-react";
 
 import LoginCard from "@/components/auth/LoginCard";
-import {
-  authOptions,
-} from "@/lib/auth/options";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
-const getSafeCallbackUrl = (
-  callbackUrl?: string,
-) =>
-  callbackUrl?.startsWith(
-    "/admin",
-  ) &&
-  !callbackUrl.startsWith("//")
-    ? callbackUrl
-    : "/admin";
+type LoginPageClientProps = {
+  callbackUrl: string;
+  error?: string;
+};
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{
-    callbackUrl?: string;
-    error?: string;
-  }>;
-}) {
-  const [
-    session,
-    params,
-  ] = await Promise.all([
-    getServerSession(
-      authOptions,
-    ),
-    searchParams,
-  ]);
+const translations = {
+  AR: {
+    title: "تسجيل الدخول",
+    subtitle: "دخول آمن إلى لوحة تحكم ArtVert",
+    secureSession: "جلسة آمنة",
+    secureSessionText: "حماية بيانات الدخول",
+    protectedAccess: "وصول محمي",
+    protectedAccessText: "للمديرين المصرح لهم فقط",
+  },
+  EN: {
+    title: "Sign In",
+    subtitle: "Secure access to the ArtVert dashboard",
+    secureSession: "Secure Session",
+    secureSessionText: "Login data protection",
+    protectedAccess: "Protected Access",
+    protectedAccessText: "Authorized administrators only",
+  },
+} as const;
 
-  const callbackUrl =
-    getSafeCallbackUrl(
-      params.callbackUrl,
-    );
-
-  if (
-    session?.user
-      ?.sessionExpiresAt
-  ) {
-    redirect(callbackUrl);
-  }
+export default function LoginPageClient({
+  callbackUrl,
+  error,
+}: LoginPageClientProps) {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
 
   return (
     <main
-      className="relative grid min-h-screen place-items-center overflow-hidden bg-[#061008] p-6 text-white font-sans"
-      dir="rtl"
+      className="relative grid min-h-screen place-items-center overflow-hidden bg-[#061008] p-6 text-white"
+      dir={isArabic ? "rtl" : "ltr"}
     >
       {/* خلفية متدرجة أساسية تتناسب مع الثيم الداكن */}
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_15%_6%,rgba(143,202,45,.12),transparent_25%),radial-gradient(circle_at_88%_18%,rgba(38,164,83,.12),transparent_27%),linear-gradient(145deg,#02150d_0%,#063220_48%,#02180f_100%)]" />
@@ -94,11 +79,11 @@ export default async function LoginPage({
           </div>
 
           <h1 className="mt-5 text-3xl font-black text-white">
-            تسجيل الدخول
+            {t.title}
           </h1>
 
           <p className="mt-2 text-sm leading-7 text-white/60">
-            دخول آمن إلى لوحة تحكم ArtVert
+            {t.subtitle}
           </p>
         </div>
 
@@ -109,7 +94,7 @@ export default async function LoginPage({
               callbackUrl
             }
             error={
-              params.error
+              error
             }
           />
         </div>
@@ -125,11 +110,11 @@ export default async function LoginPage({
 
             <div>
               <p className="text-xs font-black text-white">
-                جلسة آمنة
+                {t.secureSession}
               </p>
 
               <p className="mt-1 text-[10px] text-white/40">
-                حماية بيانات الدخول
+                {t.secureSessionText}
               </p>
             </div>
           </div>
@@ -143,11 +128,11 @@ export default async function LoginPage({
 
             <div>
               <p className="text-xs font-black text-white">
-                وصول محمي
+                {t.protectedAccess}
               </p>
 
               <p className="mt-1 text-[10px] text-white/40">
-                للمديرين المصرح لهم فقط
+                {t.protectedAccessText}
               </p>
             </div>
           </div>

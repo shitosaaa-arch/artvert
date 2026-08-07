@@ -10,28 +10,75 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 type LoginCardProps = {
   callbackUrl: string;
   error?: string;
 };
 
+const translations = {
+  AR: {
+    secureAccess: "دخول آمن",
+    title: "تسجيل الدخول",
+    description:
+      "ادخل بيانات حسابك للوصول إلى لوحة التحكم وخدمات ArtVert.",
+    email: "البريد الإلكتروني",
+    password: "كلمة المرور",
+    remember: "تذكرني على هذا الجهاز",
+    accessDenied: "ليس لديك صلاحية للدخول إلى هذه المنطقة.",
+    invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+    loading: "جاري تسجيل الدخول...",
+    login: "تسجيل الدخول",
+    forgotPassword: "نسيت كلمة المرور؟",
+    forgotPasswordTitle: "استعادة كلمة المرور ستتوفر لاحقًا.",
+  },
+  EN: {
+    secureAccess: "Secure Access",
+    title: "Sign In",
+    description:
+      "Enter your account details to access the dashboard and ArtVert services.",
+    email: "Email Address",
+    password: "Password",
+    remember: "Remember me on this device",
+    accessDenied: "You do not have permission to access this area.",
+    invalidCredentials: "The email address or password is incorrect.",
+    loading: "Signing in...",
+    login: "Sign In",
+    forgotPassword: "Forgot your password?",
+    forgotPasswordTitle: "Password recovery will be available later.",
+  },
+} as const;
+
+type MessageType = "" | "accessDenied" | "invalidCredentials";
+
 export default function LoginCard({
   callbackUrl,
   error,
 }: LoginCardProps) {
+  const { locale } = useLanguage();
+  const t = translations[locale];
+
   const [loading, setLoading] = useState(false);
 
-  const [message, setMessage] = useState(
+  const [messageType, setMessageType] = useState<MessageType>(
     error === "AccessDenied"
-      ? "ليس لديك صلاحية للدخول إلى هذه المنطقة."
+      ? "accessDenied"
       : "",
   );
+
+  const message =
+    messageType === "accessDenied"
+      ? t.accessDenied
+      : messageType === "invalidCredentials"
+        ? t.invalidCredentials
+        : "";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     setLoading(true);
-    setMessage("");
+    setMessageType("");
 
     const data = new FormData(event.currentTarget);
 
@@ -49,9 +96,7 @@ export default function LoginCard({
     setLoading(false);
 
     if (result?.error) {
-      setMessage(
-        "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-      );
+      setMessageType("invalidCredentials");
       return;
     }
 
@@ -59,24 +104,20 @@ export default function LoginCard({
   }
 
   return (
-    <section
-      className="w-full max-w-md rounded-3xl border border-lime-300/15 bg-[#081a0d]/95 p-7 text-white shadow-2xl backdrop-blur-xl"
-      dir="rtl"
-    >
-      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-lime-300 text-[#071109] shadow-[0_10px_30px_rgba(190,255,70,.25)]">
+    <section className="rounded-[28px] border border-white/5 bg-white/[.02] p-5 sm:p-6">
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-300/10 text-lime-300">
         <ShieldCheck
           aria-hidden="true"
-          size={28}
+          size={22}
         />
       </div>
 
       <h1 className="mt-5 text-3xl font-black">
-        تسجيل الدخول
+        {t.title}
       </h1>
 
       <p className="mt-2 text-sm leading-7 text-white/60">
-        ادخل بيانات حسابك للوصول إلى لوحة التحكم
-        وخدمات ArtVert.
+        {t.description}
       </p>
 
       <form
@@ -91,7 +132,7 @@ export default function LoginCard({
               className="text-lime-300"
             />
 
-            البريد الإلكتروني
+            {t.email}
           </span>
 
           <input
@@ -113,7 +154,7 @@ export default function LoginCard({
               className="text-lime-300"
             />
 
-            كلمة المرور
+            {t.password}
           </span>
 
           <input
@@ -135,7 +176,7 @@ export default function LoginCard({
             className="h-4 w-4 accent-lime-300"
           />
 
-          تذكرني على هذا الجهاز
+          {t.remember}
         </label>
 
         {message && (
@@ -166,18 +207,18 @@ export default function LoginCard({
           )}
 
           {loading
-            ? "جاري تسجيل الدخول..."
-            : "تسجيل الدخول"}
+            ? t.loading
+            : t.login}
         </button>
       </form>
 
       <button
         type="button"
         disabled
-        title="استعادة كلمة المرور ستتوفر لاحقًا."
+        title={t.forgotPasswordTitle}
         className="mt-5 text-sm font-bold text-lime-300/55"
       >
-        نسيت كلمة المرور؟
+        {t.forgotPassword}
       </button>
     </section>
   );

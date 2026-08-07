@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -11,64 +13,93 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
+const translations = {
+  AR: {
+    quickLinks: [
+      { label: "الرئيسية", href: "/" },
+      { label: "المنتجات", href: "/products" },
+      { label: "دكتور ArtVert", href: "/doctor" },
+      { label: "الرعاية الزراعية", href: "/plant-care" },
+      { label: "المدونة", href: "/blog" },
+      { label: "من نحن", href: "/about" },
+      { label: "{t.contactTitle}", href: "/contact" },
+    ],
+    productLinks: [
+      { label: "الأسمدة والمغذيات", href: "/products" },
+      { label: "المنشطات الحيوية", href: "/products" },
+      { label: "حماية النبات", href: "/products" },
+      { label: "الزراعة المنزلية", href: "/plant-care" },
+    ],
+    supportBadge: "{t.supportBadge}",
+    supportTitle: "{t.supportTitle}",
+    supportText:
+      "{t.supportText}",
+    whatsapp: "{t.whatsapp}",
+    browseProducts: "{t.browseProducts}",
+    companyText:
+      "{t.companyText}",
+    continuousSupport: "{t.continuousSupport}",
+    quickLinksTitle: "{t.quickLinksTitle}",
+    productsTitle: "{t.productsTitle}",
+    contactTitle: "{t.contactTitle}",
+    country: "مصر",
+    rights: "جميع الحقوق محفوظة",
+    privacy: "{t.privacy}",
+    terms: "{t.terms}",
+    returns: "{t.returns}",
+  },
+  EN: {
+    quickLinks: [
+      { label: "Home", href: "/" },
+      { label: "Products", href: "/products" },
+      { label: "Doctor ArtVert", href: "/doctor" },
+      { label: "Plant Care", href: "/plant-care" },
+      { label: "Blog", href: "/blog" },
+      { label: "About Us", href: "/about" },
+      { label: "Contact Us", href: "/contact" },
+    ],
+    productLinks: [
+      { label: "Fertilizers & Nutrients", href: "/products" },
+      { label: "Biostimulants", href: "/products" },
+      { label: "Plant Protection", href: "/products" },
+      { label: "Home Gardening", href: "/plant-care" },
+    ],
+    supportBadge: "Specialized Agricultural Support",
+    supportTitle: "Need help choosing the right product?",
+    supportText:
+      "The ArtVert team helps you choose the right solution for your plant, crop, and condition.",
+    whatsapp: "Contact via WhatsApp",
+    browseProducts: "Browse Products",
+    companyText:
+      "Integrated agricultural solutions for nutrition, protection, and improved plant growth using modern technologies.",
+    continuousSupport: "Continuous Agricultural Support & Guidance",
+    quickLinksTitle: "Quick Links",
+    productsTitle: "Our Products",
+    contactTitle: "Contact Us",
+    country: "Egypt",
+    rights: "All rights reserved",
+    privacy: "Privacy Policy",
+    terms: "Terms & Conditions",
+    returns: "Returns Policy",
+  },
+} as const;
+
 export default function Footer() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
   const year =
     new Date().getFullYear();
 
-  const quickLinks = [
-    {
-      label: "الرئيسية",
-      href: "/",
-    },
-    {
-      label: "المنتجات",
-      href: "/products",
-    },
-    {
-      label: "دكتور ArtVert",
-      href: "/doctor",
-    },
-    {
-      label: "الرعاية الزراعية",
-      href: "/plant-care",
-    },
-    {
-      label: "المدونة",
-      href: "/blog",
-    },
-    {
-      label: "من نحن",
-      href: "/about",
-    },
-    {
-      label: "تواصل معنا",
-      href: "/contact",
-    },
-  ];
-
-  const productLinks = [
-    {
-      label: "الأسمدة والمغذيات",
-      href: "/products",
-    },
-    {
-      label: "المنشطات الحيوية",
-      href: "/products",
-    },
-    {
-      label: "حماية النبات",
-      href: "/products",
-    },
-    {
-      label: "الزراعة المنزلية",
-      href: "/plant-care",
-    },
-  ];
+  const quickLinks = t.quickLinks;
+  const productLinks = t.productLinks;
 
   return (
     <footer
       className="relative overflow-hidden border-t border-white/[.06] bg-[#061008] text-white font-sans"
-      dir="rtl"
+      dir={isArabic ? "rtl" : "ltr"}
     >
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_0%,rgba(38,164,83,.08),transparent_62%)]" />
 
@@ -99,15 +130,15 @@ export default function Footer() {
             <div className="max-w-2xl">
               <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/20 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
                 <Sparkles size={15} />
-                دعم زراعي متخصص
+                {t.supportBadge}
               </span>
 
               <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">
-                محتاج مساعدة في اختيار المنتج المناسب؟
+                {t.supportTitle}
               </h2>
 
               <p className="mt-3 text-sm leading-7 text-white/58 sm:text-base">
-                فريق ArtVert معاك لاختيار الحل المناسب حسب النبات أو المحصول والحالة.
+                {t.supportText}
               </p>
             </div>
 
@@ -119,7 +150,7 @@ export default function Footer() {
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#21a366] px-6 text-sm font-black text-white shadow-[0_8px_22px_rgba(33,163,102,.18)] transition hover:-translate-y-0.5 hover:bg-[#27b875]"
               >
                 <MessageCircle size={18} />
-                تواصل عبر واتساب
+                {t.whatsapp}
               </a>
 
               <Link
@@ -127,7 +158,7 @@ export default function Footer() {
                 className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-lime-300 px-6 text-sm font-black text-[#071109] shadow-[0_8px_22px_rgba(200,243,63,.16)] transition hover:-translate-y-0.5 hover:bg-lime-200"
               >
                 <ShoppingBag size={18} />
-                تصفح المنتجات
+                {t.browseProducts}
               </Link>
             </div>
           </div>
@@ -156,14 +187,14 @@ export default function Footer() {
             </Link>
 
             <p className="mt-5 text-sm leading-8 text-white/64 sm:text-base">
-              حلول زراعية متكاملة للتغذية والحماية وتحسين نمو النبات بأحدث التقنيات.
+              {t.companyText}
             </p>
 
             <div className="mt-5 flex items-center gap-2">
               <span className="h-2 w-2 animate-pulse rounded-full bg-lime-300 shadow-[0_0_8px_rgba(200,243,63,0.6)]" />
 
               <span className="text-xs font-bold text-white/75">
-                دعم وإرشاد زراعي مستمر
+                {t.continuousSupport}
               </span>
             </div>
 
@@ -240,7 +271,7 @@ export default function Footer() {
               </span>
 
               <h3 className="text-lg font-black text-white">
-                روابط سريعة
+                {t.quickLinksTitle}
               </h3>
             </div>
 
@@ -273,7 +304,7 @@ export default function Footer() {
               </span>
 
               <h3 className="text-lg font-black text-white">
-                منتجاتنا
+                {t.productsTitle}
               </h3>
             </div>
 
@@ -306,7 +337,7 @@ export default function Footer() {
               </span>
 
               <h3 className="text-lg font-black text-white">
-                تواصل معنا
+                {t.contactTitle}
               </h3>
             </div>
 
@@ -325,13 +356,27 @@ export default function Footer() {
                 </span>
               </a>
 
+              <a
+                href="mailto:info@artvertegypt.com"
+                className="flex min-h-12 items-center gap-3 rounded-xl border border-white/[.06] bg-white/[.025] px-4 text-sm font-bold text-white/78 transition hover:border-lime-300/30 hover:bg-lime-300/[.06] hover:text-lime-300"
+              >
+                <Mail
+                  size={18}
+                  className="shrink-0 text-lime-300"
+                />
+
+                <span dir="ltr">
+                  info@artvertegypt.com
+                </span>
+              </a>
+
               <div className="flex min-h-12 items-center gap-3 rounded-xl border border-white/[.06] bg-white/[.025] px-4 text-sm font-bold text-white/72">
                 <MapPin
                   size={18}
                   className="shrink-0 text-lime-300"
                 />
 
-                مصر
+                {t.country}
               </div>
 
               <div className="flex min-h-12 items-center gap-3 rounded-xl border border-white/[.06] bg-white/[.025] px-4 text-sm font-bold text-white/72">
@@ -350,7 +395,7 @@ export default function Footer() {
       <div className="relative z-10 border-t border-white/[.08] bg-[#040b06]">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-3 py-5 text-center text-xs text-white/45 sm:px-6 sm:text-sm lg:flex-row lg:text-right">
           <p>
-            © {year} ArtVert Egypt — جميع الحقوق محفوظة
+            © {year} ArtVert Egypt — {t.rights}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
@@ -358,21 +403,21 @@ export default function Footer() {
               href="/privacy"
               className="transition hover:text-lime-300"
             >
-              سياسة الخصوصية
+              {t.privacy}
             </Link>
 
             <Link
               href="/terms"
               className="transition hover:text-lime-300"
             >
-              الشروط والأحكام
+              {t.terms}
             </Link>
 
             <Link
               href="/returns"
               className="transition hover:text-lime-300"
             >
-              سياسة الاسترجاع
+              {t.returns}
             </Link>
           </div>
         </div>

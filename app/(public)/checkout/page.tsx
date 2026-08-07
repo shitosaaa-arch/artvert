@@ -7,16 +7,23 @@ import {
   ArrowLeft,
   CheckCircle2,
   CircleCheck,
+  Banknote,
+  Landmark,
   MapPin,
   MessageCircle,
   PackageCheck,
   Phone,
+  Printer,
+  ReceiptText,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   Truck,
   User,
+  WalletCards,
 } from "lucide-react";
 import {
+  useEffect,
   useMemo,
   useState,
   type FormEvent,
@@ -25,6 +32,7 @@ import {
 import {
   useCart,
 } from "@/components/cart/CartProvider";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const EGYPT_GOVERNORATES = [
   "القاهرة",
@@ -56,6 +64,49 @@ const EGYPT_GOVERNORATES = [
   "سوهاج",
 ] as const;
 
+const EGYPT_GOVERNORATES_EN: Record<string, string> = {
+  "القاهرة": "Cairo",
+  "الجيزة": "Giza",
+  "الإسكندرية": "Alexandria",
+  "الدقهلية": "Dakahlia",
+  "البحر الأحمر": "Red Sea",
+  "البحيرة": "Beheira",
+  "الفيوم": "Fayoum",
+  "الغربية": "Gharbia",
+  "الإسماعيلية": "Ismailia",
+  "المنوفية": "Monufia",
+  "المنيا": "Minya",
+  "القليوبية": "Qalyubia",
+  "الوادي الجديد": "New Valley",
+  "السويس": "Suez",
+  "أسوان": "Aswan",
+  "أسيوط": "Assiut",
+  "بني سويف": "Beni Suef",
+  "بورسعيد": "Port Said",
+  "دمياط": "Damietta",
+  "الشرقية": "Sharqia",
+  "جنوب سيناء": "South Sinai",
+  "كفر الشيخ": "Kafr El Sheikh",
+  "مطروح": "Matrouh",
+  "الأقصر": "Luxor",
+  "قنا": "Qena",
+  "شمال سيناء": "North Sinai",
+  "سوهاج": "Sohag",
+} as const;
+
+
+type CatalogPriceProduct = {
+  slug: string;
+  price: number | null;
+  comparePrice: number | null;
+};
+
+type PaymentMethod =
+  | "CASH_ON_DELIVERY"
+  | "VODAFONE_CASH"
+  | "INSTAPAY"
+  | "BANK_TRANSFER";
+
 type CustomerData = {
   fullName: string;
   phone: string;
@@ -73,6 +124,8 @@ type CreatedOrderItem = {
   image: string;
   quantity: number;
   category?: string;
+  unitPrice: number | null;
+  lineTotal: number | null;
 };
 
 type CreatedOrder = {
@@ -82,6 +135,8 @@ type CreatedOrder = {
   items: CreatedOrderItem[];
   totalItems: number;
   status: string;
+  paymentMethod: PaymentMethod;
+  subtotal: number;
 };
 
 type OrderApiRecord = {
@@ -99,6 +154,9 @@ type OrderApiResponse = {
 
 const WHATSAPP_NUMBER =
   "201080040408";
+
+const DIGITAL_PAYMENT_NUMBER =
+  "01028266555";
 
 function buildWhatsAppMessage(
   order: CreatedOrder,
@@ -196,7 +254,142 @@ function getApiErrorMessage(
   return "تعذر تسجيل الطلب. راجع اتصال الإنترنت وحاول مرة أخرى.";
 }
 
-function CheckoutSteps() {
+const translations = {
+  AR: {
+    cartStep: "السلة",
+    detailsStep: "البيانات",
+    confirmStep: "التأكيد",
+    successTitle: "تم تسجيل طلبك بنجاح",
+    successText:
+      "تم حفظ الطلب داخل قاعدة البيانات. أرسل الطلب عبر واتساب حتى يتم تأكيد الأسعار وتكلفة الشحن وموعد التوصيل.",
+    orderNumber: "رقم الطلب",
+    totalItems: "إجمالي القطع",
+    sendWhatsapp: "إرسال الطلب عبر واتساب",
+    continueShopping: "متابعة التسوق",
+    backHome: "العودة للرئيسية",
+    emptyTitle: "لا توجد منتجات لإتمام الطلب",
+    emptyText: "أضف منتجًا واحدًا على الأقل إلى السلة أولًا.",
+    browseProducts: "تصفح المنتجات",
+    finalStep: "الخطوة الأخيرة",
+    checkout: "إتمام الطلب",
+    checkoutIntro:
+      "أدخل بيانات التواصل والتوصيل، ثم أكد الطلب لإرساله إلى فريق ArtVert.",
+    customerData: "بيانات العميل",
+    requiredData: "البيانات المطلوبة لتأكيد الطلب",
+    orderFailed: "لم يتم تسجيل الطلب",
+    fullName: "الاسم بالكامل *",
+    fullNamePlaceholder: "اكتب الاسم بالكامل",
+    phone: "رقم الهاتف *",
+    alternativePhone: "رقم هاتف بديل",
+    optional: "اختياري",
+    governorate: "المحافظة *",
+    selectGovernorate: "اختر المحافظة",
+    city: "المدينة أو المنطقة *",
+    cityPlaceholder: "مثال: المعادي",
+    address: "العنوان بالتفصيل *",
+    addressPlaceholder:
+      "اسم الشارع، رقم العقار، الدور، الشقة وأقرب علامة مميزة",
+    notes: "ملاحظات على الطلب",
+    notesPlaceholder: "أي تفاصيل إضافية أو وقت مناسب للتواصل",
+    shippingByGovernorate: "الشحن يُحدد حسب المحافظة.",
+    dataUse: "بياناتك تستخدم لتأكيد الطلب فقط.",
+    noCharge: "لا يتم خصم أي مبلغ الآن.",
+    submitting: "جاري تسجيل الطلب...",
+    confirmOrder: "تأكيد الطلب",
+    orderSummary: "ملخص الطلب",
+    reviewProducts: "راجع المنتجات قبل التأكيد",
+    quantity: "الكمية:",
+    finalConfirmation:
+      "سيتم تأكيد السعر النهائي والعبوات وتكلفة الشحن قبل تجهيز الطلب.",
+    editCart: "تعديل السلة",
+    paymentMethod: "طريقة الدفع",
+    paymentMethodText: "اختر الطريقة المناسبة لإتمام طلبك",
+    cashOnDelivery: "الدفع عند الاستلام",
+    cashOnDeliveryText: "ادفع قيمة الطلب عند استلامه.",
+    vodafoneCash: "Vodafone Cash",
+    vodafoneCashText: `حوّل على رقم Vodafone Cash: ${DIGITAL_PAYMENT_NUMBER}`,
+    instapay: "InstaPay",
+    instapayText: `حوّل عبر InstaPay على الرقم: ${DIGITAL_PAYMENT_NUMBER}`,
+    bankTransfer: "تحويل بنكي",
+    bankTransferText: "الدفع عن طريق التحويل البنكي.",
+    invoice: "فاتورة الطلب",
+    invoiceDate: "تاريخ الطلب",
+    customerInfo: "بيانات العميل",
+    payment: "طريقة الدفع",
+    unitPrice: "سعر الوحدة",
+    itemTotal: "الإجمالي",
+    productsTotal: "إجمالي المنتجات",
+    printInvoice: "طباعة الفاتورة",
+  },
+  EN: {
+    cartStep: "Cart",
+    detailsStep: "Details",
+    confirmStep: "Confirmation",
+    successTitle: "Your order has been registered successfully",
+    successText:
+      "Your order has been saved in our database. Send the order via WhatsApp so prices, shipping cost, and delivery time can be confirmed.",
+    orderNumber: "Order Number",
+    totalItems: "Total Items",
+    sendWhatsapp: "Send Order via WhatsApp",
+    continueShopping: "Continue Shopping",
+    backHome: "Back to Home",
+    emptyTitle: "There are no products to checkout",
+    emptyText: "Add at least one product to your cart first.",
+    browseProducts: "Browse Products",
+    finalStep: "Final Step",
+    checkout: "Checkout",
+    checkoutIntro:
+      "Enter your contact and delivery details, then confirm the order to send it to the ArtVert team.",
+    customerData: "Customer Details",
+    requiredData: "Information required to confirm your order",
+    orderFailed: "Order was not registered",
+    fullName: "Full Name *",
+    fullNamePlaceholder: "Enter your full name",
+    phone: "Phone Number *",
+    alternativePhone: "Alternative Phone",
+    optional: "Optional",
+    governorate: "Governorate *",
+    selectGovernorate: "Select Governorate",
+    city: "City or Area *",
+    cityPlaceholder: "Example: Maadi",
+    address: "Detailed Address *",
+    addressPlaceholder:
+      "Street name, building number, floor, apartment, and nearest landmark",
+    notes: "Order Notes",
+    notesPlaceholder: "Any additional details or preferred contact time",
+    shippingByGovernorate: "Shipping is determined by governorate.",
+    dataUse: "Your data is used only to confirm the order.",
+    noCharge: "No payment is charged now.",
+    submitting: "Registering order...",
+    confirmOrder: "Confirm Order",
+    orderSummary: "Order Summary",
+    reviewProducts: "Review your products before confirmation",
+    quantity: "Quantity:",
+    finalConfirmation:
+      "The final price, package sizes, and shipping cost will be confirmed before preparing your order.",
+    editCart: "Edit Cart",
+    paymentMethod: "Payment Method",
+    paymentMethodText: "Choose the payment method that suits you",
+    cashOnDelivery: "Cash on Delivery",
+    cashOnDeliveryText: "Pay for your order when it is delivered.",
+    vodafoneCash: "Vodafone Cash",
+    vodafoneCashText: `Transfer to Vodafone Cash: ${DIGITAL_PAYMENT_NUMBER}`,
+    instapay: "InstaPay",
+    instapayText: `Transfer via InstaPay to: ${DIGITAL_PAYMENT_NUMBER}`,
+    bankTransfer: "Bank Transfer",
+    bankTransferText: "Pay by bank transfer.",
+    invoice: "Order Invoice",
+    invoiceDate: "Order Date",
+    customerInfo: "Customer Details",
+    payment: "Payment Method",
+    unitPrice: "Unit Price",
+    itemTotal: "Total",
+    productsTotal: "Products Total",
+    printInvoice: "Print Invoice",
+  },
+} as const;
+
+function CheckoutSteps({ isArabic }: { isArabic: boolean }) {
   return (
     <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2 rounded-2xl border border-white/10 bg-white/[.03] p-3 sm:p-4">
       <div className="flex min-w-0 items-center gap-2">
@@ -204,7 +397,7 @@ function CheckoutSteps() {
           <CircleCheck size={17} />
         </span>
         <span className="truncate text-xs font-black text-white sm:text-sm">
-          السلة
+          {isArabic ? translations.AR.cartStep : translations.EN.cartStep}
         </span>
       </div>
 
@@ -215,7 +408,7 @@ function CheckoutSteps() {
           2
         </span>
         <span className="truncate text-xs font-black text-lime-300 sm:text-sm">
-          البيانات
+          {isArabic ? translations.AR.detailsStep : translations.EN.detailsStep}
         </span>
       </div>
 
@@ -226,7 +419,7 @@ function CheckoutSteps() {
           3
         </span>
         <span className="truncate text-xs font-black text-white/40 sm:text-sm">
-          التأكيد
+          {isArabic ? translations.AR.confirmStep : translations.EN.confirmStep}
         </span>
       </div>
     </div>
@@ -234,12 +427,76 @@ function CheckoutSteps() {
 }
 
 export default function CheckoutPage() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
+  const [catalogPrices, setCatalogPrices] = useState<CatalogPriceProduct[]>([]);
+  const [pricesReady, setPricesReady] = useState(false);
+  const [paymentMethod, setPaymentMethod] =
+    useState<PaymentMethod>("CASH_ON_DELIVERY");
+
   const {
     items,
     totalItems,
     isReady,
     clearCart,
   } = useCart();
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPrices() {
+      try {
+        const response = await fetch("/api/products", {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("Unable to load product prices.");
+        const data = (await response.json()) as CatalogPriceProduct[];
+        if (active && Array.isArray(data)) setCatalogPrices(data);
+      } catch {
+        if (active) setCatalogPrices([]);
+      } finally {
+        if (active) setPricesReady(true);
+      }
+    }
+
+    void loadPrices();
+    return () => { active = false; };
+  }, []);
+
+  const priceBySlug = useMemo(
+    () => new Map(catalogPrices.map((product) => [product.slug, product.price])),
+    [catalogPrices],
+  );
+
+  const subtotal = useMemo(
+    () => items.reduce((total, item) => {
+      const price = priceBySlug.get(item.slug);
+      return total + (typeof price === "number" ? price * item.quantity : 0);
+    }, 0),
+    [items, priceBySlug],
+  );
+
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat(isArabic ? "ar-EG" : "en-EG", {
+      style: "currency",
+      currency: "EGP",
+      maximumFractionDigits: 2,
+    }).format(value);
+
+  const paymentMethodLabel = (method: PaymentMethod) => {
+    switch (method) {
+      case "VODAFONE_CASH":
+        return t.vodafoneCash;
+      case "INSTAPAY":
+        return t.instapay;
+      case "BANK_TRANSFER":
+        return t.bankTransfer;
+      default:
+        return t.cashOnDelivery;
+    }
+  };
 
   const [
     submitting,
@@ -336,18 +593,30 @@ export default function CheckoutPage() {
       };
 
     const orderItems: CreatedOrderItem[] =
-      items.map((item) => ({
-        slug: item.slug,
-        nameAr:
-          item.nameAr,
-        nameEn:
-          item.nameEn,
-        image: item.image,
-        quantity:
-          item.quantity,
-        category:
-          item.category,
-      }));
+      items.map((item) => {
+        const unitPrice =
+          typeof priceBySlug.get(item.slug) === "number"
+            ? (priceBySlug.get(item.slug) as number)
+            : null;
+
+        return {
+          slug: item.slug,
+          nameAr:
+            item.nameAr,
+          nameEn:
+            item.nameEn,
+          image: item.image,
+          quantity:
+            item.quantity,
+          category:
+            item.category,
+          unitPrice,
+          lineTotal:
+            unitPrice === null
+              ? null
+              : unitPrice * item.quantity,
+        };
+      });
 
     try {
       const response =
@@ -365,6 +634,7 @@ export default function CheckoutPage() {
               customer,
               items:
                 orderItems,
+              paymentMethod,
             }),
           },
         );
@@ -423,6 +693,8 @@ export default function CheckoutPage() {
         items: orderItems,
         totalItems,
         status,
+        paymentMethod,
+        subtotal,
       });
 
       clearCart();
@@ -479,16 +751,16 @@ export default function CheckoutPage() {
           </div>
 
           <h1 className="mt-6 text-2xl font-black text-white sm:text-4xl">
-            تم تسجيل طلبك بنجاح
+            {t.successTitle}
           </h1>
 
           <p className="mx-auto mt-4 max-w-lg text-sm leading-8 text-white/68 sm:text-base">
-            تم حفظ الطلب داخل قاعدة البيانات. أرسل الطلب عبر واتساب حتى يتم تأكيد الأسعار وتكلفة الشحن وموعد التوصيل.
+            {t.successText}
           </p>
 
           <div className="mx-auto mt-6 max-w-md rounded-2xl border border-lime-300/15 bg-lime-300/[.06] p-5">
             <span className="text-sm text-white/60">
-              رقم الطلب
+              {t.orderNumber}
             </span>
 
             <strong
@@ -502,7 +774,7 @@ export default function CheckoutPage() {
 
             <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4 text-sm">
               <span className="text-white/60">
-                إجمالي القطع
+                {t.totalItems}
               </span>
 
               <strong className="text-white">
@@ -512,6 +784,135 @@ export default function CheckoutPage() {
               </strong>
             </div>
           </div>
+
+          <section
+            id="artvert-invoice"
+            className="mt-6 rounded-[24px] border border-white/10 bg-white/[.025] p-4 text-right sm:p-6"
+          >
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-lime-300/10 text-lime-300">
+                  <ReceiptText size={20} />
+                </div>
+
+                <div>
+                  <h2 className="text-lg font-black text-white">
+                    {t.invoice}
+                  </h2>
+
+                  <p className="mt-1 text-xs text-white/45" dir="ltr">
+                    {createdOrder.orderNumber}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/10 px-4 text-xs font-black text-lime-300 transition hover:bg-lime-300/15"
+              >
+                <Printer size={16} />
+                {t.printInvoice}
+              </button>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-white/[.06] bg-white/[.02] p-4">
+                <p className="text-xs font-bold text-white/40">
+                  {t.invoiceDate}
+                </p>
+                <p className="mt-2 text-sm font-black text-white">
+                  {new Intl.DateTimeFormat(
+                    isArabic ? "ar-EG" : "en-EG",
+                    {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    },
+                  ).format(new Date(createdOrder.createdAt))}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-white/[.06] bg-white/[.02] p-4">
+                <p className="text-xs font-bold text-white/40">
+                  {t.payment}
+                </p>
+                <p className="mt-2 text-sm font-black text-lime-300">
+                  {paymentMethodLabel(createdOrder.paymentMethod)}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 rounded-2xl border border-white/[.06] bg-white/[.02] p-4">
+              <p className="text-xs font-bold text-white/40">
+                {t.customerInfo}
+              </p>
+
+              <div className="mt-3 grid gap-2 text-sm text-white/72 sm:grid-cols-2">
+                <p>
+                  <strong className="text-white">
+                    {createdOrder.customer.fullName}
+                  </strong>
+                </p>
+                <p dir="ltr" className="text-right">
+                  {createdOrder.customer.phone}
+                </p>
+                <p>
+                  {createdOrder.customer.governorate} - {createdOrder.customer.city}
+                </p>
+                <p>
+                  {createdOrder.customer.address}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4 overflow-hidden rounded-2xl border border-white/[.06]">
+              <div className="grid grid-cols-[minmax(0,1fr)_70px_110px_110px] gap-2 bg-white/[.05] px-3 py-3 text-[11px] font-black text-white/55">
+                <span>{isArabic ? "المنتج" : "Product"}</span>
+                <span className="text-center">{t.quantity}</span>
+                <span className="text-center">{t.unitPrice}</span>
+                <span className="text-center">{t.itemTotal}</span>
+              </div>
+
+              <div className="divide-y divide-white/[.06]">
+                {createdOrder.items.map((item) => (
+                  <div
+                    key={item.slug}
+                    className="grid grid-cols-[minmax(0,1fr)_70px_110px_110px] items-center gap-2 px-3 py-3 text-xs"
+                  >
+                    <span className="min-w-0 truncate font-bold text-white">
+                      {isArabic ? item.nameAr : item.nameEn}
+                    </span>
+
+                    <span className="text-center font-black text-lime-300">
+                      {item.quantity}
+                    </span>
+
+                    <span className="text-center text-white/65">
+                      {item.unitPrice === null
+                        ? "-"
+                        : formatPrice(item.unitPrice)}
+                    </span>
+
+                    <span className="text-center font-black text-white">
+                      {item.lineTotal === null
+                        ? "-"
+                        : formatPrice(item.lineTotal)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between rounded-2xl border border-lime-300/15 bg-lime-300/[.05] p-4">
+              <span className="font-black text-white/75">
+                {t.productsTotal}
+              </span>
+
+              <strong className="text-xl font-black text-lime-300">
+                {formatPrice(createdOrder.subtotal)}
+              </strong>
+            </div>
+          </section>
 
           <a
             href={whatsappUrl}
@@ -523,7 +924,7 @@ export default function CheckoutPage() {
               aria-hidden="true"
               size={21}
             />
-            إرسال الطلب عبر واتساب
+            {t.sendWhatsapp}
           </a>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -531,14 +932,14 @@ export default function CheckoutPage() {
               href="/products"
               className="flex min-h-12 items-center justify-center rounded-xl border border-white/10 bg-white/[.04] px-5 font-bold text-white/75 transition hover:border-lime-300/35 hover:text-white"
             >
-              متابعة التسوق
+              {t.continueShopping}
             </Link>
 
             <Link
               href="/"
               className="flex min-h-12 items-center justify-center rounded-xl border border-white/10 bg-white/[.04] px-5 font-bold text-white/75 transition hover:border-lime-300/35 hover:text-white"
             >
-              العودة للرئيسية
+              {t.backHome}
             </Link>
           </div>
         </section>
@@ -563,18 +964,18 @@ export default function CheckoutPage() {
           </div>
 
           <h1 className="mt-6 text-2xl font-black text-white sm:text-3xl">
-            لا توجد منتجات لإتمام الطلب
+            {t.emptyTitle}
           </h1>
 
           <p className="mt-3 text-sm leading-7 text-white/58 sm:text-base">
-            أضف منتجًا واحدًا على الأقل إلى السلة أولًا.
+            {t.emptyText}
           </p>
 
           <Link
             href="/products"
             className="mt-7 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-lime-300 px-6 font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.22)] transition hover:-translate-y-0.5 hover:bg-lime-200 sm:w-auto"
           >
-            تصفح المنتجات
+            {t.browseProducts}
             <ArrowLeft
               aria-hidden="true"
               size={18}
@@ -604,19 +1005,19 @@ export default function CheckoutPage() {
       <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_14%_8%,rgba(200,243,63,.06),transparent_28%),radial-gradient(circle_at_88%_15%,rgba(38,164,83,.08),transparent_30%)]" />
 
       <div className="relative z-10 mx-auto max-w-7xl">
-        <CheckoutSteps />
+        <CheckoutSteps isArabic={isArabic} />
 
         <div className="mt-7">
           <span className="text-sm font-bold text-lime-300">
-            الخطوة الأخيرة
+            {t.finalStep}
           </span>
 
           <h1 className="mt-2 text-3xl font-black sm:text-4xl">
-            إتمام الطلب
+            {t.checkout}
           </h1>
 
           <p className="mt-3 max-w-2xl text-sm leading-7 text-white/58 sm:text-base">
-            أدخل بيانات التواصل والتوصيل، ثم أكد الطلب لإرساله إلى فريق ArtVert.
+            {t.checkoutIntro}
           </p>
         </div>
 
@@ -635,11 +1036,11 @@ export default function CheckoutPage() {
 
               <div>
                 <h2 className="text-xl font-black">
-                  بيانات العميل
+                  {t.customerData}
                 </h2>
 
                 <p className="mt-1 text-xs text-white/55">
-                  البيانات المطلوبة لتأكيد الطلب
+                  {t.requiredData}
                 </p>
               </div>
             </div>
@@ -658,7 +1059,7 @@ export default function CheckoutPage() {
 
                 <div>
                   <strong className="block font-black">
-                    لم يتم تسجيل الطلب
+                    {t.orderFailed}
                   </strong>
 
                   <p className="mt-1 text-red-100/80">
@@ -673,7 +1074,7 @@ export default function CheckoutPage() {
             <div className="mt-6 grid gap-5 sm:grid-cols-2">
               <label className="block sm:col-span-2">
                 <span className="mb-2 block text-sm font-bold text-white/80">
-                  الاسم بالكامل *
+                  {t.fullName}
                 </span>
 
                 <input
@@ -685,7 +1086,7 @@ export default function CheckoutPage() {
                   disabled={
                     submitting
                   }
-                  placeholder="اكتب الاسم بالكامل"
+                  placeholder={t.fullNamePlaceholder}
                   className="h-12 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 text-white outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
@@ -697,7 +1098,7 @@ export default function CheckoutPage() {
                     size={15}
                     className="text-lime-300"
                   />
-                  رقم الهاتف *
+                  {t.phone}
                 </span>
 
                 <input
@@ -719,7 +1120,7 @@ export default function CheckoutPage() {
 
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-white/80">
-                  رقم هاتف بديل
+                  {t.alternativePhone}
                 </span>
 
                 <input
@@ -732,7 +1133,7 @@ export default function CheckoutPage() {
                   disabled={
                     submitting
                   }
-                  placeholder="اختياري"
+                  placeholder={t.optional}
                   className="h-12 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 text-left text-white outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10 disabled:cursor-not-allowed disabled:opacity-60"
                   dir="ltr"
                 />
@@ -745,7 +1146,7 @@ export default function CheckoutPage() {
                     size={15}
                     className="text-lime-300"
                   />
-                  المحافظة *
+                  {t.governorate}
                 </span>
 
                 <select
@@ -761,7 +1162,7 @@ export default function CheckoutPage() {
                     value=""
                     disabled
                   >
-                    اختر المحافظة
+                    {t.selectGovernorate}
                   </option>
 
                   {EGYPT_GOVERNORATES.map(
@@ -775,7 +1176,9 @@ export default function CheckoutPage() {
                         }
                       >
                         {
-                          governorate
+                          isArabic
+                            ? governorate
+                            : EGYPT_GOVERNORATES_EN[governorate] ?? governorate
                         }
                       </option>
                     ),
@@ -785,7 +1188,7 @@ export default function CheckoutPage() {
 
               <label className="block">
                 <span className="mb-2 block text-sm font-bold text-white/80">
-                  المدينة أو المنطقة *
+                  {t.city}
                 </span>
 
                 <input
@@ -797,14 +1200,14 @@ export default function CheckoutPage() {
                   disabled={
                     submitting
                   }
-                  placeholder="مثال: المعادي"
+                  placeholder={t.cityPlaceholder}
                   className="h-12 w-full rounded-xl border border-white/10 bg-white/[.04] px-4 text-white outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
 
               <label className="block sm:col-span-2">
                 <span className="mb-2 block text-sm font-bold text-white/80">
-                  العنوان بالتفصيل *
+                  {t.address}
                 </span>
 
                 <textarea
@@ -816,14 +1219,14 @@ export default function CheckoutPage() {
                   disabled={
                     submitting
                   }
-                  placeholder="اسم الشارع، رقم العقار، الدور، الشقة وأقرب علامة مميزة"
+                  placeholder={t.addressPlaceholder}
                   className="w-full resize-none rounded-xl border border-white/10 bg-white/[.04] p-4 text-white outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
 
               <label className="block sm:col-span-2">
                 <span className="mb-2 block text-sm font-bold text-white/80">
-                  ملاحظات على الطلب
+                  {t.notes}
                 </span>
 
                 <textarea
@@ -833,11 +1236,157 @@ export default function CheckoutPage() {
                   disabled={
                     submitting
                   }
-                  placeholder="أي تفاصيل إضافية أو وقت مناسب للتواصل"
+                  placeholder={t.notesPlaceholder}
                   className="w-full resize-none rounded-xl border border-white/10 bg-white/[.04] p-4 text-white outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10 disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </label>
             </div>
+
+            <section className="mt-6 rounded-[24px] border border-white/10 bg-white/[.025] p-4 sm:p-5">
+              <div>
+                <h3 className="text-lg font-black text-white">
+                  {t.paymentMethod}
+                </h3>
+
+                <p className="mt-1 text-xs leading-6 text-white/50">
+                  {t.paymentMethodText}
+                </p>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label
+                  className={[
+                    "flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
+                    paymentMethod === "CASH_ON_DELIVERY"
+                      ? "border-lime-300/45 bg-lime-300/[.08]"
+                      : "border-white/[.07] bg-white/[.025] hover:border-lime-300/20",
+                  ].join(" ")}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="CASH_ON_DELIVERY"
+                    checked={paymentMethod === "CASH_ON_DELIVERY"}
+                    onChange={() => setPaymentMethod("CASH_ON_DELIVERY")}
+                    disabled={submitting}
+                    className="mt-1 h-4 w-4 accent-lime-300"
+                  />
+
+                  <Banknote
+                    size={20}
+                    className="mt-0.5 shrink-0 text-lime-300"
+                  />
+
+                  <span>
+                    <strong className="block text-sm font-black text-white">
+                      {t.cashOnDelivery}
+                    </strong>
+                    <span className="mt-1 block text-xs leading-6 text-white/45">
+                      {t.cashOnDeliveryText}
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  className={[
+                    "flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
+                    paymentMethod === "VODAFONE_CASH"
+                      ? "border-lime-300/45 bg-lime-300/[.08]"
+                      : "border-white/[.07] bg-white/[.025] hover:border-lime-300/20",
+                  ].join(" ")}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="VODAFONE_CASH"
+                    checked={paymentMethod === "VODAFONE_CASH"}
+                    onChange={() => setPaymentMethod("VODAFONE_CASH")}
+                    disabled={submitting}
+                    className="mt-1 h-4 w-4 accent-lime-300"
+                  />
+
+                  <Smartphone
+                    size={20}
+                    className="mt-0.5 shrink-0 text-lime-300"
+                  />
+
+                  <span>
+                    <strong className="block text-sm font-black text-white">
+                      {t.vodafoneCash}
+                    </strong>
+                    <span className="mt-1 block text-xs leading-6 text-white/45">
+                      {t.vodafoneCashText}
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  className={[
+                    "flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
+                    paymentMethod === "INSTAPAY"
+                      ? "border-lime-300/45 bg-lime-300/[.08]"
+                      : "border-white/[.07] bg-white/[.025] hover:border-lime-300/20",
+                  ].join(" ")}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="INSTAPAY"
+                    checked={paymentMethod === "INSTAPAY"}
+                    onChange={() => setPaymentMethod("INSTAPAY")}
+                    disabled={submitting}
+                    className="mt-1 h-4 w-4 accent-lime-300"
+                  />
+
+                  <WalletCards
+                    size={20}
+                    className="mt-0.5 shrink-0 text-lime-300"
+                  />
+
+                  <span>
+                    <strong className="block text-sm font-black text-white">
+                      {t.instapay}
+                    </strong>
+                    <span className="mt-1 block text-xs leading-6 text-white/45">
+                      {t.instapayText}
+                    </span>
+                  </span>
+                </label>
+
+                <label
+                  className={[
+                    "flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
+                    paymentMethod === "BANK_TRANSFER"
+                      ? "border-lime-300/45 bg-lime-300/[.08]"
+                      : "border-white/[.07] bg-white/[.025] hover:border-lime-300/20",
+                  ].join(" ")}
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="BANK_TRANSFER"
+                    checked={paymentMethod === "BANK_TRANSFER"}
+                    onChange={() => setPaymentMethod("BANK_TRANSFER")}
+                    disabled={submitting}
+                    className="mt-1 h-4 w-4 accent-lime-300"
+                  />
+
+                  <Landmark
+                    size={20}
+                    className="mt-0.5 shrink-0 text-lime-300"
+                  />
+
+                  <span>
+                    <strong className="block text-sm font-black text-white">
+                      {t.bankTransfer}
+                    </strong>
+                    <span className="mt-1 block text-xs leading-6 text-white/45">
+                      {t.bankTransferText}
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </section>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
               <div className="flex items-start gap-3 rounded-2xl border border-white/[.06] bg-white/[.025] p-3">
@@ -846,7 +1395,7 @@ export default function CheckoutPage() {
                   className="mt-0.5 shrink-0 text-lime-300"
                 />
                 <p className="text-xs leading-6 text-white/52">
-                  الشحن يُحدد حسب المحافظة.
+                  {t.shippingByGovernorate}
                 </p>
               </div>
 
@@ -856,7 +1405,7 @@ export default function CheckoutPage() {
                   className="mt-0.5 shrink-0 text-lime-300"
                 />
                 <p className="text-xs leading-6 text-white/52">
-                  بياناتك تستخدم لتأكيد الطلب فقط.
+                  {t.dataUse}
                 </p>
               </div>
 
@@ -866,7 +1415,7 @@ export default function CheckoutPage() {
                   className="mt-0.5 shrink-0 text-lime-300"
                 />
                 <p className="text-xs leading-6 text-white/52">
-                  لا يتم خصم أي مبلغ الآن.
+                  {t.noCharge}
                 </p>
               </div>
             </div>
@@ -882,8 +1431,8 @@ export default function CheckoutPage() {
               />
 
               {submitting
-                ? "جاري تسجيل الطلب..."
-                : "تأكيد الطلب"}
+                ? t.submitting
+                : t.confirmOrder}
             </button>
           </form>
 
@@ -895,10 +1444,10 @@ export default function CheckoutPage() {
 
               <div>
                 <h2 className="text-xl font-black text-white sm:text-2xl">
-                  ملخص الطلب
+                  {t.orderSummary}
                 </h2>
                 <p className="mt-1 text-xs text-white/40">
-                  راجع المنتجات قبل التأكيد
+                  {t.reviewProducts}
                 </p>
               </div>
             </div>
@@ -915,7 +1464,7 @@ export default function CheckoutPage() {
                   >
                     <Image
                       src={item.image}
-                      alt={item.nameAr}
+                      alt={isArabic ? item.nameAr : item.nameEn}
                       fill
                       sizes="72px"
                       className="object-contain p-1.5"
@@ -928,7 +1477,7 @@ export default function CheckoutPage() {
                       className="block truncate text-sm font-black text-white transition hover:text-lime-300"
                     >
                       {
-                        item.nameAr
+                        isArabic ? item.nameAr : item.nameEn
                       }
                     </Link>
 
@@ -937,7 +1486,7 @@ export default function CheckoutPage() {
                       className="mt-1 truncate text-[10px] font-bold uppercase tracking-[.09em] text-white/35"
                     >
                       {
-                        item.nameEn
+                        isArabic ? item.nameEn : item.nameAr
                       }
                     </p>
 
@@ -949,6 +1498,14 @@ export default function CheckoutPage() {
                         }
                       </strong>
                     </span>
+                    <span className="mt-2 block text-xs font-bold text-lime-300">
+                      {typeof priceBySlug.get(item.slug) === "number"
+                        ? formatPrice((priceBySlug.get(item.slug) as number) * item.quantity)
+                        : pricesReady
+                        ? isArabic ? "السعر غير متاح" : "Price unavailable"
+                        : "..."}
+                    </span>
+
                   </div>
 
                   <span className="grid h-8 min-w-8 place-items-center rounded-full bg-lime-300/10 px-2 text-xs font-black text-lime-300">
@@ -962,7 +1519,7 @@ export default function CheckoutPage() {
 
             <div className="mt-5 flex items-center justify-between pt-1">
               <span className="text-white/70">
-                إجمالي القطع
+                {t.totalItems}
               </span>
 
               <strong className="text-2xl font-black text-lime-300">
@@ -972,15 +1529,24 @@ export default function CheckoutPage() {
               </strong>
             </div>
 
+            <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-4">
+              <span className="font-bold text-white/70">
+                {isArabic ? "إجمالي المنتجات" : "Products Total"}
+              </span>
+              <strong className="text-xl font-black text-lime-300">
+                {pricesReady ? formatPrice(subtotal) : "..."}
+              </strong>
+            </div>
+
             <div className="mt-5 rounded-2xl border border-lime-300/15 bg-lime-300/[.05] p-4 text-xs leading-6 text-white/58">
-              سيتم تأكيد السعر النهائي والعبوات وتكلفة الشحن قبل تجهيز الطلب.
+              {t.finalConfirmation}
             </div>
 
             <Link
               href="/cart"
               className="mt-5 flex min-h-11 items-center justify-center rounded-xl border border-white/10 bg-white/[.04] px-5 text-sm font-bold text-white/75 transition hover:border-lime-300/35 hover:bg-white/[.08] hover:text-white"
             >
-              تعديل السلة
+              {t.editCart}
             </Link>
           </aside>
         </div>

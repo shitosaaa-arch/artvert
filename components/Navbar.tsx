@@ -15,6 +15,7 @@ import {
   Newspaper,
   Phone,
   Search,
+  ShieldCheck,
   ShoppingBag,
   ShoppingCart,
   Sparkles,
@@ -32,60 +33,107 @@ import {
   useCart,
 } from "@/components/cart/CartProvider";
 
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 const navigation = [
   {
-    label: "الرئيسية",
+    labelAr: "الرئيسية",
+    labelEn: "Home",
     href: "/",
     icon: Home,
   },
   {
-    label: "المنتجات",
+    labelAr: "المنتجات",
+    labelEn: "Products",
     href: "/products",
     icon: Store,
   },
   {
-    label: "دكتور ArtVert",
+    labelAr: "دكتور ArtVert",
+    labelEn: "Doctor ArtVert",
     href: "/doctor",
     icon: Stethoscope,
   },
   {
-    label: "البرامج الزراعية",
+    labelAr: "البرامج الزراعية",
+    labelEn: "Plant Care",
     href: "/plant-care",
     icon: Leaf,
   },
   {
-    label: "المقالات",
+    labelAr: "المقالات",
+    labelEn: "Blog",
     href: "/blog",
     icon: Newspaper,
   },
   {
-    label: "من نحن",
+    labelAr: "من نحن",
+    labelEn: "About Us",
     href: "/about",
     icon: Sparkles,
   },
   {
-    label: "تواصل معنا",
+    labelAr: "تواصل معنا",
+    labelEn: "Contact Us",
     href: "/contact",
     icon: Phone,
   },
 ] as const;
+
+const translations = {
+  AR: {
+    homeAria: "ArtVert Egypt - الصفحة الرئيسية",
+    mainNavAria: "التنقل الرئيسي",
+    searchAria: "البحث في المنتجات",
+    login: "تسجيل الدخول",
+    register: "إنشاء حساب",
+    admin: "الإدارة",
+    changeLanguage: "تغيير اللغة",
+    cart: "سلة التسوق",
+    shopNow: "تسوق الآن",
+    closeMenu: "إغلاق القائمة",
+    openMenu: "فتح القائمة",
+    searchPlaceholder: "ابحث عن منتج...",
+    searchButton: "بحث",
+    mobileNavAria: "التنقل على الهاتف",
+    quickNav: "تنقل سريع داخل الموقع",
+    language: "اللغة",
+  },
+  EN: {
+    homeAria: "ArtVert Egypt - Home",
+    mainNavAria: "Main navigation",
+    searchAria: "Search products",
+    login: "Log in",
+    register: "Register",
+    admin: "Admin",
+    changeLanguage: "Change language",
+    cart: "Shopping cart",
+    shopNow: "Shop now",
+    closeMenu: "Close menu",
+    openMenu: "Open menu",
+    searchPlaceholder: "Search products...",
+    searchButton: "Search",
+    mobileNavAria: "Mobile navigation",
+    quickNav: "Quick navigation",
+    language: "Language",
+  },
+} as const;
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
 
   const {
+    locale,
+    isArabic,
+    toggleLocale,
+  } = useLanguage();
+
+  const {
     totalItems,
     isReady,
   } = useCart();
 
-  const [
-    locale,
-    setLocale,
-  ] =
-    useState<
-      "AR" | "EN"
-    >("AR");
 
   const [
     menuOpen,
@@ -121,6 +169,8 @@ export default function Navbar() {
     isReady
       ? totalItems
       : 0;
+
+  const t = translations[locale];
 
   useEffect(() => {
     function handleScroll() {
@@ -257,7 +307,7 @@ export default function Navbar() {
         <Link
           href="/"
           className="flex w-fit items-center gap-2 rounded-xl outline-none focus-visible:ring-4 focus-visible:ring-[#c8f33f]/20"
-          aria-label="ArtVert Egypt - الصفحة الرئيسية"
+          aria-label={t.homeAria}
         >
           <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#c8f33f]/22 bg-[#c8f33f]/10 shadow-[0_0_22px_rgba(200,243,63,.10)]">
             <Leaf
@@ -287,8 +337,8 @@ export default function Navbar() {
 
         <nav
           className="hidden min-w-0 items-center justify-center gap-1 whitespace-nowrap text-[11px] lg:flex xl:gap-1.5 xl:text-[12px]"
-          dir="rtl"
-          aria-label="التنقل الرئيسي"
+          dir={isArabic ? "rtl" : "ltr"}
+          aria-label={t.mainNavAria}
         >
           {navigation.map(
             (item) => {
@@ -299,9 +349,7 @@ export default function Navbar() {
 
               return (
                 <Link
-                  key={
-                    item.label
-                  }
+                  key={item.href}
                   href={
                     item.href
                   }
@@ -317,7 +365,7 @@ export default function Navbar() {
                       : "border-transparent text-white/82 hover:border-white/8 hover:bg-white/[.045] hover:text-[#c8f33f]",
                   ].join(" ")}
                 >
-                  {item.label}
+                  {isArabic ? item.labelAr : item.labelEn}
                 </Link>
               );
             },
@@ -339,7 +387,7 @@ export default function Navbar() {
             aria-expanded={
               searchOpen
             }
-            aria-label="البحث في المنتجات"
+            aria-label={t.searchAria}
           >
             <Search
               aria-hidden="true"
@@ -348,43 +396,55 @@ export default function Navbar() {
           </button>
 
           <Link
-            href="/login"
+            href="/account/login"
             className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:inline-flex xl:px-4 xl:text-sm"
           >
             <LogIn
               aria-hidden="true"
               size={17}
             />
-            تسجيل الدخول
+            {t.login}
+          </Link>
+
+          <Link
+            href="/account/register"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-[#c8f33f]/22 bg-[#c8f33f]/8 px-3 text-xs font-black text-[#c8f33f] transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/12 lg:inline-flex xl:px-4 xl:text-sm"
+          >
+            <UserRound
+              aria-hidden="true"
+              size={17}
+            />
+            {t.register}
+          </Link>
+
+          <Link
+            href="/login"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:inline-flex xl:px-4 xl:text-sm"
+          >
+            <ShieldCheck
+              aria-hidden="true"
+              size={17}
+            />
+            {t.admin}
           </Link>
 
           <button
             type="button"
-            onClick={() =>
-              setLocale(
-                (
-                  currentLocale,
-                ) =>
-                  currentLocale ===
-                  "AR"
-                    ? "EN"
-                    : "AR",
-              )
-            }
+            onClick={toggleLocale}
             className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 sm:inline-flex"
-            aria-label="تغيير اللغة"
+            aria-label={t.changeLanguage}
           >
             <Globe2
               aria-hidden="true"
               size={16}
             />
-            {locale}
+            {isArabic ? "EN" : "AR"}
           </button>
 
           <Link
             href="/cart"
             className="relative grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10"
-            aria-label={`سلة التسوق، ${displayedCartCount} عناصر`}
+            aria-label={`${t.cart}, ${displayedCartCount}`}
           >
             <ShoppingCart
               aria-hidden="true"
@@ -406,7 +466,7 @@ export default function Navbar() {
               aria-hidden="true"
               size={17}
             />
-            تسوق الآن
+            {t.shopNow}
           </Link>
 
           <button
@@ -425,8 +485,8 @@ export default function Navbar() {
             aria-controls="artvert-mobile-navigation"
             aria-label={
               menuOpen
-                ? "إغلاق القائمة"
-                : "فتح القائمة"
+                ? t.closeMenu
+                : t.openMenu
             }
             className="grid min-h-11 min-w-11 place-items-center rounded-xl border border-white/12 bg-white/[.035] text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:hidden"
           >
@@ -478,7 +538,7 @@ export default function Navbar() {
                   submitSearch();
                 }
               }}
-              placeholder="ابحث عن منتج..."
+              placeholder={t.searchPlaceholder}
               className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-white/35"
             />
 
@@ -489,7 +549,7 @@ export default function Navbar() {
               }
               className="min-h-10 rounded-xl bg-[#c8f33f] px-5 text-sm font-black text-[#102014]"
             >
-              بحث
+              {t.searchButton}
             </button>
           </div>
         </div>
@@ -499,7 +559,7 @@ export default function Navbar() {
         <>
           <button
             type="button"
-            aria-label="إغلاق القائمة"
+            aria-label={t.closeMenu}
             onClick={
               closeMenu
             }
@@ -509,8 +569,8 @@ export default function Navbar() {
           <aside
             id="artvert-mobile-navigation"
             className="fixed bottom-0 right-0 top-[62px] z-50 flex w-[min(92vw,390px)] flex-col border-l border-[#9fbd35]/28 bg-[#041b11]/98 shadow-[-24px_0_70px_rgba(0,0,0,.45)] backdrop-blur-2xl lg:hidden"
-            dir="rtl"
-            aria-label="التنقل على الهاتف"
+            dir={isArabic ? "rtl" : "ltr"}
+            aria-label={t.mobileNavAria}
           >
             <div className="border-b border-white/[.07] p-4">
               <div className="flex items-center justify-between gap-3">
@@ -520,7 +580,7 @@ export default function Navbar() {
                   </p>
 
                   <p className="mt-1 text-xs text-white/42">
-                    تنقل سريع داخل الموقع
+                    {t.quickNav}
                   </p>
                 </div>
 
@@ -530,7 +590,7 @@ export default function Navbar() {
                     closeMenu
                   }
                   className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/[.035] text-white"
-                  aria-label="إغلاق القائمة"
+                  aria-label={t.closeMenu}
                 >
                   <X size={18} />
                 </button>
@@ -564,7 +624,7 @@ export default function Navbar() {
                       submitSearch();
                     }
                   }}
-                  placeholder="ابحث عن منتج..."
+                  placeholder={t.searchPlaceholder}
                   className="min-w-0 flex-1 bg-transparent px-2 py-2 text-sm text-white outline-none placeholder:text-white/30"
                 />
 
@@ -575,7 +635,7 @@ export default function Navbar() {
                   }
                   className="min-h-9 rounded-lg bg-[#c8f33f] px-3 text-xs font-black text-[#102014]"
                 >
-                  بحث
+                  {t.searchButton}
                 </button>
               </div>
             </div>
@@ -594,9 +654,7 @@ export default function Navbar() {
 
                     return (
                       <Link
-                        key={
-                          item.label
-                        }
+                        key={item.href}
                         href={
                           item.href
                         }
@@ -620,7 +678,7 @@ export default function Navbar() {
                         </span>
 
                         <span>
-                          {item.label}
+                          {isArabic ? item.labelAr : item.labelEn}
                         </span>
                       </Link>
                     );
@@ -644,7 +702,7 @@ export default function Navbar() {
                       size={18}
                       className="text-[#c8f33f]"
                     />
-                    سلة التسوق
+                    {t.cart}
                   </span>
 
                   <span className="grid h-6 min-w-6 place-items-center rounded-full bg-[#c8f33f] px-1.5 text-xs font-black text-[#102014]">
@@ -656,7 +714,7 @@ export default function Navbar() {
                 </Link>
 
                 <Link
-                  href="/login"
+                  href="/account/login"
                   onClick={
                     closeMenu
                   }
@@ -666,24 +724,44 @@ export default function Navbar() {
                     aria-hidden="true"
                     size={18}
                   />
-                  تسجيل الدخول
+                  {t.login}
+                </Link>
+
+                <Link
+                  href="/account/register"
+                  onClick={
+                    closeMenu
+                  }
+                  className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm font-black text-white"
+                >
+                  <UserRound
+                    aria-hidden="true"
+                    size={18}
+                    className="text-[#c8f33f]"
+                  />
+                  {t.register}
+                </Link>
+
+                <Link
+                  href="/login"
+                  onClick={
+                    closeMenu
+                  }
+                  className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm font-black text-white"
+                >
+                  <ShieldCheck
+                    aria-hidden="true"
+                    size={18}
+                    className="text-[#c8f33f]"
+                  />
+                  {t.admin}
                 </Link>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setLocale(
-                      (
-                        currentLocale,
-                      ) =>
-                        currentLocale ===
-                        "AR"
-                          ? "EN"
-                          : "AR",
-                    )
-                  }
+                  onClick={toggleLocale}
                   className="flex min-h-12 items-center justify-between rounded-xl border border-white/10 bg-white/[.025] px-4 text-sm font-bold text-white"
-                  aria-label="تغيير اللغة"
+                  aria-label={t.changeLanguage}
                 >
                   <span className="flex items-center gap-3">
                     <Globe2
@@ -691,11 +769,11 @@ export default function Navbar() {
                       size={18}
                       className="text-[#c8f33f]"
                     />
-                    اللغة
+                    {t.language}
                   </span>
 
                   <span dir="ltr">
-                    {locale}
+                    {isArabic ? "EN" : "AR"}
                   </span>
                 </button>
 
@@ -710,7 +788,7 @@ export default function Navbar() {
                     aria-hidden="true"
                     size={18}
                   />
-                  تسوق الآن
+                  {t.shopNow}
                 </Link>
               </div>
             </div>

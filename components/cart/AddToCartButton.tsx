@@ -7,6 +7,7 @@ import {
   type CartProduct,
   useCart,
 } from "@/components/cart/CartProvider";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 type AddToCartButtonProps = {
   product: CartProduct;
@@ -16,11 +17,29 @@ export default function AddToCartButton({
   product,
 }: AddToCartButtonProps) {
   const { addItem, getProductQuantity } = useCart();
+  const { locale } = useLanguage();
 
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
 
   const currentQuantity = getProductQuantity(product.slug);
+
+  const t =
+    locale === "AR"
+      ? {
+          increase: "زيادة الكمية",
+          decrease: "تقليل الكمية",
+          added: "تمت الإضافة للسلة",
+          add: "أضف إلى السلة",
+          current: "موجود حاليًا في السلة:",
+        }
+      : {
+          increase: "Increase quantity",
+          decrease: "Decrease quantity",
+          added: "Added to Cart",
+          add: "Add to Cart",
+          current: "Currently in cart:",
+        };
 
   function decreaseQuantity() {
     setQuantity((current) => Math.max(1, current - 1));
@@ -40,17 +59,14 @@ export default function AddToCartButton({
   }
 
   return (
-    <section
-      className="mt-8 rounded-3xl border border-lime-300/20 bg-[#0b1a0e]/95 p-5 shadow-2xl"
-      dir="rtl"
-    >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="flex h-12 items-center justify-between rounded-xl border border-white/10 bg-white/[.04]">
+    <section>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex h-12 items-center overflow-hidden rounded-xl border border-white/10 bg-white/[.04]">
           <button
             type="button"
             onClick={increaseQuantity}
             className="grid h-12 w-12 place-items-center text-lime-300 transition hover:bg-white/[.06]"
-            aria-label="زيادة الكمية"
+            aria-label={t.increase}
           >
             <Plus aria-hidden="true" size={18} />
           </button>
@@ -67,7 +83,7 @@ export default function AddToCartButton({
             onClick={decreaseQuantity}
             disabled={quantity <= 1}
             className="grid h-12 w-12 place-items-center text-lime-300 transition hover:bg-white/[.06] disabled:cursor-not-allowed disabled:opacity-35"
-            aria-label="تقليل الكمية"
+            aria-label={t.decrease}
           >
             <Minus aria-hidden="true" size={18} />
           </button>
@@ -86,12 +102,12 @@ export default function AddToCartButton({
           {added ? (
             <>
               <Check aria-hidden="true" size={19} />
-              تمت الإضافة للسلة
+              {t.added}
             </>
           ) : (
             <>
               <ShoppingCart aria-hidden="true" size={19} />
-              أضف إلى السلة
+              {t.add}
             </>
           )}
         </button>
@@ -99,7 +115,7 @@ export default function AddToCartButton({
 
       {currentQuantity > 0 && (
         <p className="mt-3 text-sm font-bold text-lime-300">
-          موجود حاليًا في السلة: {currentQuantity}
+          {t.current} {currentQuantity}
         </p>
       )}
     </section>

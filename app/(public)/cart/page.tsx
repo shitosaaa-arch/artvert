@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -17,8 +18,149 @@ import {
 import {
   useCart,
 } from "@/components/cart/CartProvider";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
+const translations = {
+  AR: {
+    emptyTitle: "سلة التسوق فارغة",
+    emptyText: "أضف المنتجات التي تحتاجها، ثم ارجع هنا لإتمام الطلب بسهولة.",
+    browseProducts: "تصفح المنتجات",
+    cartBadge: "سلة ArtVert",
+    cartTitle: "سلة التسوق",
+    totalItemsLabel: "إجمالي عدد القطع:",
+    clearCart: "تفريغ السلة",
+    increaseQuantity: "زيادة كمية",
+    decreaseQuantity: "تقليل كمية",
+    removeProduct: "حذف المنتج",
+    orderSummary: "ملخص الطلب",
+    reviewCart: "راجع محتويات السلة قبل المتابعة",
+    productTypes: "عدد أنواع المنتجات",
+    totalPieces: "إجمالي القطع",
+    shippingText: "سيتم تأكيد تكلفة الشحن حسب المحافظة ومكان التوصيل.",
+    originalProducts: "جميع المنتجات أصلية ومعبأة من ArtVert Egypt.",
+    finalPrices: "يتم تأكيد الأسعار والعبوات النهائية قبل تجهيز الطلب.",
+    checkout: "إتمام الطلب",
+    addMore: "إضافة منتجات أخرى",
+    unitPrice: "سعر الوحدة",
+    itemTotal: "إجمالي المنتج",
+    subtotal: "إجمالي المنتجات",
+    priceUnavailable: "السعر غير متاح",
+    currency: "ج.م",
+  },
+  EN: {
+    emptyTitle: "Your Shopping Cart Is Empty",
+    emptyText: "Add the products you need, then return here to complete your order easily.",
+    browseProducts: "Browse Products",
+    cartBadge: "ArtVert Cart",
+    cartTitle: "Shopping Cart",
+    totalItemsLabel: "Total items:",
+    clearCart: "Clear Cart",
+    increaseQuantity: "Increase quantity of",
+    decreaseQuantity: "Decrease quantity of",
+    removeProduct: "Remove Product",
+    orderSummary: "Order Summary",
+    reviewCart: "Review your cart before continuing",
+    productTypes: "Product types",
+    totalPieces: "Total items",
+    shippingText: "Shipping cost will be confirmed according to the governorate and delivery location.",
+    originalProducts: "All products are original and packed by ArtVert Egypt.",
+    finalPrices: "Final prices and package sizes are confirmed before preparing the order.",
+    checkout: "Checkout",
+    addMore: "Add More Products",
+    unitPrice: "Unit Price",
+    itemTotal: "Item Total",
+    subtotal: "Products Total",
+    priceUnavailable: "Price unavailable",
+    currency: "EGP",
+  },
+} as const;
+
+const categoryTranslations: Record<string, string> = {
+  "المنشطات الحيوية": "Biostimulants",
+  "الأحماض الأمينية": "Amino Acids",
+  "المبيدات الحشرية": "Insecticides",
+  "الأسمدة المتخصصة": "Specialty Fertilizers",
+  "محسنات التربة": "Soil Improvers",
+  "الزراعة المنزلية": "Home Gardening",
+  "العناصر الصغرى": "Micronutrients",
+  "الأسمدة العضوية": "Organic Fertilizers",
+  "أسمدة الكالسيوم": "Calcium Fertilizers",
+  "محسنات الامتصاص": "Absorption Enhancers",
+  "الأسمدة المركبة": "Compound Fertilizers",
+  "العناصر الكبرى والصغرى": "Macro & Micronutrients",
+  "منشطات الجذور": "Root Stimulants",
+  "منظمات النمو": "Growth Regulators",
+};
+
+type CatalogPriceProduct = {
+  slug: string;
+  price: number | null;
+  comparePrice: number | null;
+};
 
 export default function CartPage() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
+  const [catalogPrices, setCatalogPrices] = useState<CatalogPriceProduct[]>([]);
+  const [pricesReady, setPricesReady] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPrices() {
+      try {
+        const response = await fetch("/api/products", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Unable to load product prices.");
+        }
+
+        const data = (await response.json()) as CatalogPriceProduct[];
+
+        if (active && Array.isArray(data)) {
+          setCatalogPrices(data);
+        }
+      } catch {
+        if (active) {
+          setCatalogPrices([]);
+        }
+      } finally {
+        if (active) {
+          setPricesReady(true);
+        }
+      }
+    }
+
+    void loadPrices();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const priceBySlug = useMemo(
+    () =>
+      new Map(
+        catalogPrices.map((product) => [
+          product.slug,
+          typeof product.price === "number"
+            ? product.price
+            : null,
+        ]),
+      ),
+    [catalogPrices],
+  );
+
+  const formatPrice = (value: number) =>
+    `${value.toLocaleString(isArabic ? "ar-EG" : "en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })} ${t.currency}`;
+
   const {
     items,
     totalItems,
@@ -28,6 +170,21 @@ export default function CartPage() {
     removeItem,
     clearCart,
   } = useCart();
+
+  const subtotal = useMemo(
+    () =>
+      items.reduce((total, item) => {
+        const currentPrice = priceBySlug.get(item.slug);
+
+        return (
+          total +
+          (typeof currentPrice === "number"
+            ? currentPrice * item.quantity
+            : 0)
+        );
+      }, 0),
+    [items, priceBySlug],
+  );
 
   if (!isReady) {
     return (
@@ -74,18 +231,18 @@ export default function CartPage() {
           </div>
 
           <h1 className="mt-6 text-2xl font-black text-white sm:text-3xl">
-            سلة التسوق فارغة
+            {t.emptyTitle}
           </h1>
 
           <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-white/58 sm:text-base">
-            أضف المنتجات التي تحتاجها، ثم ارجع هنا لإتمام الطلب بسهولة.
+            {t.emptyText}
           </p>
 
           <Link
             href="/products"
             className="mt-7 inline-flex min-h-[54px] w-full items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.22)] transition hover:-translate-y-0.5 hover:bg-lime-200 sm:w-auto sm:text-base"
           >
-            تصفح المنتجات
+            {t.browseProducts}
             <ArrowLeft
               aria-hidden="true"
               size={18}
@@ -119,15 +276,15 @@ export default function CartPage() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
               <ShoppingBag size={16} />
-              سلة ArtVert
+              {t.cartBadge}
             </span>
 
             <h1 className="mt-4 text-3xl font-black text-white sm:text-4xl">
-              سلة التسوق
+              {t.cartTitle}
             </h1>
 
             <p className="mt-2 text-sm text-white/55">
-              إجمالي عدد القطع:{" "}
+              {t.totalItemsLabel}{" "}
               <strong className="text-lime-300">
                 {totalItems}
               </strong>
@@ -143,7 +300,7 @@ export default function CartPage() {
               aria-hidden="true"
               size={17}
             />
-            تفريغ السلة
+            {t.clearCart}
           </button>
         </div>
 
@@ -160,7 +317,7 @@ export default function CartPage() {
                 >
                   <Image
                     src={item.image}
-                    alt={item.nameAr}
+                    alt={isArabic ? item.nameAr : item.nameEn}
                     fill
                     sizes="(max-width: 640px) 100vw, 160px"
                     className="object-contain p-3 transition-transform duration-500 hover:scale-[1.04]"
@@ -170,7 +327,7 @@ export default function CartPage() {
                 <div className="min-w-0">
                   {item.category && (
                     <span className="inline-flex rounded-full border border-lime-300/15 bg-lime-300/10 px-3 py-1 text-[11px] font-bold text-lime-300">
-                      {item.category}
+                      {isArabic ? item.category : categoryTranslations[item.category] ?? item.category}
                     </span>
                   )}
 
@@ -178,15 +335,48 @@ export default function CartPage() {
                     href={`/products/${item.slug}`}
                     className="mt-3 block text-xl font-black text-white transition hover:text-lime-300"
                   >
-                    {item.nameAr}
+                    {isArabic ? item.nameAr : item.nameEn}
                   </Link>
 
                   <p
                     className="mt-1 truncate text-xs font-bold uppercase tracking-[.12em] text-white/38"
                     dir="ltr"
                   >
-                    {item.nameEn}
+                    {isArabic ? item.nameEn : item.nameAr}
                   </p>
+
+                  <div className="mt-4 grid gap-2 rounded-2xl border border-white/[.06] bg-white/[.025] p-3 sm:grid-cols-2">
+                    <div>
+                      <p className="text-[11px] font-bold text-white/40">
+                        {t.unitPrice}
+                      </p>
+
+                      <p className="mt-1 text-sm font-black text-lime-300">
+                        {typeof priceBySlug.get(item.slug) === "number"
+                          ? formatPrice(priceBySlug.get(item.slug) as number)
+                          : pricesReady
+                          ? t.priceUnavailable
+                          : "..."}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[11px] font-bold text-white/40">
+                        {t.itemTotal}
+                      </p>
+
+                      <p className="mt-1 text-sm font-black text-white">
+                        {typeof priceBySlug.get(item.slug) === "number"
+                          ? formatPrice(
+                              (priceBySlug.get(item.slug) as number) *
+                                item.quantity,
+                            )
+                          : pricesReady
+                          ? t.priceUnavailable
+                          : "..."}
+                      </p>
+                    </div>
+                  </div>
 
                   <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="inline-flex h-12 w-full items-center justify-between overflow-hidden rounded-xl border border-white/10 bg-white/[.04] sm:w-auto">
@@ -198,7 +388,7 @@ export default function CartPage() {
                           )
                         }
                         className="grid h-12 w-12 place-items-center text-lime-300 transition hover:bg-lime-300/10"
-                        aria-label={`زيادة كمية ${item.nameAr}`}
+                        aria-label={`${t.increaseQuantity} ${isArabic ? item.nameAr : item.nameEn}`}
                       >
                         <Plus
                           aria-hidden="true"
@@ -218,7 +408,7 @@ export default function CartPage() {
                           )
                         }
                         className="grid h-12 w-12 place-items-center text-lime-300 transition hover:bg-lime-300/10"
-                        aria-label={`تقليل كمية ${item.nameAr}`}
+                        aria-label={`${t.decreaseQuantity} ${isArabic ? item.nameAr : item.nameEn}`}
                       >
                         <Minus
                           aria-hidden="true"
@@ -240,7 +430,7 @@ export default function CartPage() {
                         aria-hidden="true"
                         size={16}
                       />
-                      حذف المنتج
+                      {t.removeProduct}
                     </button>
                   </div>
                 </div>
@@ -256,27 +446,34 @@ export default function CartPage() {
 
               <div>
                 <h2 className="text-xl font-black text-white sm:text-2xl">
-                  ملخص الطلب
+                  {t.orderSummary}
                 </h2>
 
                 <p className="mt-1 text-xs text-white/40">
-                  راجع محتويات السلة قبل المتابعة
+                  {t.reviewCart}
                 </p>
               </div>
             </div>
 
             <div className="mt-6 space-y-4 border-b border-white/10 pb-6">
               <div className="flex items-center justify-between text-sm text-white/58">
-                <span>عدد أنواع المنتجات</span>
+                <span>{t.productTypes}</span>
                 <strong className="text-white">
                   {items.length}
                 </strong>
               </div>
 
               <div className="flex items-center justify-between text-sm text-white/58">
-                <span>إجمالي القطع</span>
+                <span>{t.totalPieces}</span>
                 <strong className="text-lg text-lime-300">
                   {totalItems}
+                </strong>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-white/[.06] pt-4 text-sm text-white/58">
+                <span>{t.subtotal}</span>
+                <strong className="text-xl font-black text-lime-300">
+                  {pricesReady ? formatPrice(subtotal) : "..."}
                 </strong>
               </div>
             </div>
@@ -288,7 +485,7 @@ export default function CartPage() {
                   className="mt-0.5 shrink-0 text-lime-300"
                 />
                 <p className="text-xs leading-6 text-white/52">
-                  سيتم تأكيد تكلفة الشحن حسب المحافظة ومكان التوصيل.
+                  {t.shippingText}
                 </p>
               </div>
 
@@ -298,7 +495,7 @@ export default function CartPage() {
                   className="mt-0.5 shrink-0 text-lime-300"
                 />
                 <p className="text-xs leading-6 text-white/52">
-                  جميع المنتجات أصلية ومعبأة من ArtVert Egypt.
+                  {t.originalProducts}
                 </p>
               </div>
 
@@ -308,7 +505,7 @@ export default function CartPage() {
                   className="mt-0.5 shrink-0 text-lime-300"
                 />
                 <p className="text-xs leading-6 text-white/52">
-                  يتم تأكيد الأسعار والعبوات النهائية قبل تجهيز الطلب.
+                  {t.finalPrices}
                 </p>
               </div>
             </div>
@@ -317,14 +514,14 @@ export default function CartPage() {
               href="/checkout"
               className="mt-6 flex min-h-[54px] w-full items-center justify-center rounded-xl bg-lime-300 px-6 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.22)] transition hover:-translate-y-0.5 hover:bg-lime-200 sm:text-base"
             >
-              إتمام الطلب
+              {t.checkout}
             </Link>
 
             <Link
               href="/products"
               className="mt-3 flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-5 text-sm font-bold text-white/72 transition hover:border-lime-300/35 hover:text-white"
             >
-              إضافة منتجات أخرى
+              {t.addMore}
               <ArrowLeft size={17} />
             </Link>
           </aside>
@@ -335,11 +532,11 @@ export default function CartPage() {
         <div className="mx-auto flex max-w-xl items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="text-[11px] text-white/45">
-              إجمالي القطع
+              {t.subtotal}
             </p>
 
             <p className="mt-1 text-lg font-black text-lime-300">
-              {totalItems}
+              {pricesReady ? formatPrice(subtotal) : "..."}
             </p>
           </div>
 
@@ -347,7 +544,7 @@ export default function CartPage() {
             href="/checkout"
             className="flex min-h-12 flex-[1.35] items-center justify-center rounded-xl bg-lime-300 px-5 text-sm font-black text-[#071109] shadow-[0_8px_20px_rgba(200,243,63,.18)]"
           >
-            إتمام الطلب
+            {t.checkout}
           </Link>
         </div>
       </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -9,36 +11,97 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import { useLanguage } from "@/components/i18n/LanguageProvider";
+
 const sections = [
   {
     icon: PackageCheck,
-    title: "استلام المنتجات",
-    text: "يتم التأكد من سلامة المنتج عند الاستلام، وفي حالة وجود أي مشكلة يتم التواصل مع فريق ArtVert Egypt في أسرع وقت.",
+    titleAr: "استلام المنتجات",
+    titleEn: "Receiving Products",
+    textAr:
+      "يتم التأكد من سلامة المنتج عند الاستلام، وفي حالة وجود أي مشكلة يتم التواصل مع فريق ArtVert Egypt في أسرع وقت.",
+    textEn:
+      "Please check the product condition upon delivery. If there is any issue, contact the ArtVert Egypt team as soon as possible.",
   },
   {
     icon: RefreshCw,
-    title: "حالات الاستبدال",
-    text: "يتم النظر في طلبات الاستبدال في حالة وجود عيب في المنتج أو وصول منتج غير مطابق للطلب.",
+    titleAr: "حالات الاستبدال",
+    titleEn: "Replacement Cases",
+    textAr:
+      "يتم النظر في طلبات الاستبدال في حالة وجود عيب في المنتج أو وصول منتج غير مطابق للطلب.",
+    textEn:
+      "Replacement requests are reviewed if the product has a defect or if the delivered product does not match the order.",
   },
   {
     icon: ShieldCheck,
-    title: "شروط الاستبدال",
-    text: "يجب أن يكون المنتج بحالته الأصلية وغير مستخدم، مع التواصل خلال المدة المحددة من تاريخ الاستلام.",
+    titleAr: "شروط الاستبدال",
+    titleEn: "Replacement Conditions",
+    textAr:
+      "يجب أن يكون المنتج بحالته الأصلية وغير مستخدم، مع التواصل خلال المدة المحددة من تاريخ الاستلام.",
+    textEn:
+      "The product must be in its original condition and unused, and you should contact us within the specified period from the delivery date.",
   },
   {
     icon: MessageCircle,
-    title: "التواصل",
-    text: "لأي استفسارات خاصة بالطلبات أو المنتجات، يرجى التواصل مع خدمة العملاء عبر واتساب.",
+    titleAr: "التواصل",
+    titleEn: "Contact",
+    textAr:
+      "لأي استفسارات خاصة بالطلبات أو المنتجات، يرجى التواصل مع خدمة العملاء عبر واتساب.",
+    textEn:
+      "For any questions about orders or products, please contact customer service via WhatsApp.",
   },
 ] as const;
 
 const replacementSteps = [
-  "تواصل مع خدمة العملاء مع توضيح رقم الطلب والمشكلة.",
-  "أرسل صورًا واضحة للمنتج والعبوة عند وجود تلف أو عدم مطابقة.",
-  "انتظر مراجعة الطلب وتأكيد الإجراء المناسب من فريق ArtVert.",
+  {
+    ar: "تواصل مع خدمة العملاء مع توضيح رقم الطلب والمشكلة.",
+    en: "Contact customer service and provide the order number and details of the issue.",
+  },
+  {
+    ar: "أرسل صورًا واضحة للمنتج والعبوة عند وجود تلف أو عدم مطابقة.",
+    en: "Send clear photos of the product and packaging if there is damage or a mismatch.",
+  },
+  {
+    ar: "انتظر مراجعة الطلب وتأكيد الإجراء المناسب من فريق ArtVert.",
+    en: "Wait for the ArtVert team to review the request and confirm the appropriate action.",
+  },
 ] as const;
 
+const translations = {
+  AR: {
+    afterSales: "خدمة ما بعد البيع",
+    title: "سياسة الاستبدال والاسترجاع",
+    intro:
+      "توضح هذه الصفحة الحالات والشروط الخاصة باستبدال أو استرجاع منتجات ArtVert Egypt.",
+    replacementStepsTitle: "خطوات طلب الاستبدال",
+    replacementStepsSub: "اتبع الخطوات التالية لتسريع مراجعة طلبك",
+    customerService: "خدمة العملاء",
+    needHelp: "تحتاج مساعدة بخصوص طلبك؟",
+    helpText:
+      "تواصل معنا عبر واتساب مع رقم الطلب وصور المنتج، وسيتولى فريق ArtVert مراجعة الحالة.",
+    whatsapp: "تواصل عبر واتساب",
+    contactPage: "صفحة التواصل",
+  },
+  EN: {
+    afterSales: "After-Sales Service",
+    title: "Return & Replacement Policy",
+    intro:
+      "This page explains the cases and conditions for replacing or returning ArtVert Egypt products.",
+    replacementStepsTitle: "Replacement Request Steps",
+    replacementStepsSub: "Follow these steps to speed up the review of your request",
+    customerService: "Customer Service",
+    needHelp: "Need Help with Your Order?",
+    helpText:
+      "Contact us via WhatsApp with your order number and product photos, and the ArtVert team will review the case.",
+    whatsapp: "Contact via WhatsApp",
+    contactPage: "Contact Page",
+  },
+} as const;
+
 export default function ReturnsPage() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
   return (
     <main
       className="relative min-h-screen overflow-hidden bg-[#061008] py-10 text-white font-sans sm:py-14 lg:py-16"
@@ -60,15 +123,15 @@ export default function ReturnsPage() {
         <section className="text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
             <RefreshCw size={16} />
-            خدمة ما بعد البيع
+            {t.afterSales}
           </span>
 
           <h1 className="mt-5 text-3xl font-black leading-tight text-white sm:mt-6 sm:text-5xl">
-            سياسة الاستبدال والاسترجاع
+            {t.title}
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-sm leading-8 text-white/68 sm:mt-6 sm:text-lg">
-            توضح هذه الصفحة الحالات والشروط الخاصة باستبدال أو استرجاع منتجات ArtVert Egypt.
+            {t.intro}
           </p>
         </section>
 
@@ -79,7 +142,7 @@ export default function ReturnsPage() {
 
               return (
                 <article
-                  key={section.title}
+                  key={section.titleAr}
                   className="group rounded-[22px] border border-white/[.06] bg-white/[.025] p-4 transition duration-300 hover:border-lime-300/20 hover:bg-white/[.04] sm:p-6"
                 >
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -90,7 +153,7 @@ export default function ReturnsPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-3">
                         <h2 className="text-xl font-black text-white sm:text-2xl">
-                          {section.title}
+                          {isArabic ? section.titleAr : section.titleEn}
                         </h2>
 
                         <span className="text-2xl font-black text-white/[.07]">
@@ -99,7 +162,7 @@ export default function ReturnsPage() {
                       </div>
 
                       <p className="mt-3 text-sm leading-8 text-white/60 sm:text-base">
-                        {section.text}
+                        {isArabic ? section.textAr : section.textEn}
                       </p>
                     </div>
                   </div>
@@ -117,10 +180,10 @@ export default function ReturnsPage() {
 
             <div>
               <h2 className="text-xl font-black text-white sm:text-2xl">
-                خطوات طلب الاستبدال
+                {t.replacementStepsTitle}
               </h2>
               <p className="mt-1 text-xs text-white/40">
-                اتبع الخطوات التالية لتسريع مراجعة طلبك
+                {t.replacementStepsSub}
               </p>
             </div>
           </div>
@@ -128,7 +191,7 @@ export default function ReturnsPage() {
           <div className="mt-5 grid gap-3">
             {replacementSteps.map((item, index) => (
               <div
-                key={item}
+                key={item.ar}
                 className="flex items-start gap-3 rounded-2xl border border-white/[.06] bg-white/[.025] p-4"
               >
                 <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-lime-300 text-xs font-black text-[#071109]">
@@ -136,7 +199,7 @@ export default function ReturnsPage() {
                 </span>
 
                 <p className="text-sm leading-7 text-white/64">
-                  {item}
+                  {isArabic ? item.ar : item.en}
                 </p>
               </div>
             ))}
@@ -146,15 +209,15 @@ export default function ReturnsPage() {
         <section className="mt-6 rounded-[28px] border border-lime-300/20 bg-[linear-gradient(135deg,rgba(200,243,63,.08),rgba(11,26,14,.92))] p-5 text-center shadow-[0_0_40px_rgba(200,243,63,0.10)] backdrop-blur-xl sm:mt-8 sm:p-8">
           <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
             <CheckCircle2 size={15} />
-            خدمة العملاء
+            {t.customerService}
           </span>
 
           <h2 className="mt-5 text-2xl font-black text-white sm:text-3xl">
-            تحتاج مساعدة بخصوص طلبك؟
+            {t.needHelp}
           </h2>
 
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-white/60">
-            تواصل معنا عبر واتساب مع رقم الطلب وصور المنتج، وسيتولى فريق ArtVert مراجعة الحالة.
+            {t.helpText}
           </p>
 
           <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
@@ -165,14 +228,14 @@ export default function ReturnsPage() {
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#21a366] px-7 text-sm font-black text-white shadow-[0_8px_25px_rgba(33,163,102,0.22)] transition hover:-translate-y-0.5 hover:bg-[#27b875]"
             >
               <MessageCircle size={18} />
-              تواصل عبر واتساب
+              {t.whatsapp}
             </a>
 
             <Link
               href="/contact"
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-7 text-sm font-black text-white/78 transition hover:border-lime-300/35 hover:bg-white/[.08] hover:text-white"
             >
-              صفحة التواصل
+              {t.contactPage}
               <ArrowLeft size={16} />
             </Link>
           </div>

@@ -10,7 +10,6 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import {
-  Bot,
   CheckCircle2,
   FlaskConical,
   Image as ImageIcon,
@@ -28,6 +27,7 @@ import {
 } from "lucide-react";
 
 import { sendDoctorMessage } from "@/lib/doctor/client";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 import type {
   DoctorChatRequest,
   DoctorChatResponse,
@@ -262,6 +262,8 @@ function TrustCard({
 }
 
 export function DoctorChat() {
+  const { isArabic, toggleLocale } = useLanguage();
+  const t = (ar: string, en: string) => (isArabic ? ar : en);
   const [sessionId, setSessionId] = useState<string>();
   const [status, setStatus] = useState<UiStatus>("welcome");
   const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
@@ -326,7 +328,7 @@ export function DoctorChat() {
           text:
             result.reply ||
             result.error ||
-            "محتاج توضيح بسيط أكتر.",
+            t("محتاج توضيح بسيط أكتر.", "I need a little more information."),
           result,
         },
       ]);
@@ -381,7 +383,7 @@ export function DoctorChat() {
             text:
               error instanceof Error
                 ? error.message
-                : "تعذر الاتصال بدكتور ArtVert AI.",
+                : t("تعذر الاتصال بدكتور ArtVert AI.", "Unable to connect to Doctor ArtVert AI."),
           },
         ]);
       } finally {
@@ -428,7 +430,7 @@ export function DoctorChat() {
       }
 
       if (!response.ok || !result.imageRef || !result.sessionId) {
-        throw new Error(result.error || "تعذر رفع الصورة.");
+        throw new Error(result.error || t("تعذر رفع الصورة.", "Unable to upload the image."));
       }
 
       setImageRef(result.imageRef);
@@ -446,7 +448,7 @@ export function DoctorChat() {
           id: crypto.randomUUID(),
           role: "assistant",
           text:
-            error instanceof Error ? error.message : "تعذر رفع الصورة.",
+            error instanceof Error ? error.message : t("تعذر رفع الصورة.", "Unable to upload the image."),
         },
       ]);
     } finally {
@@ -477,7 +479,7 @@ export function DoctorChat() {
     void submitTurn(
       {
         message:
-          trimmed || "حلل صورة النبات المرفوعة وساعدني في معرفة المشكلة.",
+          trimmed || t("حلل صورة النبات المرفوعة وساعدني في معرفة المشكلة.", "Analyze the uploaded plant image and help me identify the problem."),
         imageRef,
         sessionId: sessionIdRef.current ?? sessionId,
       },
@@ -501,16 +503,16 @@ export function DoctorChat() {
   const canSend = Boolean(message.trim()) || Boolean(imageRef);
   const doctorState =
     status === "thinking"
-      ? "براجع الحالة الآن"
+      ? t("براجع الحالة الآن", "Reviewing the case now")
       : status === "differential_ready"
-      ? "وصلنا للنتيجة"
+      ? t("وصلنا للنتيجة", "Diagnosis ready")
       : status === "needs_information"
-      ? "محتاج معلومة إضافية"
-      : "وصلت الطبيب شغالة";
+      ? t("محتاج معلومة إضافية", "More information needed")
+      : t("وصلت الطبيب شغالة", "Doctor is online");
 
   return (
     <main
-      dir="rtl"
+      dir={isArabic ? "rtl" : "ltr"}
       className="relative min-h-[100dvh] w-full overflow-x-hidden bg-[#0a1e12] px-2 py-2 text-white sm:px-3 lg:h-[100dvh] lg:overflow-hidden font-sans"
     >
       {/* Background Gradient & Pattern */}
@@ -539,18 +541,18 @@ export function DoctorChat() {
           </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-bold text-white/90">
-            <Link href="/" className="hover:text-[#c8f33f] transition-colors">الرئيسية</Link>
-            <Link href="/plant-care" className="hover:text-[#c8f33f] transition-colors">الرعاية والحماية</Link>
-            <Link href="/doctor" className="text-[#c8f33f]">الرعاية والتشخيص</Link>
-            <Link href="/blog" className="hover:text-[#c8f33f] transition-colors">المدونة</Link>
-            <Link href="/about" className="hover:text-[#c8f33f] transition-colors">من نحن</Link>
+            <Link href="/" className="hover:text-[#c8f33f] transition-colors">{t("الرئيسية", "Home")}</Link>
+            <Link href="/plant-care" className="hover:text-[#c8f33f] transition-colors">{t("الرعاية والحماية", "Plant Care")}</Link>
+            <Link href="/doctor" className="text-[#c8f33f]">{t("الرعاية والتشخيص", "Care & Diagnosis")}</Link>
+            <Link href="/blog" className="hover:text-[#c8f33f] transition-colors">{t("المدونة", "Blog")}</Link>
+            <Link href="/about" className="hover:text-[#c8f33f] transition-colors">{t("من نحن", "About Us")}</Link>
           </div>
 
           <Link
             href="/contact"
             className="hidden rounded-xl border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-bold text-white transition hover:bg-white/20 sm:inline-flex"
           >
-            تواصل معنا
+            {t("تواصل معنا", "Contact Us")}
           </Link>
         </nav>
 
@@ -561,17 +563,17 @@ export function DoctorChat() {
               <Menu size={20} />
             </button>
             <button className="hidden sm:flex h-10 items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 text-xs font-bold text-white hover:bg-white/10">
-              تسجيل الدخول <LogIn size={16} className="rotate-180" />
+              {t("تسجيل الدخول", "Login")} <LogIn size={16} className="rotate-180" />
             </button>
-            <button className="hidden sm:flex h-10 items-center rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-white/80 hover:bg-white/10">
-              AR
+            <button onClick={toggleLocale} className="hidden sm:flex h-10 items-center rounded-xl border border-white/10 bg-white/5 px-3 text-xs font-bold text-white/80 hover:bg-white/10">
+              {isArabic ? "EN" : "AR"}
             </button>
             <Link href="/cart" className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white hover:bg-white/10">
               <ShoppingCart size={18} />
               <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[#c8f33f] text-[10px] font-black text-black">0</span>
             </Link>
             <Link href="/products" className="flex h-10 items-center rounded-xl bg-[#c8f33f] px-3 text-xs font-black text-[#102014] shadow-[0_0_15px_rgba(200,243,63,.3)] transition-colors hover:bg-[#d4f85e] sm:px-5 sm:text-sm">
-              تسوق الآن <ShoppingCart size={16} className="ml-2 hidden sm:block" />
+              {t("تسوق الآن", "Shop Now")} <ShoppingCart size={16} className="ml-2 hidden sm:block" />
             </Link>
           </div>
           
@@ -593,7 +595,7 @@ export function DoctorChat() {
             <div className="relative flex flex-col items-center overflow-hidden rounded-[24px] border border-[#9fbd35]/30 bg-[#072517]/80 pb-6 pt-4 backdrop-blur-md">
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 border border-[#9fbd35]/30">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-[#62ff59]" />
-                <span className="text-[10px] font-bold text-white">وصلنا للنتيجة</span>
+                <span className="text-[10px] font-bold text-white">{t("وصلنا للنتيجة", "Diagnosis ready")}</span>
               </div>
               
               <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-0 opacity-40">
@@ -601,16 +603,16 @@ export function DoctorChat() {
               </div>
 
               <div className="relative z-10 mt-6 h-48 w-48">
-                <Image src="/doctor/artvert-doctor.png" alt="دكتور ArtVert AI" fill className="object-contain object-bottom drop-shadow-2xl" />
+                <Image src="/doctor/artvert-doctor.png" alt={t("دكتور ArtVert AI", "Doctor ArtVert AI")} fill className="object-contain object-bottom drop-shadow-2xl" />
               </div>
 
               <div className="relative z-10 flex flex-col items-center mt-2 text-center px-4">
                 <div className="flex items-center gap-2">
-                   <h2 className="text-lg font-black text-white">دكتور ArtVert AI</h2>
+                   <h2 className="text-lg font-black text-white">{t("دكتور ArtVert AI", "Doctor ArtVert AI")}</h2>
                    <CheckCircle2 size={16} className="text-[#c8f33f] fill-[#c8f33f]/20" />
                 </div>
                 <p className="mt-2 text-xs leading-5 text-white/70">
-                  تحدث مع أسرع ذكاء زراعي في الوطن العربي.<br/> جاهز لمساعدتك 24/2
+                  {t("تحدث مع أسرع ذكاء زراعي في الوطن العربي.", "Talk to advanced agricultural AI.")}<br/> {t("جاهز لمساعدتك 24/2", "Ready to help you anytime") }
                 </p>
                 <div className="mt-4 flex items-center justify-center gap-4 text-white/60">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hover:text-white cursor-pointer transition-colors">
@@ -625,15 +627,15 @@ export function DoctorChat() {
               </div>
               
               <button onClick={resetConversation} className="relative z-10 mx-4 mt-5 flex w-[calc(100%-32px)] items-center justify-center rounded-xl bg-[#2a4d3b] border border-[#3e6650] py-3 text-sm font-bold text-white transition-colors hover:bg-[#325a45]">
-                محادثة جديدة
+                {t("محادثة جديدة", "New conversation")}
               </button>
             </div>
 
             {/* Sidebar Trust Cards */}
             <div className="rounded-[24px] border border-[#c8f33f]/40 bg-[#122e1e]/80 p-4 flex items-center justify-between shadow-[0_0_15px_rgba(200,243,63,.1)] backdrop-blur-md">
                <div>
-                  <p className="text-sm font-black text-white">أكثر من 10,000 مزارع</p>
-                  <p className="text-xs font-bold text-[#c8f33f] mt-0.5">يثقون بدكتور آرت فيرت</p>
+                  <p className="text-sm font-black text-white">{t("أكثر من 10,000 مزارع", "More than 10,000 growers")}</p>
+                  <p className="text-xs font-bold text-[#c8f33f] mt-0.5">{t("يثقون بدكتور آرت فيرت", "trust Doctor ArtVert")}</p>
                   <p className="mt-1 text-sm tracking-[.15em] text-[#c8f33f]">★★★★★</p>
                </div>
                <div className="h-10 w-10 rounded-xl border border-[#c8f33f]/40 bg-[#c8f33f]/10 flex items-center justify-center text-[#c8f33f]">
@@ -643,8 +645,8 @@ export function DoctorChat() {
 
             <div className="rounded-[24px] border border-white/10 bg-[#072517]/80 p-4 flex items-center justify-between backdrop-blur-md">
                <div>
-                  <p className="text-sm font-black text-white">جودة على مضمونة</p>
-                  <p className="text-xs text-white/60 mt-0.5">منتجات عالية الفعالية</p>
+                  <p className="text-sm font-black text-white">{t("جودة على مضمونة", "Guaranteed quality")}</p>
+                  <p className="text-xs text-white/60 mt-0.5">{t("منتجات عالية الفعالية", "Highly effective products")}</p>
                </div>
                <div className="h-10 w-10 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center text-white/80">
                   <FlaskConical size={20} />
@@ -662,9 +664,9 @@ export function DoctorChat() {
             <div className="relative z-10 flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-4 py-3 sm:px-6 sm:py-4">
               <div>
                 <h1 className="text-lg font-black text-[#c8f33f] sm:text-2xl">
-                  اسأل دكتور ArtVert AI
+                  {t("اسأل دكتور ArtVert AI", "Ask Doctor ArtVert AI")}
                 </h1>
-                <p className="mt-1 text-xs text-white/70 sm:text-sm">المهندس الزراعي الذكي</p>
+                <p className="mt-1 text-xs text-white/70 sm:text-sm">{t("المهندس الزراعي الذكي", "Your smart agricultural expert")}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2 rounded-full border border-[#9fbd35]/30 bg-[#153a25] px-3 py-2 sm:px-4">
                 <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#62ff59]" />
@@ -685,26 +687,26 @@ export function DoctorChat() {
                     <div className="space-y-4 pr-0 sm:pr-12">
                       <div className="relative rounded-2xl rounded-tr-sm bg-[#153a25]/80 border border-white/10 px-5 py-4 text-sm leading-7 text-white backdrop-blur-md">
                         <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-[#c8f33f]/40 bg-[#9fbd35]/20 text-[#c8f33f] sm:absolute sm:-right-10 sm:top-0 sm:mb-0">
-                          <Bot size={18} />
+                          <Leaf size={18} />
                         </div>
-                        <p className="font-black text-[#c8f33f] mb-1">مرحباً بك! أنا دكتور آرت فيرت.</p>
-                        اسألني عن أي مشكلة في نباتك، وسأساعدك في التشخيص والعلاج خطوة بخطوة لأفضل نتائج.
+                        <p className="font-black text-[#c8f33f] mb-1">{t("مرحباً بك! أنا دكتور آرت فيرت.", "Welcome! I’m Doctor ArtVert.")}</p>
+                        {t("اسألني عن أي مشكلة في نباتك، وسأساعدك في التشخيص والعلاج خطوة بخطوة لأفضل نتائج.", "Ask me about any plant problem, and I’ll help you with diagnosis and treatment step by step for the best results.")}
                       </div>
                       <div className="relative rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-5 py-3 text-sm text-white/90 backdrop-blur-md w-[85%]">
                         <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/70 sm:absolute sm:-right-10 sm:top-0 sm:mb-0">
-                          <Bot size={18} />
+                          <Leaf size={18} />
                         </div>
-                        تعبت ندردش في إيه النهاردة؟ أو عندك زرع محتاج متابعة؟
+                        {t("تعبت ندردش في إيه النهاردة؟ أو عندك زرع محتاج متابعة؟", "What would you like to talk about today? Do you have a plant that needs attention?")}
                       </div>
                     </div>
                   </div>
 
                   {/* Trust Cards Grid */}
                   <div className="ml-auto grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
-                    <TrustCard icon={<ShieldCheck size={24} />} title="جودة مضمونة" text="منتجات عالية الفعالية" />
-                    <TrustCard featured icon={<CheckCircle2 size={24} />} title="أكثر من 10,000 مزارع" text="يثقون بخبرتنا" />
-                    <TrustCard icon={<FlaskConical size={24} />} title="آمنة على" text="الضمير النباتات" />
-                    <TrustCard icon={<Leaf size={24} />} title="آمنة على النباتات" text="طاولة المعارض" />
+                    <TrustCard icon={<ShieldCheck size={24} />} title={t("جودة مضمونة", "Guaranteed quality")} text={t("منتجات عالية الفعالية", "Highly effective products")} />
+                    <TrustCard featured icon={<CheckCircle2 size={24} />} title={t("أكثر من 10,000 مزارع", "More than 10,000 growers")} text={t("يثقون بخبرتنا", "trust our expertise")} />
+                    <TrustCard icon={<FlaskConical size={24} />} title={t("حلول فعالة وموثوقة", "Effective, trusted solutions")} text="" />
+                    <TrustCard icon={<Leaf size={24} />} title={t("تركيبة مبتكرة لطيفة وآمنة", "Innovative, gentle and safe formula")} text="" />
                   </div>
                 </div>
               ) : (
@@ -716,7 +718,7 @@ export function DoctorChat() {
                       <div key={item.id} className={["flex items-start gap-4", isUser ? "justify-start" : "justify-end"].join(" ")}>
                         {!isUser && (
                           <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#c8f33f]/40 bg-[#9fbd35]/20 text-[#c8f33f]">
-                            <Bot size={16} />
+                            <Leaf size={16} />
                           </div>
                         )}
                         <div className={["max-w-[85%] rounded-2xl p-4 text-sm leading-7 backdrop-blur-md", isUser ? "rounded-tr-sm bg-[#c8f33f]/10 border border-[#c8f33f]/30 text-white" : "rounded-tl-sm bg-[#153a25]/80 border border-white/10 text-white/90"].join(" ")}>
@@ -736,7 +738,7 @@ export function DoctorChat() {
                               <div className="mb-3 flex items-center gap-2 text-[#c8f33f]">
                                 <ShoppingCart size={17} aria-hidden="true" />
                                 <p className="text-xs font-black">
-                                  منتجات ArtVert المقترحة
+                                  {t("منتجات ArtVert المقترحة", "Recommended ArtVert products")}
                                 </p>
                               </div>
 
@@ -770,13 +772,13 @@ export function DoctorChat() {
                                           <div className="flex flex-col items-center gap-2 text-white/35">
                                             <ImageIcon size={30} aria-hidden="true" />
                                             <span className="text-[10px] font-bold">
-                                              صورة المنتج غير متاحة
+                                              {t("صورة المنتج غير متاحة", "Product image unavailable")}
                                             </span>
                                           </div>
                                         )}
 
                                         <span className="absolute right-2 top-2 rounded-full border border-[#c8f33f]/30 bg-[#071d11]/85 px-2.5 py-1 text-[9px] font-black text-[#c8f33f] backdrop-blur-md">
-                                          موصى به
+                                          {t("موصى به", "Recommended")}
                                         </span>
                                       </div>
 
@@ -827,11 +829,11 @@ export function DoctorChat() {
                                             className="mt-3 flex min-h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#c8f33f] px-4 py-2 text-xs font-black text-[#102014] shadow-[0_7px_18px_rgba(200,243,63,.16)] transition hover:bg-[#d9ff63]"
                                           >
                                             <ShoppingCart size={15} aria-hidden="true" />
-                                            عرض المنتج
+                                            {t("عرض المنتج", "View product")}
                                           </Link>
                                         ) : (
                                           <div className="mt-3 flex min-h-10 w-full items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold text-white/40">
-                                            رابط المنتج غير متاح
+                                            {t("رابط المنتج غير متاح", "Product link unavailable")}
                                           </div>
                                         )}
                                       </div>
@@ -854,11 +856,11 @@ export function DoctorChat() {
                   {isRequestPending && (
                     <div className="flex items-start gap-4 justify-end">
                       <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[#c8f33f]/40 bg-[#9fbd35]/20 text-[#c8f33f]">
-                         <Bot size={16} />
+                         <Leaf size={16} />
                       </div>
                       <div className="flex items-center gap-3 rounded-2xl rounded-tl-sm bg-[#153a25]/80 border border-white/10 px-5 py-3 backdrop-blur-md">
                         <Loader2 size={16} className="animate-spin text-[#c8f33f]" />
-                        <span className="text-sm font-bold text-white/70">بكتب...</span>
+                        <span className="text-sm font-bold text-white/70">{t("بكتب...", "Typing...")}</span>
                       </div>
                     </div>
                   )}
@@ -875,12 +877,12 @@ export function DoctorChat() {
                   <label className="flex h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[16px] border border-white/10 bg-transparent text-white transition-colors hover:bg-white/5 sm:h-20 sm:w-[90px] sm:flex-none sm:flex-col sm:gap-2 sm:rounded-[22px]">
                     <input type="file" accept="image/*" onChange={(e) => void chooseImage(e.target.files?.[0])} disabled={isRequestPending || imageUploading} className="sr-only" />
                     <ImageIcon size={22} className={imageUploading ? "animate-bounce" : ""} />
-                    <span className="text-[10px] sm:text-xs">تحميل صورة</span>
+                    <span className="text-[10px] sm:text-xs">{t("تحميل صورة", "Upload image")}</span>
                   </label>
 
                   <button type="button" onClick={() => setRecording(!recording)} className={["flex h-16 w-20 sm:h-20 sm:w-[90px] flex-col items-center justify-center gap-1 sm:gap-2 rounded-[22px] border transition-colors", recording ? "border-rose-400/50 bg-rose-400/20 text-rose-300" : "border-white/10 bg-transparent text-white hover:bg-white/5"].join(" ")}>
                     <Mic size={22} className={recording ? "animate-pulse" : ""} />
-                    <span className="text-[10px] sm:text-xs">تسجيل صوتي</span>
+                    <span className="text-[10px] sm:text-xs">{t("تسجيل صوتي", "Voice recording")}</span>
                   </button>
                 </div>
 
@@ -896,11 +898,11 @@ export function DoctorChat() {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (e.preventDefault(), sendCurrentMessage())}
-                    placeholder="اكتب هنا واسأل عن مشكلتك..."
+                    placeholder={t("اكتب هنا واسأل عن مشكلتك...", "Type here and ask about your problem...")}
                     className="w-full bg-transparent pl-12 text-sm leading-loose text-white outline-none placeholder:text-white/40 sm:pl-16"
                   />
                   <div className="absolute left-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                    <span className="hidden sm:inline text-xs font-bold text-white/60">محادثة جديدة</span>
+                    <span className="hidden sm:inline text-xs font-bold text-white/60">{t("محادثة جديدة", "New conversation")}</span>
                     <button
                       onClick={sendCurrentMessage}
                       disabled={!canSend || isRequestPending || imageUploading}

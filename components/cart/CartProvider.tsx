@@ -16,6 +16,8 @@ export type CartProduct = {
   nameEn: string;
   image: string;
   category?: string;
+  price?: number | null;
+  comparePrice?: number | null;
 };
 
 export type CartItem = CartProduct & {
@@ -25,6 +27,7 @@ export type CartItem = CartProduct & {
 type CartContextValue = {
   items: CartItem[];
   totalItems: number;
+  subtotal: number;
   isReady: boolean;
   addItem: (product: CartProduct, quantity?: number) => void;
   removeItem: (slug: string) => void;
@@ -46,6 +49,24 @@ function normalizeQuantity(quantity: number) {
   }
 
   return Math.max(1, Math.floor(quantity));
+}
+
+function normalizePrice(
+  value: unknown,
+): number | null {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed)
+    ? parsed
+    : null;
 }
 
 function isValidStoredItem(value: unknown): value is CartItem {
@@ -92,6 +113,8 @@ export function CartProvider({
             .filter(isValidStoredItem)
             .map((item) => ({
               ...item,
+              price: normalizePrice(item.price),
+              comparePrice: normalizePrice(item.comparePrice),
               quantity: normalizeQuantity(item.quantity),
             })),
         );
@@ -131,6 +154,9 @@ export function CartProvider({
           item.slug === product.slug
             ? {
                 ...item,
+                ...product,
+                price: normalizePrice(product.price),
+                comparePrice: normalizePrice(product.comparePrice),
                 quantity:
                   item.quantity + safeQuantity,
               }
@@ -142,6 +168,8 @@ export function CartProvider({
         ...currentItems,
         {
           ...product,
+          price: normalizePrice(product.price),
+          comparePrice: normalizePrice(product.comparePrice),
           quantity: safeQuantity,
         },
       ];
@@ -239,10 +267,24 @@ export function CartProvider({
     [items],
   );
 
-  const value = useMemo<CartContextValue>(
+  const subtotal = useMemo(
+    () =>
+      items.reduce(
+        (total, item) =>
+          total +
+          (typeof item.price === "number"
+            ? item.price * item.quantity
+            : 0),
+        0,
+      ),
+    [items],
+  );
+
+  const value = useMemo(
     () => ({
       items,
       totalItems,
+      subtotal,
       isReady,
       addItem,
       removeItem,
@@ -253,7 +295,7 @@ export function CartProvider({
       containsProduct,
       getProductQuantity,
     }),
-    [items, totalItems, isReady],
+    [items, totalItems, subtotal, isReady],
   );
 
   return (

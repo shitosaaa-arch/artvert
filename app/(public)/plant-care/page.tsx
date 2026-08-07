@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -13,59 +15,133 @@ import {
   Sparkles,
   Sprout,
 } from "lucide-react";
+import { useLanguage } from "@/components/i18n/LanguageProvider";
 
 const problems = [
   {
     icon: Leaf,
-    title: "اصفرار الأوراق",
-    text: "قد يكون بسبب نقص العناصر أو زيادة الري أو مشاكل الجذور.",
-    treatment:
+    titleAr: "اصفرار الأوراق",
+    titleEn: "Yellowing Leaves",
+    textAr: "قد يكون بسبب نقص العناصر أو زيادة الري أو مشاكل الجذور.",
+    textEn: "It may be caused by nutrient deficiency, overwatering, or root problems.",
+    treatmentAr:
       "فحص الري والتربة، واستخدام برنامج تغذية مناسب يحتوي على العناصر الصغرى.",
+    treatmentEn:
+      "Check irrigation and soil conditions, and use a suitable nutrition program containing micronutrients.",
   },
   {
     icon: Droplets,
-    title: "ذبول النبات",
-    text: "غالبًا بسبب مشاكل الجذور أو نقص المياه أو حرارة زائدة.",
-    treatment:
+    titleAr: "ذبول النبات",
+    titleEn: "Plant Wilting",
+    textAr: "غالبًا بسبب مشاكل الجذور أو نقص المياه أو حرارة زائدة.",
+    textEn: "Often caused by root problems, lack of water, or excessive heat.",
+    treatmentAr:
       "فحص الجذور وتقليل الإجهاد وتحسين التهوية واستخدام منشطات جذور.",
+    treatmentEn:
+      "Check the roots, reduce stress, improve aeration, and use root stimulants.",
   },
   {
     icon: Bug,
-    title: "إصابات الحشرات",
-    text: "مثل المن والذبابة البيضاء والعناكب.",
-    treatment:
+    titleAr: "إصابات الحشرات",
+    titleEn: "Insect Infestations",
+    textAr: "مثل المن والذبابة البيضاء والعناكب.",
+    textEn: "Such as aphids, whiteflies, and mites.",
+    treatmentAr:
       "تحديد نوع الحشرة واختيار المبيد المناسب حسب الإصابة.",
+    treatmentEn:
+      "Identify the insect and choose the appropriate pesticide according to the infestation.",
   },
   {
     icon: CircleDot,
-    title: "بقع على الأوراق",
-    text: "قد تكون إصابة فطرية أو نقص عنصر غذائي.",
-    treatment:
+    titleAr: "بقع على الأوراق",
+    titleEn: "Leaf Spots",
+    textAr: "قد تكون إصابة فطرية أو نقص عنصر غذائي.",
+    textEn: "They may be caused by a fungal infection or nutrient deficiency.",
+    treatmentAr:
       "تشخيص السبب أولًا ثم استخدام المعاملة المناسبة.",
+    treatmentEn:
+      "Diagnose the cause first, then use the appropriate treatment.",
   },
   {
     icon: Sprout,
-    title: "ضعف النمو",
-    text: "النبات لا ينمو بشكل طبيعي أو الأوراق صغيرة.",
-    treatment:
+    titleAr: "ضعف النمو",
+    titleEn: "Weak Growth",
+    textAr: "النبات لا ينمو بشكل طبيعي أو الأوراق صغيرة.",
+    textEn: "The plant is not growing normally or its leaves are small.",
+    treatmentAr:
       "تحسين التغذية واستخدام منشطات النمو والعناصر المطلوبة.",
+    treatmentEn:
+      "Improve nutrition and use growth stimulants and the required nutrients.",
   },
   {
     icon: Flower2,
-    title: "مشاكل نباتات المنزل",
-    text: "مثل سقوط الأوراق وضعف النباتات الداخلية.",
-    treatment:
+    titleAr: "مشاكل نباتات المنزل",
+    titleEn: "Houseplant Problems",
+    textAr: "مثل سقوط الأوراق وضعف النباتات الداخلية.",
+    textEn: "Such as leaf drop and weak indoor plants.",
+    treatmentAr:
       "ضبط الإضاءة والري واستخدام التغذية المناسبة للنباتات المنزلية.",
+    treatmentEn:
+      "Adjust lighting and watering, and use suitable nutrition for houseplants.",
   },
 ] as const;
 
 const careSteps = [
-  "صورة واضحة للأوراق أو الجزء المصاب.",
-  "اسم النبات أو المحصول وعمره التقريبي.",
-  "وصف الري والتسميد والأعراض التي ظهرت.",
+  {
+    ar: "صورة واضحة للأوراق أو الجزء المصاب.",
+    en: "A clear photo of the leaves or affected part.",
+  },
+  {
+    ar: "اسم النبات أو المحصول وعمره التقريبي.",
+    en: "The plant or crop name and its approximate age.",
+  },
+  {
+    ar: "وصف الري والتسميد والأعراض التي ظهرت.",
+    en: "A description of watering, fertilization, and the symptoms that appeared.",
+  },
 ] as const;
 
+const translations = {
+  AR: {
+    careDiagnosis: "{t.careDiagnosis}",
+    title: "{t.title}",
+    intro:
+      "{t.intro}",
+    diagnoseNow: "{t.diagnoseNow}",
+    browseProducts: "{t.browseProducts}",
+    suitableStep: "{t.suitableStep}",
+    beforePhoto: "{t.beforePhoto}",
+    prepareInfo: "{t.prepareInfo}",
+    imageDiagnosis: "{t.imageDiagnosis}",
+    haveProblem: "{t.haveProblem}",
+    uploadText:
+      "{t.uploadText}",
+    openDoctor: "{t.openDoctor}",
+    sendWhatsapp: "{t.sendWhatsapp}",
+  },
+  EN: {
+    careDiagnosis: "Care & Diagnosis",
+    title: "Diagnose Plant Problems",
+    intro:
+      "Learn about common plant problems and send a photo of the condition for clearer assistance from Doctor ArtVert.",
+    diagnoseNow: "Diagnose Your Plant Now",
+    browseProducts: "Browse Products",
+    suitableStep: "Recommended Step",
+    beforePhoto: "Before Sending the Photo",
+    prepareInfo: "Prepare this information for a better diagnosis",
+    imageDiagnosis: "Image Diagnosis",
+    haveProblem: "Having a problem with your plant?",
+    uploadText:
+      "Upload a clear photo and talk to Doctor ArtVert for a direct response and practical steps.",
+    openDoctor: "Open Doctor ArtVert",
+    sendWhatsapp: "Send Photo via WhatsApp",
+  },
+} as const;
+
 export default function PlantCarePage() {
+  const { locale, isArabic } = useLanguage();
+  const t = translations[locale];
+
   return (
     <main
       className="relative min-h-screen overflow-hidden bg-[#061008] py-10 text-white font-sans sm:py-14 lg:py-16"
@@ -87,15 +163,15 @@ export default function PlantCarePage() {
         <section className="text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
             <Leaf size={16} />
-            الرعاية والتشخيص
+            {t.careDiagnosis}
           </span>
 
           <h1 className="mt-5 text-3xl font-black leading-tight text-white sm:mt-6 sm:text-5xl lg:text-6xl">
-            تشخيص مشاكل النبات
+            {t.title}
           </h1>
 
           <p className="mx-auto mt-4 max-w-3xl text-sm leading-8 text-white/68 sm:mt-6 sm:text-lg">
-            تعرف على أشهر المشكلات التي تصيب النباتات، وأرسل صورة الحالة للحصول على مساعدة أوضح من دكتور ArtVert.
+            {t.intro}
           </p>
 
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
@@ -104,7 +180,7 @@ export default function PlantCarePage() {
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.22)] transition hover:-translate-y-0.5 hover:bg-lime-200"
             >
               <Camera size={18} />
-              شخّص حالتك الآن
+              {t.diagnoseNow}
             </Link>
 
             <Link
@@ -112,7 +188,7 @@ export default function PlantCarePage() {
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-7 text-sm font-black text-white/78 transition hover:border-lime-300/35 hover:bg-white/[.08] hover:text-white"
             >
               <Sprout size={18} />
-              تصفح المنتجات
+              {t.browseProducts}
             </Link>
           </div>
         </section>
@@ -123,7 +199,7 @@ export default function PlantCarePage() {
 
             return (
               <article
-                key={problem.title}
+                key={problem.titleAr}
                 className="group overflow-hidden rounded-[24px] border border-lime-300/15 bg-[#0b1a0e]/84 shadow-[0_16px_38px_rgba(0,0,0,.22)] backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-lime-300/35 hover:shadow-[0_18px_42px_rgba(200,243,63,.10)]"
               >
                 <div className="relative border-b border-white/[.06] bg-[radial-gradient(circle_at_85%_10%,rgba(200,243,63,.13),transparent_34%),linear-gradient(135deg,rgba(255,255,255,.03),rgba(255,255,255,.01))] p-5">
@@ -138,11 +214,11 @@ export default function PlantCarePage() {
                   </div>
 
                   <h2 className="mt-5 text-xl font-black text-white sm:text-2xl">
-                    {problem.title}
+                    {isArabic ? problem.titleAr : problem.titleEn}
                   </h2>
 
                   <p className="mt-3 text-sm leading-7 text-white/56">
-                    {problem.text}
+                    {isArabic ? problem.textAr : problem.textEn}
                   </p>
                 </div>
 
@@ -154,12 +230,12 @@ export default function PlantCarePage() {
                         className="text-lime-300"
                       />
                       <h3 className="text-sm font-black text-lime-300">
-                        الخطوة المناسبة
+                        {t.suitableStep}
                       </h3>
                     </div>
 
                     <p className="mt-3 text-sm leading-7 text-white/68">
-                      {problem.treatment}
+                      {isArabic ? problem.treatmentAr : problem.treatmentEn}
                     </p>
                   </div>
                 </div>
@@ -172,17 +248,17 @@ export default function PlantCarePage() {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/18 bg-lime-300/[.06] px-4 py-2 text-xs font-black text-lime-300">
               <ShieldCheck size={15} />
-              قبل إرسال الصورة
+              {t.beforePhoto}
             </span>
 
             <h2 className="mt-4 text-2xl font-black text-white sm:text-3xl">
-              جهّز هذه المعلومات للحصول على تشخيص أفضل
+              {t.prepareInfo}
             </h2>
 
             <div className="mt-5 grid gap-3">
               {careSteps.map((item) => (
                 <div
-                  key={item}
+                  key={item.ar}
                   className="flex items-start gap-3 rounded-2xl border border-white/[.06] bg-white/[.025] p-4"
                 >
                   <CheckCircle2
@@ -190,7 +266,7 @@ export default function PlantCarePage() {
                     className="mt-1 shrink-0 text-lime-300"
                   />
                   <p className="text-sm leading-7 text-white/64">
-                    {item}
+                    {isArabic ? item.ar : item.en}
                   </p>
                 </div>
               ))}
@@ -205,15 +281,15 @@ export default function PlantCarePage() {
         <section className="mx-auto mt-10 max-w-5xl rounded-[28px] border border-lime-300/20 bg-[linear-gradient(135deg,rgba(200,243,63,.08),rgba(11,26,14,.92))] px-5 py-10 text-center shadow-[0_0_40px_rgba(200,243,63,0.10)] backdrop-blur-xl sm:mt-16 sm:px-10 sm:py-12">
           <span className="inline-flex items-center gap-2 rounded-full border border-lime-300/25 bg-lime-300/10 px-4 py-2 text-xs font-black text-lime-300">
             <Sparkles size={15} />
-            تشخيص بالصور
+            {t.imageDiagnosis}
           </span>
 
           <h2 className="mt-6 text-3xl font-black text-white sm:text-5xl">
-            عندك مشكلة في نباتك؟
+            {t.haveProblem}
           </h2>
 
           <p className="mx-auto mt-5 max-w-2xl text-sm leading-8 text-white/66 sm:text-base">
-            ارفع صورة واضحة وتحدث مع دكتور ArtVert للحصول على رد مباشر وخطوات عملية.
+            {t.uploadText}
           </p>
 
           <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
@@ -222,7 +298,7 @@ export default function PlantCarePage() {
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-lime-300 px-7 text-sm font-black text-[#071109] shadow-[0_8px_25px_rgba(200,243,63,0.22)] transition hover:-translate-y-0.5 hover:bg-lime-200"
             >
               <MessageCircle size={18} />
-              افتح دكتور ArtVert
+              {t.openDoctor}
             </Link>
 
             <a
@@ -232,7 +308,7 @@ export default function PlantCarePage() {
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-7 text-sm font-black text-white/78 transition hover:border-lime-300/35 hover:bg-white/[.08] hover:text-white"
             >
               <Camera size={18} />
-              أرسل الصورة عبر واتساب
+              {t.sendWhatsapp}
               <ArrowLeft size={16} />
             </a>
           </div>
