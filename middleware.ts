@@ -22,12 +22,18 @@ export default withAuth(
 
     const token = request.nextauth.token;
 
+    // الجواسيس الجديدة لكشف محتوى التوكن
+    console.log("=== 1. التوكن الذي وصل للميدل وير ===", token);
+    console.log("=== 2. نتيجة فحص الصلاحية ===", token ? isUserRole(token.role) : "لا يوجد توكن");
+    console.log("=== 3. وقت الانتهاء مقابل الوقت الحالي ===", token?.sessionExpiresAt, "<=", Date.now());
+
     if (
       !token ||
       !isUserRole(token.role) ||
       !token.sessionExpiresAt ||
       token.sessionExpiresAt <= Date.now()
     ) {
+      console.log("=== 4. الرفض: تم تفعيل شرط الطرد والتوجيه لصفحة الدخول ===");
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set(
         "callbackUrl",
@@ -37,6 +43,7 @@ export default withAuth(
       return NextResponse.redirect(loginUrl);
     }
 
+    console.log("=== 5. نجاح: السماح بالمرور للوحة التحكم ===");
     const response = NextResponse.next();
     response.headers.set(
       "x-request-id",

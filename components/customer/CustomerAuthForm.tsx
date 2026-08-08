@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
@@ -61,32 +62,42 @@ export default function CustomerAuthForm({
     setError("");
 
     const form = new FormData(event.currentTarget);
+    const email = form.get("email") as string;
+    const password = form.get("password") as string;
 
-    const body =
-      mode === "register"
-        ? {
-            email: form.get("email"),
-            password: form.get("password"),
-            displayName: form.get("displayName"),
-            locale: locale === "AR" ? "ar-EG" : "en",
-          }
-        : {
-            email: form.get("email"),
-            password: form.get("password"),
-          };
+    if (mode === "login") {
+      const result = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
 
-    const response = await fetch(
-      `/api/customer/auth/${
-        mode === "register" ? "register" : "login"
-      }`,
-      {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify(body),
+      if (result?.error) {
+        setError(t.requestError);
+        setLoading(false);
+        return;
+      }
+
+      // توجيه العميل لصفحة حسابه
+      router.push("/account");
+      router.refresh();
+      return;
+    }
+
+    const body = {
+      email,
+      password,
+      displayName: form.get("displayName") as string,
+      locale: locale === "AR" ? "ar-EG" : "en",
+    };
+
+    const response = await fetch("/api/customer/auth/register", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
       },
-    );
+      body: JSON.stringify(body),
+    });
 
     if (!response.ok) {
       setError(t.requestError);
@@ -94,6 +105,7 @@ export default function CustomerAuthForm({
       return;
     }
 
+    // توجيه العميل لصفحة حسابه بعد التسجيل
     router.push("/account");
     router.refresh();
   }
@@ -150,7 +162,7 @@ export default function CustomerAuthForm({
         <p>{t.passwordHint}</p>
       )}
 
-      {error && <p>{error}</p>}
+      {error && <p className="text-red-500">{error}</p>}
 
       <button
         type="submit"

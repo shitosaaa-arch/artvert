@@ -417,8 +417,9 @@ export default function Navbar() {
             {t.register}
           </Link>
 
+          {/* التعديل هنا لزر الديسكتوب */}
           <Link
-            href="/login"
+            href="/admin-login"
             className="hidden min-h-11 items-center gap-2 rounded-xl border border-white/12 bg-white/[.035] px-3 text-xs font-black text-white transition hover:border-[#c8f33f]/45 hover:bg-[#c8f33f]/10 lg:inline-flex xl:px-4 xl:text-sm"
           >
             <ShieldCheck
@@ -742,8 +743,9 @@ export default function Navbar() {
                   {t.register}
                 </Link>
 
+                {/* التعديل هنا لزر الموبايل */}
                 <Link
-                  href="/login"
+                  href="/admin-login"
                   onClick={
                     closeMenu
                   }

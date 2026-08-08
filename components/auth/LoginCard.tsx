@@ -1,8 +1,11 @@
 "use client";
 
 import { type FormEvent, useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import {
+  Eye,
+  EyeOff,
   Loader2,
   LockKeyhole,
   LogIn,
@@ -31,7 +34,8 @@ const translations = {
     loading: "جاري تسجيل الدخول...",
     login: "تسجيل الدخول",
     forgotPassword: "نسيت كلمة المرور؟",
-    forgotPasswordTitle: "استعادة كلمة المرور ستتوفر لاحقًا.",
+    showPassword: "إظهار كلمة المرور",
+    hidePassword: "إخفاء كلمة المرور",
   },
   EN: {
     secureAccess: "Secure Access",
@@ -46,11 +50,15 @@ const translations = {
     loading: "Signing in...",
     login: "Sign In",
     forgotPassword: "Forgot your password?",
-    forgotPasswordTitle: "Password recovery will be available later.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
   },
 } as const;
 
-type MessageType = "" | "accessDenied" | "invalidCredentials";
+type MessageType =
+  | ""
+  | "accessDenied"
+  | "invalidCredentials";
 
 export default function LoginCard({
   callbackUrl,
@@ -59,57 +67,78 @@ export default function LoginCard({
   const { locale } = useLanguage();
   const t = translations[locale];
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [messageType, setMessageType] = useState<MessageType>(
-    error === "AccessDenied"
-      ? "accessDenied"
-      : "",
-  );
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [messageType, setMessageType] =
+    useState<MessageType>(
+      error === "AccessDenied"
+        ? "accessDenied"
+        : "",
+    );
 
   const message =
     messageType === "accessDenied"
       ? t.accessDenied
-      : messageType === "invalidCredentials"
+      : messageType ===
+          "invalidCredentials"
         ? t.invalidCredentials
         : "";
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     setLoading(true);
     setMessageType("");
 
-    const data = new FormData(event.currentTarget);
+    const data = new FormData(
+      event.currentTarget,
+    );
 
-    const result = await signIn("credentials", {
-      email: data.get("email"),
-      password: data.get("password"),
-      remember:
-        data.get("remember") === "on"
-          ? "true"
-          : "false",
-      redirect: false,
-      callbackUrl,
-    });
+    const result = await signIn(
+      "credentials",
+      {
+        email: data.get("email"),
+        password: data.get("password"),
+        remember:
+          data.get("remember") === "on"
+            ? "true"
+            : "false",
+        redirect: false,
+        callbackUrl,
+      },
+    );
 
     setLoading(false);
 
     if (result?.error) {
-      setMessageType("invalidCredentials");
+      setMessageType(
+        "invalidCredentials",
+      );
       return;
     }
 
-    window.location.assign(result?.url || callbackUrl);
+    window.location.assign(
+      result?.url || callbackUrl,
+    );
   }
 
   return (
-    <section className="rounded-[28px] border border-white/5 bg-white/[.02] p-5 sm:p-6">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-300/10 text-lime-300">
+    <section>
+      <div className="flex items-center gap-2 text-lime-300">
         <ShieldCheck
           aria-hidden="true"
-          size={22}
+          size={18}
         />
+
+        <span className="text-xs font-black">
+          {t.secureAccess}
+        </span>
       </div>
 
       <h1 className="mt-5 text-3xl font-black">
@@ -157,16 +186,54 @@ export default function LoginCard({
             {t.password}
           </span>
 
-          <input
-            required
-            minLength={8}
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="••••••••"
-            className="h-12 w-full rounded-xl border border-white/10 bg-white/[.05] px-4 text-left outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10"
-            dir="ltr"
-          />
+          <div className="relative">
+            <input
+              required
+              minLength={8}
+              name="password"
+              type={
+                showPassword
+                  ? "text"
+                  : "password"
+              }
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="h-12 w-full rounded-xl border border-white/10 bg-white/[.05] px-4 pr-12 text-left outline-none transition placeholder:text-white/25 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10"
+              dir="ltr"
+            />
+
+            <button
+              type="button"
+              onClick={() =>
+                setShowPassword(
+                  (current) => !current,
+                )
+              }
+              aria-label={
+                showPassword
+                  ? t.hidePassword
+                  : t.showPassword
+              }
+              title={
+                showPassword
+                  ? t.hidePassword
+                  : t.showPassword
+              }
+              className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-white/45 transition hover:bg-white/[.06] hover:text-lime-300"
+            >
+              {showPassword ? (
+                <EyeOff
+                  aria-hidden="true"
+                  size={18}
+                />
+              ) : (
+                <Eye
+                  aria-hidden="true"
+                  size={18}
+                />
+              )}
+            </button>
+          </div>
         </label>
 
         <label className="flex cursor-pointer items-center gap-2 text-sm text-white/60">
@@ -212,14 +279,12 @@ export default function LoginCard({
         </button>
       </form>
 
-      <button
-        type="button"
-        disabled
-        title={t.forgotPasswordTitle}
-        className="mt-5 text-sm font-bold text-lime-300/55"
+      <Link
+        href="/forgot-password"
+        className="mt-5 inline-block text-sm font-bold text-lime-300 transition hover:text-lime-200"
       >
         {t.forgotPassword}
-      </button>
+      </Link>
     </section>
   );
 }

@@ -32,9 +32,22 @@ model User {
   updatedDeficiencies Deficiency[] @relation("DeficiencyUpdatedBy")
   createdProducts     Product[]    @relation("ProductCreatedBy")
   updatedProducts     Product[]    @relation("ProductUpdatedBy")
+  passwordResetTokens UserPasswordResetToken[]
 
   @@index([active])
   @@index([role])
+}
+
+model UserPasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
 }
 
 enum KnowledgeEntityType {
