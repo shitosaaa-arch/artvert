@@ -16,6 +16,7 @@ import {
   Stethoscope,
   UserCheck,
   UsersRound,
+  MessageCircle,
 } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
@@ -317,6 +318,7 @@ export default async function CustomersPage({
     marketingCustomers,
     deletionRequests,
     filteredCount,
+    whatsappInterestedCount,
   ] = await Promise.all([
     prisma.customer.count(),
 
@@ -356,6 +358,12 @@ export default async function CustomersPage({
 
     prisma.customer.count({
       where,
+    }),
+
+    prisma.customerAuditLog.count({
+      where: {
+        action: "WHATSAPP_INTERESTED",
+      },
     }),
   ]);
 
@@ -454,6 +462,29 @@ export default async function CustomersPage({
           auditLogs: true,
           addresses: true,
           orders: true,
+        },
+      },
+    },
+  });
+
+  const whatsappInterested = await prisma.customerAuditLog.findMany({
+    where: {
+      action: "WHATSAPP_INTERESTED",
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 50,
+    select: {
+      id: true,
+      customerId: true,
+      createdAt: true,
+      metadata: true,
+      customer: {
+        select: {
+          id: true,
+          displayName: true,
+          email: true,
         },
       },
     },
@@ -707,6 +738,96 @@ export default async function CustomersPage({
               </Link>
             </div>
           ) : null}
+        </section>
+
+        <section className="mt-8 rounded-3xl border border-emerald-400/20 bg-[#0b1a0e] p-5 shadow-2xl sm:p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <span className="flex items-center gap-2 text-sm font-black text-emerald-300">
+                <MessageCircle aria-hidden="true" size={18} />
+                ردود واتساب
+              </span>
+              <h2 className="mt-2 text-2xl font-black">العملاء المهتمون</h2>
+              <p className="mt-2 text-sm leading-7 text-white/50">
+                آخر العملاء الذين ضغطوا على زر «مهتم» في رسائل واتساب.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-center">
+              <span className="block text-xs text-white/45">إجمالي الردود</span>
+              <strong className="mt-1 block text-2xl font-black text-emerald-200">
+                {whatsappInterestedCount.toLocaleString("ar-EG")}
+              </strong>
+            </div>
+          </div>
+
+          {whatsappInterested.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-dashed border-white/10 px-5 py-8 text-center text-sm text-white/40">
+              لا توجد ردود «مهتم» مسجلة حتى الآن.
+            </div>
+          ) : (
+            <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
+              <table className="w-full min-w-[760px] text-right">
+                <thead className="bg-white/[.04] text-xs text-white/45">
+                  <tr>
+                    <th className="px-4 py-3 font-bold">رقم واتساب</th>
+                    <th className="px-4 py-3 font-bold">الحالة</th>
+                    <th className="px-4 py-3 font-bold">تاريخ الرد</th>
+                    <th className="px-4 py-3 font-bold">الربط بالعميل</th>
+                    <th className="px-4 py-3 font-bold">العميل</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {whatsappInterested.map((item) => {
+                    const metadata =
+                      item.metadata &&
+                      typeof item.metadata === "object" &&
+                      !Array.isArray(item.metadata)
+                        ? (item.metadata as Prisma.JsonObject)
+                        : null;
+                    const phone =
+                      metadata && typeof metadata.phone === "string"
+                        ? metadata.phone
+                        : "غير متاح";
+
+                    return (
+                      <tr key={item.id} className="text-sm">
+                        <td className="px-4 py-4 font-bold" dir="ltr">{phone}</td>
+                        <td className="px-4 py-4">
+                          <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs font-black text-emerald-200">
+                            مهتم
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-white/60">{formatDate(item.createdAt)}</td>
+                        <td className="px-4 py-4">
+                          {item.customer ? (
+                            <span className="rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 text-xs font-black text-sky-200">
+                              مرتبط بحساب
+                            </span>
+                          ) : (
+                            <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-xs font-black text-amber-200">
+                              غير مرتبط
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          {item.customer ? (
+                            <Link
+                              href={`/admin/customers/${item.customer.id}`}
+                              className="font-black text-lime-300 transition hover:text-lime-200"
+                            >
+                              {item.customer.displayName || item.customer.email}
+                            </Link>
+                          ) : (
+                            <span className="text-white/35">جهة اتصال واتساب فقط</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section className="mt-8">
