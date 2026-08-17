@@ -10,9 +10,12 @@ import {
 import {
   AlertTriangle,
   CheckCircle2,
+  Clock3,
+  Eye,
   FileSpreadsheet,
   Loader2,
   MessageCircle,
+  RefreshCw,
   Send,
   ShieldCheck,
   Upload,
@@ -75,8 +78,50 @@ type SendResult = {
   };
 };
 
+
+type CampaignHistoryItem = {
+  id: string;
+  name: string;
+  templateName: string;
+  languageCode: string;
+  status: string;
+  totalRecipients: number;
+  pendingCount: number;
+  sentCount: number;
+  failedCount: number;
+  blockedCount: number;
+  sourceFileName: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type CampaignHistoryResponse = {
+  ok?: boolean;
+  error?: string;
+  campaigns?: CampaignHistoryItem[];
+  pagination?: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+};
+
 function formatNumber(value: number) {
   return value.toLocaleString("ar-EG");
+}
+
+function formatDate(value: string | null) {
+  if (!value) {
+    return "—";
+  }
+
+  return new Intl.DateTimeFormat("ar-EG", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 function formatFileSize(size: number) {
@@ -129,6 +174,40 @@ export default function WhatsAppCampaignsPage() {
 
   const [error, setError] =
     useState("");
+
+  const [
+    historyLoading,
+    setHistoryLoading,
+  ] = useState(false);
+
+  const [
+    historyLoaded,
+    setHistoryLoaded,
+  ] = useState(false);
+
+  const [
+    historyError,
+    setHistoryError,
+  ] = useState("");
+
+  const [
+    history,
+    setHistory,
+  ] = useState<CampaignHistoryItem[]>([]);
+
+  const [
+    historyPagination,
+    setHistoryPagination,
+  ] = useState<
+    CampaignHistoryResponse["pagination"]
+  >(undefined);
+
+  const [
+    selectedHistoryCampaign,
+    setSelectedHistoryCampaign,
+  ] = useState<CampaignHistoryItem | null>(
+    null,
+  );
 
   const campaign =
     importResult?.campaign ?? null;
@@ -294,6 +373,47 @@ export default function WhatsAppCampaignsPage() {
       );
     } finally {
       setSending(false);
+    }
+  }
+
+  async function loadCampaignHistory(
+    page = 1,
+  ) {
+    setHistoryLoading(true);
+    setHistoryError("");
+
+    try {
+      const response = await fetch(
+        `/api/admin/whatsapp/campaigns?page=${page}&pageSize=20`,
+        {
+          method: "GET",
+          cache: "no-store",
+        },
+      );
+
+      const data =
+        (await response.json()) as CampaignHistoryResponse;
+
+      if (!response.ok || !data.ok) {
+        throw new Error(
+          data.error ||
+            "تعذر تحميل سجل الحملات.",
+        );
+      }
+
+      setHistory(data.campaigns ?? []);
+      setHistoryPagination(
+        data.pagination,
+      );
+      setHistoryLoaded(true);
+    } catch (historyLoadError) {
+      setHistoryError(
+        historyLoadError instanceof Error
+          ? historyLoadError.message
+          : "حدث خطأ أثناء تحميل سجل الحملات.",
+      );
+    } finally {
+      setHistoryLoading(false);
     }
   }
 
@@ -784,6 +904,254 @@ export default function WhatsAppCampaignsPage() {
             ) : null}
           </section>
         ) : null}
+
+        <section className="mt-8 rounded-3xl border border-white/10 bg-[#0b1a0e] p-5 shadow-2xl sm:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <span className="flex items-center gap-2 text-sm font-black text-lime-300">
+                <Clock3 aria-hidden="true" size={18} />
+                Campaign History
+              </span>
+
+              <h2 className="mt-2 text-2xl font-black">
+                سجل الحملات السابقة
+              </h2>
+
+              <p className="mt-2 text-sm leading-7 text-white/45">
+                راجع الحملات السابقة ونتائج الإرسال وحالة كل حملة من مكان واحد.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                loadCampaignHistory(
+                  historyPagination?.page ?? 1,
+                )
+              }
+              disabled={historyLoading}
+              className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-4 text-sm font-black text-white transition hover:bg-white/[.07] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {historyLoading ? (
+                <Loader2 aria-hidden="true" size={17} className="animate-spin" />
+              ) : (
+                <RefreshCw aria-hidden="true" size={17} />
+              )}
+
+              {historyLoaded
+                ? "تحديث السجل"
+                : "تحميل السجل"}
+            </button>
+          </div>
+
+          {historyError ? (
+            <div className="mt-5 flex items-start gap-3 rounded-2xl border border-red-400/20 bg-red-400/[.07] p-4 text-red-100">
+              <XCircle aria-hidden="true" size={19} className="mt-0.5 shrink-0" />
+              <span className="text-sm leading-7">
+                {historyError}
+              </span>
+            </div>
+          ) : null}
+
+          {historyLoaded && history.length === 0 ? (
+            <div className="mt-5 rounded-2xl border border-white/10 bg-white/[.025] p-6 text-center text-sm text-white/45">
+              لا توجد حملات سابقة حتى الآن.
+            </div>
+          ) : null}
+
+          {history.length > 0 ? (
+            <>
+              <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10">
+                <table className="min-w-[1100px] w-full text-sm">
+                  <thead className="bg-white/[.04] text-white/50">
+                    <tr>
+                      <th className="px-4 py-3 text-right font-bold">الحملة</th>
+                      <th className="px-4 py-3 text-right font-bold">التاريخ</th>
+                      <th className="px-4 py-3 text-right font-bold">الحالة</th>
+                      <th className="px-4 py-3 text-right font-bold">الإجمالي</th>
+                      <th className="px-4 py-3 text-right font-bold">تم الإرسال</th>
+                      <th className="px-4 py-3 text-right font-bold">فشل</th>
+                      <th className="px-4 py-3 text-right font-bold">مستبعد</th>
+                      <th className="px-4 py-3 text-right font-bold">متبقي</th>
+                      <th className="px-4 py-3 text-right font-bold">التفاصيل</th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {history.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="border-t border-white/10 text-white/75"
+                      >
+                        <td className="px-4 py-4">
+                          <strong className="block text-white">
+                            {item.name}
+                          </strong>
+                          <span
+                            className="mt-1 block max-w-[260px] truncate text-xs text-white/30"
+                            dir="ltr"
+                          >
+                            {item.id}
+                          </span>
+                        </td>
+
+                        <td className="px-4 py-4 whitespace-nowrap">
+                          {formatDate(item.createdAt)}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <CampaignStatusBadge status={item.status} />
+                        </td>
+
+                        <td className="px-4 py-4 font-black text-white">
+                          {formatNumber(item.totalRecipients)}
+                        </td>
+
+                        <td className="px-4 py-4 font-black text-emerald-200">
+                          {formatNumber(item.sentCount)}
+                        </td>
+
+                        <td className="px-4 py-4 font-black text-red-200">
+                          {formatNumber(item.failedCount)}
+                        </td>
+
+                        <td className="px-4 py-4 font-black text-amber-200">
+                          {formatNumber(item.blockedCount)}
+                        </td>
+
+                        <td className="px-4 py-4 font-black text-white">
+                          {formatNumber(item.pendingCount)}
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setSelectedHistoryCampaign(item)
+                            }
+                            className="inline-flex items-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/[.06] px-3 py-2 text-xs font-black text-lime-200 transition hover:bg-lime-300/[.1]"
+                          >
+                            <Eye aria-hidden="true" size={15} />
+                            عرض التفاصيل
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {historyPagination &&
+              historyPagination.totalPages > 1 ? (
+                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="text-xs text-white/35">
+                    صفحة {formatNumber(historyPagination.page)} من{" "}
+                    {formatNumber(historyPagination.totalPages)} — إجمالي{" "}
+                    {formatNumber(historyPagination.total)} حملة
+                  </span>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={
+                        historyLoading ||
+                        historyPagination.page <= 1
+                      }
+                      onClick={() =>
+                        loadCampaignHistory(
+                          historyPagination.page - 1,
+                        )
+                      }
+                      className="rounded-xl border border-white/10 bg-white/[.04] px-4 py-2 text-sm font-bold text-white/70 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      السابق
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={
+                        historyLoading ||
+                        historyPagination.page >=
+                          historyPagination.totalPages
+                      }
+                      onClick={() =>
+                        loadCampaignHistory(
+                          historyPagination.page + 1,
+                        )
+                      }
+                      className="rounded-xl border border-white/10 bg-white/[.04] px-4 py-2 text-sm font-bold text-white/70 disabled:cursor-not-allowed disabled:opacity-30"
+                    >
+                      التالي
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+
+          {selectedHistoryCampaign ? (
+            <div className="mt-6 rounded-3xl border border-lime-300/15 bg-lime-300/[.04] p-5 sm:p-6">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <span className="text-xs font-black text-lime-300">
+                    تفاصيل الحملة
+                  </span>
+                  <h3 className="mt-2 text-xl font-black text-white">
+                    {selectedHistoryCampaign.name}
+                  </h3>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectedHistoryCampaign(null)
+                  }
+                  className="w-fit rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-xs font-black text-white/60"
+                >
+                  إغلاق
+                </button>
+              </div>
+
+              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <InfoBox
+                  title="الحالة"
+                  value={selectedHistoryCampaign.status}
+                />
+                <InfoBox
+                  title="تاريخ الإنشاء"
+                  value={formatDate(selectedHistoryCampaign.createdAt)}
+                />
+                <InfoBox
+                  title="بدأت"
+                  value={formatDate(selectedHistoryCampaign.startedAt)}
+                />
+                <InfoBox
+                  title="اكتملت"
+                  value={formatDate(selectedHistoryCampaign.completedAt)}
+                />
+                <InfoBox
+                  title="القالب"
+                  value={selectedHistoryCampaign.templateName}
+                />
+                <InfoBox
+                  title="اللغة"
+                  value={selectedHistoryCampaign.languageCode}
+                />
+                <InfoBox
+                  title="الملف المصدر"
+                  value={
+                    selectedHistoryCampaign.sourceFileName ||
+                    "غير مسجل"
+                  }
+                />
+                <InfoBox
+                  title="Campaign ID"
+                  value={selectedHistoryCampaign.id}
+                />
+              </div>
+            </div>
+          ) : null}
+        </section>
       </div>
     </main>
   );
@@ -846,6 +1214,28 @@ function ResultCard({
         {formatNumber(value)}
       </strong>
     </div>
+  );
+}
+
+function CampaignStatusBadge({
+  status,
+}: {
+  status: string;
+}) {
+  const labelMap: Record<string, string> = {
+    DRAFT: "مسودة",
+    READY: "جاهزة",
+    SENDING: "جاري الإرسال",
+    COMPLETED: "مكتملة",
+    PARTIALLY_COMPLETED: "مكتملة جزئيًا",
+    FAILED: "فشلت",
+    CANCELLED: "ملغاة",
+  };
+
+  return (
+    <span className="inline-flex rounded-full border border-white/10 bg-white/[.04] px-3 py-1 text-xs font-black text-white/70">
+      {labelMap[status] ?? status}
+    </span>
   );
 }
 
