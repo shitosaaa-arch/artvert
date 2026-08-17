@@ -7,6 +7,7 @@ import {
   Bug,
   FlaskConical,
   Leaf,
+  MessageCircle,
   Package,
   Settings,
   Sprout,
@@ -44,6 +45,11 @@ const items = [
     label: "المنتجات",
     href: "/admin/products",
     icon: Package,
+  },
+  {
+    label: "حملات واتساب",
+    href: "/admin/whatsapp-campaigns",
+    icon: MessageCircle,
   },
   {
     label: "مولد المعرفة",
