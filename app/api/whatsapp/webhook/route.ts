@@ -5,11 +5,15 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const WHATSAPP_INTERESTED_TEMPLATE =
-  "artvert_customer_followup";
+const INTERESTED_FOLLOWUP_MESSAGE = `أهلاً بحضرتك 🌱💚
+حابين نطمن عليك ونعرف تجربتك مع بلانت جرو كانت إيه؟ وأخبار الزرع معاك إيه؟ 😊
 
-const WHATSAPP_INTERESTED_LANGUAGE =
-  "ar_EG";
+ولو حابب تعمل طلب جديد أو عندك أي سؤال أو استشارة عن زرعك ابعتلنا وإحنا تحت أمرك 🌿
+
+منتجاتنا وخدماتنا على:
+www.artvertegypt.com
+
+ArtVert Egypt 💚`;
 
 type WhatsAppSendResponse = {
   messaging_product?: string;
@@ -61,9 +65,7 @@ function normalizeArabic(value: string) {
 function getWhatsAppErrorMessage(
   data: WhatsAppSendResponse,
 ) {
-  const message =
-    data.error?.message;
-
+  const message = data.error?.message;
   const details =
     data.error?.error_data?.details;
 
@@ -167,11 +169,8 @@ async function findCustomerByWhatsAppPhone(
 }
 
 /**
- * حماية من تكرار نفس Webhook Event.
- *
- * Meta قد تعيد إرسال نفس الحدث أكثر من مرة.
- * لو كنا سجلنا نفس messageId بالفعل كـ WHATSAPP_INTERESTED،
- * لا نسجل الحدث ولا نرسل القالب مرة أخرى.
+ * Meta قد تعيد إرسال نفس حدث الضغط أكثر من مرة.
+ * نتحقق من messageId حتى لا نسجل أو نرسل الرد مرتين.
  */
 async function wasWhatsAppInterestedAlreadyProcessed(
   messageId?: string,
@@ -200,9 +199,10 @@ async function wasWhatsAppInterestedAlreadyProcessed(
 }
 
 /**
- * إرسال قالب المتابعة تلقائيًا للعميل الذي ضغط "مهتم".
+ * إرسال رسالة نصية تلقائية بعد ضغط العميل "مهتم".
+ * لا نعيد إرسال قالب الحملة حتى لا ندخل في Loop.
  */
-async function sendInterestedFollowupTemplate(
+async function sendInterestedFollowupMessage(
   toPhone: string,
 ) {
   const accessToken =
@@ -245,16 +245,11 @@ async function sendInterestedFollowupTemplate(
         messaging_product: "whatsapp",
         recipient_type: "individual",
         to,
-        type: "template",
+        type: "text",
 
-        template: {
-          name:
-            WHATSAPP_INTERESTED_TEMPLATE,
-
-          language: {
-            code:
-              WHATSAPP_INTERESTED_LANGUAGE,
-          },
+        text: {
+          preview_url: true,
+          body: INTERESTED_FOLLOWUP_MESSAGE,
         },
       }),
     },
@@ -276,16 +271,11 @@ async function sendInterestedFollowupTemplate(
   }
 
   const metaMessageId =
-    data.messages?.[0]?.id ??
-    null;
+    data.messages?.[0]?.id ?? null;
 
   console.log(
-    `[WhatsApp interested follow-up] Template sent successfully to ${to}.`,
+    `[WhatsApp interested follow-up] Text message sent successfully to ${to}.`,
     {
-      template:
-        WHATSAPP_INTERESTED_TEMPLATE,
-      language:
-        WHATSAPP_INTERESTED_LANGUAGE,
       metaMessageId,
     },
   );
@@ -316,17 +306,13 @@ async function recordWhatsAppAction(args: {
     phone: args.from,
     buttonText: args.buttonText,
     buttonPayload: args.buttonPayload,
-    messageId:
-      args.messageId ?? null,
-    timestamp:
-      args.timestamp ?? null,
-    source:
-      "WHATSAPP_WEBHOOK",
+    messageId: args.messageId ?? null,
+    timestamp: args.timestamp ?? null,
+    source: "WHATSAPP_WEBHOOK",
   };
 
   if (
-    args.action ===
-      "WHATSAPP_OPT_OUT" &&
+    args.action === "WHATSAPP_OPT_OUT" &&
     customer
   ) {
     await prisma.$transaction([
@@ -368,8 +354,7 @@ async function recordWhatsAppAction(args: {
       actorType:
         "WHATSAPP_CUSTOMER",
 
-      action:
-        args.action,
+      action: args.action,
 
       targetType:
         customer
@@ -384,8 +369,7 @@ async function recordWhatsAppAction(args: {
   });
 
   if (
-    args.action ===
-    "WHATSAPP_INTERESTED"
+    args.action === "WHATSAPP_INTERESTED"
   ) {
     console.log(
       customer
@@ -418,10 +402,6 @@ async function processButtonReply(args: {
     text === "مهتم" ||
     payload === "مهتم"
   ) {
-    /*
-     * لو Meta أعادت نفس Event،
-     * لا نكرر التسجيل ولا الإرسال.
-     */
     const alreadyProcessed =
       await wasWhatsAppInterestedAlreadyProcessed(
         args.messageId,
@@ -436,35 +416,28 @@ async function processButtonReply(args: {
     }
 
     /*
-     * أولًا نسجل إن العميل ضغط "مهتم".
+     * نسجل ضغط العميل على "مهتم" أولًا.
      */
     await recordWhatsAppAction({
       from: args.from,
-      action:
-        "WHATSAPP_INTERESTED",
-      buttonText:
-        args.text.trim(),
-      buttonPayload:
-        args.payload.trim(),
-      messageId:
-        args.messageId,
-      timestamp:
-        args.timestamp,
+      action: "WHATSAPP_INTERESTED",
+      buttonText: args.text.trim(),
+      buttonPayload: args.payload.trim(),
+      messageId: args.messageId,
+      timestamp: args.timestamp,
     });
 
     /*
-     * بعدها نرسل له قالب المتابعة تلقائيًا.
-     *
-     * لو فشل الإرسال، لا نمسح تسجيل "مهتم".
-     * العميل يظل ظاهرًا في لوحة الإدارة.
+     * ثم نرسل رسالة المتابعة النصية فقط.
+     * لا نعيد إرسال قالب artvert_customer_followup.
      */
     try {
-      await sendInterestedFollowupTemplate(
+      await sendInterestedFollowupMessage(
         args.from,
       );
     } catch (error) {
       console.error(
-        `[WhatsApp interested follow-up] Automatic template failed for ${args.from}:`,
+        `[WhatsApp interested follow-up] Automatic text message failed for ${args.from}:`,
         error,
       );
     }
@@ -478,16 +451,11 @@ async function processButtonReply(args: {
   ) {
     await recordWhatsAppAction({
       from: args.from,
-      action:
-        "WHATSAPP_OPT_OUT",
-      buttonText:
-        args.text.trim(),
-      buttonPayload:
-        args.payload.trim(),
-      messageId:
-        args.messageId,
-      timestamp:
-        args.timestamp,
+      action: "WHATSAPP_OPT_OUT",
+      buttonText: args.text.trim(),
+      buttonPayload: args.payload.trim(),
+      messageId: args.messageId,
+      timestamp: args.timestamp,
     });
   }
 }
@@ -515,8 +483,7 @@ export async function GET(
     );
 
   const verifyToken =
-    process.env
-      .WHATSAPP_VERIFY_TOKEN;
+    process.env.WHATSAPP_VERIFY_TOKEN;
 
   if (!verifyToken) {
     console.error(
@@ -587,9 +554,7 @@ export async function POST(
 
     for (const entry of entries) {
       const changes =
-        Array.isArray(
-          entry?.changes,
-        )
+        Array.isArray(entry?.changes)
           ? entry.changes
           : [];
 
@@ -598,19 +563,13 @@ export async function POST(
           change?.value;
 
         const messages =
-          Array.isArray(
-            value?.messages,
-          )
+          Array.isArray(value?.messages)
             ? value.messages
             : [];
 
-        for (
-          const message
-          of messages
-        ) {
+        for (const message of messages) {
           const from =
-            typeof message?.from ===
-            "string"
+            typeof message?.from === "string"
               ? message.from
               : "";
 
@@ -619,14 +578,12 @@ export async function POST(
           }
 
           const messageId =
-            typeof message?.id ===
-            "string"
+            typeof message?.id === "string"
               ? message.id
               : undefined;
 
           const timestamp =
-            typeof message?.timestamp ===
-            "string"
+            typeof message?.timestamp === "string"
               ? message.timestamp
               : undefined;
 
@@ -634,21 +591,17 @@ export async function POST(
            * Quick Reply الخاص بقالب WhatsApp.
            */
           if (
-            message?.type ===
-              "button" &&
+            message?.type === "button" &&
             message?.button
           ) {
             const buttonText =
-              typeof message.button
-                .text === "string"
+              typeof message.button.text === "string"
                 ? message.button.text
                 : "";
 
             const buttonPayload =
-              typeof message.button
-                .payload === "string"
-                ? message.button
-                    .payload
+              typeof message.button.payload === "string"
+                ? message.button.payload
                 : "";
 
             console.log(
@@ -663,8 +616,7 @@ export async function POST(
             await processButtonReply({
               from,
               text: buttonText,
-              payload:
-                buttonPayload,
+              payload: buttonPayload,
               messageId,
               timestamp,
             });
@@ -676,27 +628,23 @@ export async function POST(
            * بعض الردود التفاعلية تصل كـ interactive.
            */
           if (
-            message?.type ===
-              "interactive" &&
+            message?.type === "interactive" &&
             message?.interactive
           ) {
             const buttonReply =
-              message.interactive
-                .button_reply;
+              message.interactive.button_reply;
 
             if (!buttonReply) {
               continue;
             }
 
             const title =
-              typeof buttonReply
-                .title === "string"
+              typeof buttonReply.title === "string"
                 ? buttonReply.title
                 : "";
 
             const id =
-              typeof buttonReply.id ===
-              "string"
+              typeof buttonReply.id === "string"
                 ? buttonReply.id
                 : "";
 
@@ -730,10 +678,6 @@ export async function POST(
       error,
     );
 
-    /*
-     * نرجع 200 حتى Meta لا تدخل في retries مستمرة
-     * أثناء معالجة Webhook.
-     */
     return NextResponse.json({
       received: true,
     });
