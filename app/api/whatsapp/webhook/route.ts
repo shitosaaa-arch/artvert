@@ -19,6 +19,13 @@ function getPhoneSuffix(value: string) {
   return normalized.slice(-10);
 }
 
+function normalizeArabic(value: string) {
+  return value
+    .trim()
+    .replace(/[إأآ]/g, "ا")
+    .replace(/\s+/g, " ");
+}
+
 async function findCustomerByWhatsAppPhone(phone: string) {
   const suffix = getPhoneSuffix(phone);
 
@@ -169,7 +176,9 @@ async function recordWhatsAppAction(args: {
     );
   } else {
     console.log(
-      `WhatsApp customer ${args.from} requested opt-out. No matching customer account found.`,
+      customer
+        ? `WhatsApp customer ${args.from} requested opt-out. Linked customer: ${customer.id}.`
+        : `WhatsApp customer ${args.from} requested opt-out. No matching customer account found.`,
     );
   }
 }
@@ -181,8 +190,8 @@ async function processButtonReply(args: {
   messageId?: string;
   timestamp?: string;
 }) {
-  const text = args.text.trim();
-  const payload = args.payload.trim();
+  const text = normalizeArabic(args.text);
+  const payload = normalizeArabic(args.payload);
 
   if (
     text === "مهتم" ||
@@ -191,8 +200,8 @@ async function processButtonReply(args: {
     await recordWhatsAppAction({
       from: args.from,
       action: "WHATSAPP_INTERESTED",
-      buttonText: text,
-      buttonPayload: payload,
+      buttonText: args.text.trim(),
+      buttonPayload: args.payload.trim(),
       messageId: args.messageId,
       timestamp: args.timestamp,
     });
@@ -201,14 +210,14 @@ async function processButtonReply(args: {
   }
 
   if (
-    text === "إيقاف الرسائل" ||
-    payload === "إيقاف الرسائل"
+    text === "ايقاف الرسائل" ||
+    payload === "ايقاف الرسائل"
   ) {
     await recordWhatsAppAction({
       from: args.from,
       action: "WHATSAPP_OPT_OUT",
-      buttonText: text,
-      buttonPayload: payload,
+      buttonText: args.text.trim(),
+      buttonPayload: args.payload.trim(),
       messageId: args.messageId,
       timestamp: args.timestamp,
     });
@@ -402,10 +411,6 @@ export async function POST(request: NextRequest) {
       error,
     );
 
-    /*
-     * نرجع 200 حتى لا تدخل Meta في retries مستمرة
-     * أثناء مرحلة التشغيل الحالية.
-     */
     return NextResponse.json({
       received: true,
     });
