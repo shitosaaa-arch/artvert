@@ -109,6 +109,31 @@ type CampaignHistoryResponse = {
   };
 };
 
+type CampaignRecipient = {
+  id: string;
+  phone: string;
+  displayName: string | null;
+  status: string;
+  blockedReason: string | null;
+  failureReason: string | null;
+  metaMessageId: string | null;
+  attemptCount: number;
+  lastAttemptAt: string | null;
+  sentAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type CampaignDetails = CampaignHistoryItem & {
+  recipients: CampaignRecipient[];
+};
+
+type CampaignDetailsResponse = {
+  ok?: boolean;
+  error?: string;
+  campaign?: CampaignDetails;
+};
+
 function formatNumber(value: number) {
   return value.toLocaleString("ar-EG");
 }
@@ -206,6 +231,23 @@ export default function WhatsAppCampaignsPage() {
     selectedHistoryCampaign,
     setSelectedHistoryCampaign,
   ] = useState<CampaignHistoryItem | null>(
+    null,
+  );
+
+  const [
+    campaignDetailsLoading,
+    setCampaignDetailsLoading,
+  ] = useState(false);
+
+  const [
+    campaignDetailsError,
+    setCampaignDetailsError,
+  ] = useState("");
+
+  const [
+    campaignDetails,
+    setCampaignDetails,
+  ] = useState<CampaignDetails | null>(
     null,
   );
 
@@ -414,6 +456,51 @@ export default function WhatsAppCampaignsPage() {
       );
     } finally {
       setHistoryLoading(false);
+    }
+  }
+
+  async function loadCampaignDetails(
+    item: CampaignHistoryItem,
+  ) {
+    setSelectedHistoryCampaign(item);
+    setCampaignDetails(null);
+    setCampaignDetailsError("");
+    setCampaignDetailsLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/admin/whatsapp/campaigns/${item.id}`,
+        {
+          method: "GET",
+          cache: "no-store",
+        },
+      );
+
+      const data =
+        (await response.json()) as CampaignDetailsResponse;
+
+      if (
+        !response.ok ||
+        !data.ok ||
+        !data.campaign
+      ) {
+        throw new Error(
+          data.error ||
+            "تعذر تحميل تفاصيل الحملة.",
+        );
+      }
+
+      setCampaignDetails(
+        data.campaign,
+      );
+    } catch (detailsError) {
+      setCampaignDetailsError(
+        detailsError instanceof Error
+          ? detailsError.message
+          : "حدث خطأ أثناء تحميل تفاصيل الحملة.",
+      );
+    } finally {
+      setCampaignDetailsLoading(false);
     }
   }
 
@@ -1027,7 +1114,7 @@ export default function WhatsAppCampaignsPage() {
                           <button
                             type="button"
                             onClick={() =>
-                              setSelectedHistoryCampaign(item)
+                              loadCampaignDetails(item)
                             }
                             className="inline-flex items-center gap-2 rounded-xl border border-lime-300/20 bg-lime-300/[.06] px-3 py-2 text-xs font-black text-lime-200 transition hover:bg-lime-300/[.1]"
                           >
@@ -1096,59 +1183,300 @@ export default function WhatsAppCampaignsPage() {
                   <span className="text-xs font-black text-lime-300">
                     تفاصيل الحملة
                   </span>
+
                   <h3 className="mt-2 text-xl font-black text-white">
-                    {selectedHistoryCampaign.name}
+                    {campaignDetails?.name ??
+                      selectedHistoryCampaign.name}
                   </h3>
+
+                  <p
+                    className="mt-2 text-xs text-white/30"
+                    dir="ltr"
+                  >
+                    Campaign ID:{" "}
+                    {selectedHistoryCampaign.id}
+                  </p>
                 </div>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setSelectedHistoryCampaign(null)
-                  }
-                  className="w-fit rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-xs font-black text-white/60"
+                  onClick={() => {
+                    setSelectedHistoryCampaign(
+                      null,
+                    );
+                    setCampaignDetails(
+                      null,
+                    );
+                    setCampaignDetailsError(
+                      "",
+                    );
+                  }}
+                  className="w-fit rounded-xl border border-white/10 bg-white/[.04] px-3 py-2 text-xs font-black text-white/60 transition hover:bg-white/[.07]"
                 >
                   إغلاق
                 </button>
               </div>
 
-              <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <InfoBox
-                  title="الحالة"
-                  value={selectedHistoryCampaign.status}
-                />
-                <InfoBox
-                  title="تاريخ الإنشاء"
-                  value={formatDate(selectedHistoryCampaign.createdAt)}
-                />
-                <InfoBox
-                  title="بدأت"
-                  value={formatDate(selectedHistoryCampaign.startedAt)}
-                />
-                <InfoBox
-                  title="اكتملت"
-                  value={formatDate(selectedHistoryCampaign.completedAt)}
-                />
-                <InfoBox
-                  title="القالب"
-                  value={selectedHistoryCampaign.templateName}
-                />
-                <InfoBox
-                  title="اللغة"
-                  value={selectedHistoryCampaign.languageCode}
-                />
-                <InfoBox
-                  title="الملف المصدر"
-                  value={
-                    selectedHistoryCampaign.sourceFileName ||
-                    "غير مسجل"
-                  }
-                />
-                <InfoBox
-                  title="Campaign ID"
-                  value={selectedHistoryCampaign.id}
-                />
-              </div>
+              {campaignDetailsLoading ? (
+                <div className="mt-6 flex items-center justify-center gap-3 rounded-2xl border border-white/10 bg-black/10 p-8 text-white/55">
+                  <Loader2
+                    aria-hidden="true"
+                    size={20}
+                    className="animate-spin text-lime-300"
+                  />
+
+                  جاري تحميل عملاء الحملة...
+                </div>
+              ) : null}
+
+              {campaignDetailsError ? (
+                <div className="mt-6 flex items-start gap-3 rounded-2xl border border-red-400/20 bg-red-400/[.07] p-4 text-red-100">
+                  <XCircle
+                    aria-hidden="true"
+                    size={19}
+                    className="mt-0.5 shrink-0"
+                  />
+
+                  <div>
+                    <strong className="block">
+                      تعذر تحميل التفاصيل
+                    </strong>
+
+                    <p className="mt-1 text-sm leading-7">
+                      {campaignDetailsError}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
+              {campaignDetails ? (
+                <>
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <InfoBox
+                      title="الحالة"
+                      value={
+                        campaignDetails.status
+                      }
+                    />
+
+                    <InfoBox
+                      title="تاريخ الإنشاء"
+                      value={formatDate(
+                        campaignDetails.createdAt,
+                      )}
+                    />
+
+                    <InfoBox
+                      title="بدأت"
+                      value={formatDate(
+                        campaignDetails.startedAt,
+                      )}
+                    />
+
+                    <InfoBox
+                      title="اكتملت"
+                      value={formatDate(
+                        campaignDetails.completedAt,
+                      )}
+                    />
+
+                    <InfoBox
+                      title="القالب"
+                      value={
+                        campaignDetails.templateName
+                      }
+                    />
+
+                    <InfoBox
+                      title="اللغة"
+                      value={
+                        campaignDetails.languageCode
+                      }
+                    />
+
+                    <InfoBox
+                      title="الملف المصدر"
+                      value={
+                        campaignDetails.sourceFileName ||
+                        "غير مسجل"
+                      }
+                    />
+
+                    <InfoBox
+                      title="إجمالي العملاء"
+                      value={formatNumber(
+                        campaignDetails.totalRecipients,
+                      )}
+                    />
+                  </div>
+
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <ResultCard
+                      label="تم الإرسال"
+                      value={
+                        campaignDetails.sentCount
+                      }
+                    />
+
+                    <ResultCard
+                      label="فشل"
+                      value={
+                        campaignDetails.failedCount
+                      }
+                    />
+
+                    <ResultCard
+                      label="مستبعد"
+                      value={
+                        campaignDetails.blockedCount
+                      }
+                    />
+
+                    <ResultCard
+                      label="متبقي"
+                      value={
+                        campaignDetails.pendingCount
+                      }
+                    />
+                  </div>
+
+                  <div className="mt-7">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h4 className="text-lg font-black text-white">
+                          عملاء الحملة
+                        </h4>
+
+                        <p className="mt-1 text-sm text-white/40">
+                          حالة كل رقم ونتيجة محاولة الإرسال.
+                        </p>
+                      </div>
+
+                      <span className="w-fit rounded-full border border-white/10 bg-white/[.04] px-3 py-1 text-xs font-black text-white/55">
+                        {formatNumber(
+                          campaignDetails.recipients
+                            .length,
+                        )}{" "}
+                        عميل
+                      </span>
+                    </div>
+
+                    {campaignDetails.recipients
+                      .length === 0 ? (
+                      <div className="mt-4 rounded-2xl border border-white/10 bg-black/10 p-6 text-center text-sm text-white/40">
+                        لا يوجد عملاء مسجلون في هذه الحملة.
+                      </div>
+                    ) : (
+                      <div className="mt-4 overflow-x-auto rounded-2xl border border-white/10">
+                        <table className="w-full min-w-[1200px] text-sm">
+                          <thead className="bg-black/20 text-white/45">
+                            <tr>
+                              <th className="px-4 py-3 text-right font-bold">
+                                الاسم
+                              </th>
+                              <th className="px-4 py-3 text-right font-bold">
+                                رقم واتساب
+                              </th>
+                              <th className="px-4 py-3 text-right font-bold">
+                                الحالة
+                              </th>
+                              <th className="px-4 py-3 text-right font-bold">
+                                المحاولات
+                              </th>
+                              <th className="px-4 py-3 text-right font-bold">
+                                وقت الإرسال
+                              </th>
+                              <th className="px-4 py-3 text-right font-bold">
+                                سبب الاستبعاد / الفشل
+                              </th>
+                              <th className="px-4 py-3 text-right font-bold">
+                                Meta Message ID
+                              </th>
+                            </tr>
+                          </thead>
+
+                          <tbody>
+                            {campaignDetails.recipients.map(
+                              (recipient) => {
+                                const reason =
+                                  recipient.blockedReason ||
+                                  recipient.failureReason ||
+                                  "—";
+
+                                return (
+                                  <tr
+                                    key={
+                                      recipient.id
+                                    }
+                                    className="border-t border-white/10 text-white/70"
+                                  >
+                                    <td className="px-4 py-4">
+                                      <strong className="text-white">
+                                        {recipient.displayName ||
+                                          "بدون اسم"}
+                                      </strong>
+                                    </td>
+
+                                    <td
+                                      className="px-4 py-4 font-bold text-white"
+                                      dir="ltr"
+                                    >
+                                      {recipient.phone}
+                                    </td>
+
+                                    <td className="px-4 py-4">
+                                      <RecipientStatusBadge
+                                        status={
+                                          recipient.status
+                                        }
+                                      />
+                                    </td>
+
+                                    <td className="px-4 py-4 font-black text-white">
+                                      {formatNumber(
+                                        recipient.attemptCount,
+                                      )}
+                                    </td>
+
+                                    <td className="px-4 py-4 whitespace-nowrap">
+                                      {formatDate(
+                                        recipient.sentAt ||
+                                          recipient.lastAttemptAt,
+                                      )}
+                                    </td>
+
+                                    <td className="max-w-[360px] px-4 py-4">
+                                      <span
+                                        className={
+                                          reason === "—"
+                                            ? "text-white/30"
+                                            : "break-words text-amber-100/75"
+                                        }
+                                      >
+                                        {reason}
+                                      </span>
+                                    </td>
+
+                                    <td
+                                      className="max-w-[300px] px-4 py-4"
+                                      dir="ltr"
+                                    >
+                                      <span className="block truncate text-xs text-white/30">
+                                        {recipient.metaMessageId ||
+                                          "—"}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              },
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : null}
             </div>
           ) : null}
         </section>
@@ -1234,6 +1562,41 @@ function CampaignStatusBadge({
 
   return (
     <span className="inline-flex rounded-full border border-white/10 bg-white/[.04] px-3 py-1 text-xs font-black text-white/70">
+      {labelMap[status] ?? status}
+    </span>
+  );
+}
+
+function RecipientStatusBadge({
+  status,
+}: {
+  status: string;
+}) {
+  const labelMap: Record<string, string> = {
+    PENDING: "في الانتظار",
+    SENT: "تم الإرسال",
+    FAILED: "فشل",
+    BLOCKED: "مستبعد",
+  };
+
+  const classMap: Record<string, string> = {
+    PENDING:
+      "border-sky-300/20 bg-sky-300/[.07] text-sky-100",
+    SENT:
+      "border-emerald-300/20 bg-emerald-300/[.07] text-emerald-100",
+    FAILED:
+      "border-red-300/20 bg-red-300/[.07] text-red-100",
+    BLOCKED:
+      "border-amber-300/20 bg-amber-300/[.07] text-amber-100",
+  };
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-3 py-1 text-xs font-black ${
+        classMap[status] ??
+        "border-white/10 bg-white/[.04] text-white/70"
+      }`}
+    >
       {labelMap[status] ?? status}
     </span>
   );
