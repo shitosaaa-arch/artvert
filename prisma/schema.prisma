@@ -14,24 +14,24 @@ enum UserRole {
 }
 
 model User {
-  id                  String       @id @default(cuid())
+  id                  String                   @id @default(cuid())
   name                String
-  email               String       @unique
+  email               String                   @unique
   passwordHash        String?
-  role                UserRole     @default(AGRONOMIST)
-  active              Boolean      @default(true)
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
-  createdPlants       Plant[]      @relation("PlantCreatedBy")
-  updatedPlants       Plant[]      @relation("PlantUpdatedBy")
-  createdDiseases     Disease[]    @relation("DiseaseCreatedBy")
-  updatedDiseases     Disease[]    @relation("DiseaseUpdatedBy")
-  createdPests        Pest[]       @relation("PestCreatedBy")
-  updatedPests        Pest[]       @relation("PestUpdatedBy")
-  createdDeficiencies Deficiency[] @relation("DeficiencyCreatedBy")
-  updatedDeficiencies Deficiency[] @relation("DeficiencyUpdatedBy")
-  createdProducts     Product[]    @relation("ProductCreatedBy")
-  updatedProducts     Product[]    @relation("ProductUpdatedBy")
+  role                UserRole                 @default(AGRONOMIST)
+  active              Boolean                  @default(true)
+  createdAt           DateTime                 @default(now())
+  updatedAt           DateTime                 @updatedAt
+  createdPlants       Plant[]                  @relation("PlantCreatedBy")
+  updatedPlants       Plant[]                  @relation("PlantUpdatedBy")
+  createdDiseases     Disease[]                @relation("DiseaseCreatedBy")
+  updatedDiseases     Disease[]                @relation("DiseaseUpdatedBy")
+  createdPests        Pest[]                   @relation("PestCreatedBy")
+  updatedPests        Pest[]                   @relation("PestUpdatedBy")
+  createdDeficiencies Deficiency[]             @relation("DeficiencyCreatedBy")
+  updatedDeficiencies Deficiency[]             @relation("DeficiencyUpdatedBy")
+  createdProducts     Product[]                @relation("ProductCreatedBy")
+  updatedProducts     Product[]                @relation("ProductUpdatedBy")
   passwordResetTokens UserPasswordResetToken[]
 
   @@index([active])
@@ -39,13 +39,13 @@ model User {
 }
 
 model UserPasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, expiresAt])
 }
@@ -864,10 +864,10 @@ model ProductAlias {
 }
 
 model ProductImage {
-  id             String               @id @default(cuid())
+  id             String                @id @default(cuid())
   productId      String
   ownership      ProductImageOwnership
-  storageKey     String?              @unique
+  storageKey     String?               @unique
   url            String
   originalUrl    String?
   thumbnailUrl   String?
@@ -881,16 +881,16 @@ model ProductImage {
   height         Int?
   checksum       String?
   sortOrder      Int
-  isPrimary      Boolean              @default(false)
-  objectFit      ProductImageFit      @default(CONTAIN)
-  objectPosition ProductImagePosition @default(CENTER)
-  zoom           Int                  @default(100)
-  cropX          Int                  @default(50)
-  cropY          Int                  @default(50)
-  rotation       Int                  @default(0)
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @default(now()) @updatedAt
-  product        Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  isPrimary      Boolean               @default(false)
+  objectFit      ProductImageFit       @default(CONTAIN)
+  objectPosition ProductImagePosition  @default(CENTER)
+  zoom           Int                   @default(100)
+  cropX          Int                   @default(50)
+  cropY          Int                   @default(50)
+  rotation       Int                   @default(0)
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @default(now()) @updatedAt
+  product        Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([productId, sortOrder])
   @@index([productId, isPrimary])
@@ -1266,4 +1266,68 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
   @@index([productSlug])
+}
+
+// WhatsApp bulk campaign domain.
+// A campaign is created once from an uploaded recipient list, then each recipient
+// is processed independently so one failed/blocked send never loses campaign progress.
+enum WhatsAppCampaignStatus {
+  DRAFT
+  READY
+  SENDING
+  COMPLETED
+  PARTIALLY_COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum WhatsAppCampaignRecipientStatus {
+  PENDING
+  SENT
+  FAILED
+  BLOCKED
+}
+
+model WhatsAppCampaign {
+  id              String                      @id @default(cuid())
+  name            String
+  templateName    String                      @default("artvert_customer_followup")
+  languageCode    String                      @default("ar_EG")
+  status          WhatsAppCampaignStatus      @default(DRAFT)
+  totalRecipients Int                         @default(0)
+  pendingCount    Int                         @default(0)
+  sentCount       Int                         @default(0)
+  failedCount     Int                         @default(0)
+  blockedCount    Int                         @default(0)
+  sourceFileName  String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime                    @default(now())
+  updatedAt       DateTime                    @updatedAt
+  recipients      WhatsAppCampaignRecipient[]
+
+  @@index([status, createdAt])
+  @@index([createdAt])
+}
+
+model WhatsAppCampaignRecipient {
+  id            String                          @id @default(cuid())
+  campaignId    String
+  phone         String
+  displayName   String?
+  status        WhatsAppCampaignRecipientStatus @default(PENDING)
+  blockedReason String?
+  failureReason String?
+  metaMessageId String?
+  attemptCount  Int                             @default(0)
+  lastAttemptAt DateTime?
+  sentAt        DateTime?
+  createdAt     DateTime                        @default(now())
+  updatedAt     DateTime                        @updatedAt
+  campaign      WhatsAppCampaign                @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, phone])
+  @@index([campaignId, status])
+  @@index([phone])
+  @@index([status, createdAt])
 }
