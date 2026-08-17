@@ -265,12 +265,34 @@ export async function POST(
       process.env
         .WHATSAPP_PHONE_NUMBER_ID;
 
+    const environmentDiagnostics = {
+      vercelEnv:
+        process.env.VERCEL_ENV ?? "unknown",
+      nodeEnv:
+        process.env.NODE_ENV ?? "unknown",
+      hasWhatsAppAccessToken:
+        Boolean(accessToken),
+      whatsAppAccessTokenLength:
+        accessToken?.length ?? 0,
+      hasWhatsAppPhoneNumberId:
+        Boolean(phoneNumberId),
+      whatsAppPhoneNumberIdLength:
+        phoneNumberId?.length ?? 0,
+    };
+
+    console.log(
+      "[whatsapp-campaign-env]",
+      environmentDiagnostics,
+    );
+
     if (!accessToken) {
       return NextResponse.json(
         {
           ok: false,
           error:
             "WHATSAPP_ACCESS_TOKEN is not configured.",
+          diagnostics:
+            environmentDiagnostics,
         },
         {
           status: 500,
@@ -284,6 +306,8 @@ export async function POST(
           ok: false,
           error:
             "WHATSAPP_PHONE_NUMBER_ID is not configured.",
+          diagnostics:
+            environmentDiagnostics,
         },
         {
           status: 500,
