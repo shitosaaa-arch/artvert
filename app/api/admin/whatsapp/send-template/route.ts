@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { prisma } from "@/lib/prisma";
+
 export const runtime = "nodejs";
 
 type SendTemplateBody = {
@@ -10,16 +12,101 @@ function normalizePhoneNumber(value: string) {
   return value.replace(/[^\d]/g, "");
 }
 
-export async function POST(request: NextRequest) {
+function getPhoneSuffix(value: string) {
+  const normalized = normalizePhoneNumber(value);
+
+  if (normalized.length <= 10) {
+    return normalized;
+  }
+
+  return normalized.slice(-10);
+}
+
+async function hasWhatsAppOptedOut(phone: string) {
+  const suffix = getPhoneSuffix(phone);
+
+  if (!suffix) {
+    return false;
+  }
+
+  const recentLogs =
+    await prisma.customerAuditLog.findMany({
+      where: {
+        action: {
+          in: [
+            "WHATSAPP_INTERESTED",
+            "WHATSAPP_OPT_OUT",
+          ],
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 500,
+      select: {
+        action: true,
+        metadata: true,
+      },
+    });
+
+  for (const log of recentLogs) {
+    if (
+      !log.metadata ||
+      typeof log.metadata !== "object" ||
+      Array.isArray(log.metadata)
+    ) {
+      continue;
+    }
+
+    const metadata =
+      log.metadata as Record<
+        string,
+        unknown
+      >;
+
+    const rawPhone =
+      typeof metadata.phone === "string"
+        ? metadata.phone
+        : "";
+
+    if (!rawPhone) {
+      continue;
+    }
+
+    const logPhoneSuffix =
+      getPhoneSuffix(rawPhone);
+
+    if (
+      logPhoneSuffix &&
+      logPhoneSuffix === suffix
+    ) {
+      return (
+        log.action ===
+        "WHATSAPP_OPT_OUT"
+      );
+    }
+  }
+
+  return false;
+}
+
+export async function POST(
+  request: NextRequest,
+) {
   try {
-    const accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+    const accessToken =
+      process.env.WHATSAPP_ACCESS_TOKEN;
+
+    const phoneNumberId =
+      process.env
+        .WHATSAPP_PHONE_NUMBER_ID;
 
     if (!accessToken) {
       return NextResponse.json(
         {
           ok: false,
-          error: "WHATSAPP_ACCESS_TOKEN is not configured.",
+          error:
+            "WHATSAPP_ACCESS_TOKEN is not configured.",
         },
         {
           status: 500,
@@ -31,7 +118,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           ok: false,
-          error: "WHATSAPP_PHONE_NUMBER_ID is not configured.",
+          error:
+            "WHATSAPP_PHONE_NUMBER_ID is not configured.",
         },
         {
           status: 500,
@@ -39,15 +127,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = (await request.json()) as SendTemplateBody;
+    const body =
+      (await request.json()) as SendTemplateBody;
 
-    const rawPhone = body.to?.trim() ?? "";
+    const rawPhone =
+      body.to?.trim() ?? "";
 
     if (!rawPhone) {
       return NextResponse.json(
         {
           ok: false,
-          error: "رقم الهاتف مطلوب.",
+          error:
+            "رقم الهاتف مطلوب.",
         },
         {
           status: 400,
@@ -55,16 +146,45 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const to = normalizePhoneNumber(rawPhone);
+    const to =
+      normalizePhoneNumber(
+        rawPhone,
+      );
 
     if (!to) {
       return NextResponse.json(
         {
           ok: false,
-          error: "رقم الهاتف غير صالح.",
+          error:
+            "رقم الهاتف غير صالح.",
         },
         {
           status: 400,
+        },
+      );
+    }
+
+    const optedOut =
+      await hasWhatsAppOptedOut(
+        to,
+      );
+
+    if (optedOut) {
+      console.warn(
+        `WhatsApp send blocked for opted-out customer: ${to}`,
+      );
+
+      return NextResponse.json(
+        {
+          ok: false,
+          blocked: true,
+          reason:
+            "WHATSAPP_OPT_OUT",
+          error:
+            "تم إيقاف الإرسال لهذا الرقم لأن العميل طلب إيقاف الرسائل.",
+        },
+        {
+          status: 403,
         },
       );
     }
@@ -74,16 +194,21 @@ export async function POST(request: NextRequest) {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+          Authorization:
+            `Bearer ${accessToken}`,
+          "Content-Type":
+            "application/json",
         },
         body: JSON.stringify({
-          messaging_product: "whatsapp",
-          recipient_type: "individual",
+          messaging_product:
+            "whatsapp",
+          recipient_type:
+            "individual",
           to,
           type: "template",
           template: {
-            name: "artvert_customer_followup",
+            name:
+              "artvert_customer_followup",
             language: {
               code: "ar_EG",
             },
@@ -92,35 +217,50 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
     if (!response.ok) {
-      console.error("WhatsApp send error:", data);
+      console.error(
+        "WhatsApp send error:",
+        data,
+      );
 
       return NextResponse.json(
         {
           ok: false,
-          error: "فشل إرسال رسالة واتساب.",
+          error:
+            "فشل إرسال رسالة واتساب.",
           details: data,
         },
         {
-          status: response.status,
+          status:
+            response.status,
         },
       );
     }
 
+    console.log(
+      `WhatsApp template sent successfully to ${to}.`,
+    );
+
     return NextResponse.json({
       ok: true,
-      message: "تم إرسال قالب واتساب بنجاح.",
+      message:
+        "تم إرسال قالب واتساب بنجاح.",
       data,
     });
   } catch (error) {
-    console.error("WhatsApp template route error:", error);
+    console.error(
+      "WhatsApp template route error:",
+      error,
+    );
 
     return NextResponse.json(
       {
         ok: false,
-        error: "حدث خطأ غير متوقع أثناء إرسال رسالة واتساب.",
+        error:
+          "حدث خطأ غير متوقع أثناء إرسال رسالة واتساب.",
       },
       {
         status: 500,
