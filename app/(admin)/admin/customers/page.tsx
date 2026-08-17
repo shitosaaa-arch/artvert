@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { revalidatePath } from "next/cache";
 import { Prisma } from "@prisma/client";
 import {
   BadgeCheck,
@@ -20,6 +21,7 @@ import {
 } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+import { requireCustomerAdmin } from "@/lib/customers/staff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -181,6 +183,174 @@ function getVerificationClass(
   return emailVerifiedAt
     ? "border-sky-400/25 bg-sky-400/10 text-sky-200"
     : "border-amber-400/25 bg-amber-400/10 text-amber-200";
+}
+
+
+const WHATSAPP_LEAD_STATUSES = [
+  "NEW",
+  "CONTACTED",
+  "SOLD",
+  "NOT_INTERESTED",
+] as const;
+
+type WhatsAppLeadStatus =
+  (typeof WHATSAPP_LEAD_STATUSES)[number];
+
+function getWhatsAppLeadStatusLabel(
+  status: WhatsAppLeadStatus,
+) {
+  switch (status) {
+    case "CONTACTED":
+      return "تم التواصل";
+    case "SOLD":
+      return "تم البيع";
+    case "NOT_INTERESTED":
+      return "غير مهتم";
+    default:
+      return "جديد";
+  }
+}
+
+function normalizeWhatsAppPhone(value: string) {
+  return value.replace(/[^\d]/g, "");
+}
+
+function getJsonString(
+  metadata: Prisma.JsonValue | null,
+  key: string,
+) {
+  if (
+    !metadata ||
+    typeof metadata !== "object" ||
+    Array.isArray(metadata)
+  ) {
+    return null;
+  }
+
+  const value = (metadata as Prisma.JsonObject)[key];
+
+  return typeof value === "string" ? value : null;
+}
+
+async function updateWhatsAppLead(
+  formData: FormData,
+) {
+  "use server";
+
+  const actor = await requireCustomerAdmin();
+
+  const phone = normalizeWhatsAppPhone(
+    String(formData.get("phone") ?? ""),
+  );
+
+  const rawStatus = String(
+    formData.get("status") ?? "NEW",
+  );
+
+  const note = String(
+    formData.get("note") ?? "",
+  )
+    .trim()
+    .slice(0, 1000);
+
+  if (!phone) {
+    throw new Error("WHATSAPP_PHONE_REQUIRED");
+  }
+
+  if (
+    !WHATSAPP_LEAD_STATUSES.includes(
+      rawStatus as WhatsAppLeadStatus,
+    )
+  ) {
+    throw new Error("INVALID_WHATSAPP_LEAD_STATUS");
+  }
+
+  const phoneSuffix =
+    phone.length > 10
+      ? phone.slice(-10)
+      : phone;
+
+  const address =
+    await prisma.customerAddress.findFirst({
+      where: {
+        OR: [
+          {
+            phone: {
+              endsWith: phoneSuffix,
+            },
+          },
+          {
+            alternativePhone: {
+              endsWith: phoneSuffix,
+            },
+          },
+        ],
+      },
+      select: {
+        customerId: true,
+      },
+    });
+
+  let customerId =
+    address?.customerId ?? null;
+
+  if (!customerId) {
+    const order =
+      await prisma.order.findFirst({
+        where: {
+          customerId: {
+            not: null,
+          },
+          OR: [
+            {
+              phone: {
+                endsWith: phoneSuffix,
+              },
+            },
+            {
+              alternativePhone: {
+                endsWith: phoneSuffix,
+              },
+            },
+          ],
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          customerId: true,
+        },
+      });
+
+    customerId =
+      order?.customerId ?? null;
+  }
+
+  await prisma.customerAuditLog.create({
+    data: {
+      customerId,
+      actorType: "STAFF",
+      action:
+        "WHATSAPP_LEAD_STATUS_UPDATED",
+      targetType:
+        "WHATSAPP_LEAD",
+      targetId:
+        customerId,
+      metadata: {
+        phone,
+        status:
+          rawStatus as WhatsAppLeadStatus,
+        note:
+          note || null,
+        source:
+          "ADMIN_CUSTOMERS",
+        staffUserId:
+          actor.id,
+      },
+    },
+  });
+
+  revalidatePath("/admin/customers");
 }
 
 export default async function CustomersPage({
@@ -490,6 +660,81 @@ export default async function CustomersPage({
     },
   });
 
+  const whatsappLeadUpdates =
+    await prisma.customerAuditLog.findMany({
+      where: {
+        action:
+          "WHATSAPP_LEAD_STATUS_UPDATED",
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 500,
+      select: {
+        id: true,
+        createdAt: true,
+        metadata: true,
+      },
+    });
+
+  const latestLeadUpdateByPhone =
+    new Map<
+      string,
+      {
+        status: WhatsAppLeadStatus;
+        note: string;
+        updatedAt: Date;
+      }
+    >();
+
+  for (const update of whatsappLeadUpdates) {
+    const phone =
+      getJsonString(
+        update.metadata,
+        "phone",
+      ) ?? "";
+
+    const normalizedPhone =
+      normalizeWhatsAppPhone(phone);
+
+    if (
+      !normalizedPhone ||
+      latestLeadUpdateByPhone.has(
+        normalizedPhone,
+      )
+    ) {
+      continue;
+    }
+
+    const rawStatus =
+      getJsonString(
+        update.metadata,
+        "status",
+      );
+
+    const status =
+      rawStatus &&
+      WHATSAPP_LEAD_STATUSES.includes(
+        rawStatus as WhatsAppLeadStatus,
+      )
+        ? (rawStatus as WhatsAppLeadStatus)
+        : "NEW";
+
+    latestLeadUpdateByPhone.set(
+      normalizedPhone,
+      {
+        status,
+        note:
+          getJsonString(
+            update.metadata,
+            "note",
+          ) ?? "",
+        updatedAt:
+          update.createdAt,
+      },
+    );
+  }
+
   const stats = [
     {
       label: "إجمالي العملاء",
@@ -747,13 +992,21 @@ export default async function CustomersPage({
                 <MessageCircle aria-hidden="true" size={18} />
                 ردود واتساب
               </span>
-              <h2 className="mt-2 text-2xl font-black">العملاء المهتمون</h2>
+
+              <h2 className="mt-2 text-2xl font-black">
+                العملاء المهتمون
+              </h2>
+
               <p className="mt-2 text-sm leading-7 text-white/50">
-                آخر العملاء الذين ضغطوا على زر «مهتم» في رسائل واتساب.
+                متابعة العملاء الذين ضغطوا على زر «مهتم» مع حالة البيع والملاحظات وفتح واتساب مباشرة.
               </p>
             </div>
+
             <div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-center">
-              <span className="block text-xs text-white/45">إجمالي الردود</span>
+              <span className="block text-xs text-white/45">
+                إجمالي الردود
+              </span>
+
               <strong className="mt-1 block text-2xl font-black text-emerald-200">
                 {whatsappInterestedCount.toLocaleString("ar-EG")}
               </strong>
@@ -765,67 +1018,207 @@ export default async function CustomersPage({
               لا توجد ردود «مهتم» مسجلة حتى الآن.
             </div>
           ) : (
-            <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
-              <table className="w-full min-w-[760px] text-right">
-                <thead className="bg-white/[.04] text-xs text-white/45">
-                  <tr>
-                    <th className="px-4 py-3 font-bold">رقم واتساب</th>
-                    <th className="px-4 py-3 font-bold">الحالة</th>
-                    <th className="px-4 py-3 font-bold">تاريخ الرد</th>
-                    <th className="px-4 py-3 font-bold">الربط بالعميل</th>
-                    <th className="px-4 py-3 font-bold">العميل</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10">
-                  {whatsappInterested.map((item) => {
-                    const metadata =
-                      item.metadata &&
-                      typeof item.metadata === "object" &&
-                      !Array.isArray(item.metadata)
-                        ? (item.metadata as Prisma.JsonObject)
-                        : null;
-                    const phone =
-                      metadata && typeof metadata.phone === "string"
-                        ? metadata.phone
-                        : "غير متاح";
+            <div className="mt-5 grid gap-4">
+              {whatsappInterested.map((item) => {
+                const rawPhone =
+                  getJsonString(
+                    item.metadata,
+                    "phone",
+                  ) ?? "";
 
-                    return (
-                      <tr key={item.id} className="text-sm">
-                        <td className="px-4 py-4 font-bold" dir="ltr">{phone}</td>
-                        <td className="px-4 py-4">
-                          <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs font-black text-emerald-200">
-                            مهتم
+                const phone =
+                  normalizeWhatsAppPhone(
+                    rawPhone,
+                  );
+
+                const leadUpdate =
+                  latestLeadUpdateByPhone.get(
+                    phone,
+                  );
+
+                const currentStatus =
+                  leadUpdate?.status ??
+                  "NEW";
+
+                const currentNote =
+                  leadUpdate?.note ?? "";
+
+                const whatsappUrl =
+                  phone
+                    ? `https://wa.me/${phone}`
+                    : null;
+
+                return (
+                  <article
+                    key={item.id}
+                    className="rounded-2xl border border-white/10 bg-white/[.025] p-4 sm:p-5"
+                  >
+                    <div className="grid gap-4 xl:grid-cols-[minmax(180px,.8fr)_minmax(180px,.8fr)_minmax(220px,1fr)_minmax(280px,1.5fr)_auto] xl:items-end">
+                      <div>
+                        <span className="block text-xs text-white/40">
+                          رقم واتساب
+                        </span>
+
+                        <strong
+                          className="mt-2 block text-base"
+                          dir="ltr"
+                        >
+                          {phone || "غير متاح"}
+                        </strong>
+
+                        <span className="mt-2 inline-flex rounded-full border border-emerald-400/25 bg-emerald-400/10 px-3 py-1 text-xs font-black text-emerald-200">
+                          مهتم
+                        </span>
+                      </div>
+
+                      <div>
+                        <span className="block text-xs text-white/40">
+                          تاريخ الرد
+                        </span>
+
+                        <strong className="mt-2 block text-sm">
+                          {formatDate(
+                            item.createdAt,
+                          )}
+                        </strong>
+
+                        {leadUpdate ? (
+                          <span className="mt-2 block text-[11px] text-white/35">
+                            آخر متابعة:{" "}
+                            {formatDate(
+                              leadUpdate.updatedAt,
+                            )}
                           </span>
-                        </td>
-                        <td className="px-4 py-4 text-white/60">{formatDate(item.createdAt)}</td>
-                        <td className="px-4 py-4">
+                        ) : null}
+                      </div>
+
+                      <div>
+                        <span className="block text-xs text-white/40">
+                          العميل
+                        </span>
+
+                        <div className="mt-2">
                           {item.customer ? (
-                            <span className="rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 text-xs font-black text-sky-200">
-                              مرتبط بحساب
-                            </span>
+                            <>
+                              <Link
+                                href={`/admin/customers/${item.customer.id}`}
+                                className="font-black text-lime-300 transition hover:text-lime-200"
+                              >
+                                {item.customer.displayName ||
+                                  item.customer.email}
+                              </Link>
+
+                              <span className="mt-2 block w-fit rounded-full border border-sky-400/25 bg-sky-400/10 px-3 py-1 text-xs font-black text-sky-200">
+                                مرتبط بحساب
+                              </span>
+                            </>
                           ) : (
-                            <span className="rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-xs font-black text-amber-200">
-                              غير مرتبط
-                            </span>
+                            <>
+                              <span className="text-white/55">
+                                جهة اتصال واتساب فقط
+                              </span>
+
+                              <span className="mt-2 block w-fit rounded-full border border-amber-400/25 bg-amber-400/10 px-3 py-1 text-xs font-black text-amber-200">
+                                غير مرتبط
+                              </span>
+                            </>
                           )}
-                        </td>
-                        <td className="px-4 py-4">
-                          {item.customer ? (
-                            <Link
-                              href={`/admin/customers/${item.customer.id}`}
-                              className="font-black text-lime-300 transition hover:text-lime-200"
-                            >
-                              {item.customer.displayName || item.customer.email}
-                            </Link>
-                          ) : (
-                            <span className="text-white/35">جهة اتصال واتساب فقط</span>
+                        </div>
+                      </div>
+
+                      <form
+                        action={updateWhatsAppLead}
+                        className="grid gap-3"
+                      >
+                        <input
+                          type="hidden"
+                          name="phone"
+                          value={phone}
+                        />
+
+                        <label>
+                          <span className="mb-2 block text-xs text-white/40">
+                            حالة المتابعة
+                          </span>
+
+                          <select
+                            name="status"
+                            defaultValue={
+                              currentStatus
+                            }
+                            className="h-11 w-full rounded-xl border border-white/10 bg-[#0d2112] px-3 text-sm text-white outline-none transition focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10"
+                          >
+                            {WHATSAPP_LEAD_STATUSES.map(
+                              (status) => (
+                                <option
+                                  key={status}
+                                  value={status}
+                                >
+                                  {getWhatsAppLeadStatusLabel(
+                                    status,
+                                  )}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        </label>
+
+                        <label>
+                          <span className="mb-2 block text-xs text-white/40">
+                            ملاحظات الموظف
+                          </span>
+
+                          <textarea
+                            name="note"
+                            defaultValue={
+                              currentNote
+                            }
+                            maxLength={1000}
+                            rows={2}
+                            placeholder="مثال: تم التواصل والعميل طلب تفاصيل السعر..."
+                            className="w-full resize-y rounded-xl border border-white/10 bg-[#0d2112] px-3 py-2 text-sm leading-6 text-white outline-none transition placeholder:text-white/20 focus:border-lime-300 focus:ring-4 focus:ring-lime-300/10"
+                          />
+                        </label>
+
+                        <button
+                          type="submit"
+                          disabled={!phone}
+                          className="min-h-11 rounded-xl bg-lime-300 px-4 text-sm font-black text-[#071109] transition hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          حفظ المتابعة
+                        </button>
+                      </form>
+
+                      <div className="flex flex-col gap-2">
+                        {whatsappUrl ? (
+                          <a
+                            href={whatsappUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-emerald-400/25 bg-emerald-400/10 px-4 text-sm font-black text-emerald-200 transition hover:bg-emerald-400/15"
+                          >
+                            <MessageCircle
+                              aria-hidden="true"
+                              size={17}
+                            />
+                            فتح واتساب
+                          </a>
+                        ) : (
+                          <span className="flex min-h-11 cursor-not-allowed items-center justify-center rounded-xl border border-white/10 bg-white/[.02] px-4 text-sm font-bold text-white/25">
+                            الرقم غير متاح
+                          </span>
+                        )}
+
+                        <span className="rounded-xl border border-white/10 bg-white/[.02] px-3 py-2 text-center text-xs text-white/45">
+                          {getWhatsAppLeadStatusLabel(
+                            currentStatus,
                           )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </span>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>
