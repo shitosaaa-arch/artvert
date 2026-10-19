@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 import "../globals.css";
 
@@ -102,6 +103,7 @@ export default function PublicRootLayout({
           <SpeedInsights />
         </LanguageProvider>
       </body>
+      <GoogleAnalytics gaId="AW-18521199237" />
     </html>
   );
 }

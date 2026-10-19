@@ -43,6 +43,7 @@
     "knowledge:validate-import": "tsx scripts/test-knowledge-import.ts"
   },
   "dependencies": {
+    "@next/third-parties": "^16.4.2",
     "@prisma/client": "6.19.2",
     "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.6.1",
