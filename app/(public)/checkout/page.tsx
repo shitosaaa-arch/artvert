@@ -34,6 +34,12 @@ import {
 } from "@/components/cart/CartProvider";
 import { useLanguage } from "@/components/i18n/LanguageProvider";
 
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 const EGYPT_GOVERNORATES = [
   "القاهرة",
   "الجيزة",
@@ -165,7 +171,7 @@ function buildWhatsAppMessage(
     order.items
       .map(
         (item, index) =>
-          `${index + 1}- ${item.nameAr} × ${item.quantity}`,
+          `${index + 1}\n${item.nameAr} × ${item.quantity}`,
       )
       .join("\n");
 
@@ -697,6 +703,17 @@ export default function CheckoutPage() {
         subtotal,
       });
 
+      // --- Google Ads Conversion Tracking (Start) ---
+      if (typeof window !== "undefined" && typeof window.gtag === "function") {
+        window.gtag("event", "conversion", {
+          // send_to: 'AW-18521199237/YOUR_CONVERSION_LABEL_HERE',
+          value: subtotal,
+          currency: "EGP",
+          transaction_id: savedOrder.orderNumber.trim(),
+        });
+      }
+      // --- Google Ads Conversion Tracking (End) ---
+
       clearCart();
 
       window.scrollTo({
@@ -857,7 +874,9 @@ export default function CheckoutPage() {
                   {createdOrder.customer.phone}
                 </p>
                 <p>
-                  {createdOrder.customer.governorate} - {createdOrder.customer.city}
+                  {createdOrder.customer.governorate}
+                  {"\n"}
+                  {createdOrder.customer.city}
                 </p>
                 <p>
                   {createdOrder.customer.address}

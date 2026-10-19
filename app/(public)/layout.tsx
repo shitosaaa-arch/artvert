@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Cairo } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import Script from "next/script";
 
 import "../globals.css";
 
@@ -102,8 +102,25 @@ export default function PublicRootLayout({
           <Analytics />
           <SpeedInsights />
         </LanguageProvider>
+
+        {/* Google Ads Tracking Script */}
+        <Script
+          strategy="afterInteractive"
+          src={`https://www.googletagmanager.com/gtag/js?id=AW-18521199237`}
+        />
+        <Script
+          id="google-ads-tag"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'AW-18521199237');
+            `,
+          }}
+        />
       </body>
-      <GoogleAnalytics gaId="AW-18521199237" />
     </html>
   );
 }
