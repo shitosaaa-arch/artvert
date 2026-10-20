@@ -8,8 +8,8 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https:",
   "style-src 'self' 'unsafe-inline'",
   isDevelopment
-    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
-    : "script-src 'self' 'unsafe-inline'",
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com"
+    : "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com",
   "connect-src 'self' https: ws: wss:",
   "font-src 'self' data:",
   "frame-ancestors 'none'",
